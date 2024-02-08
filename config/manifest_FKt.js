@@ -1,0 +1,214 @@
+// const Fs = require('fs');
+const Pkg = require('../package.json');
+
+// const tlsOptions = {
+//   key: Fs.readFileSync(<privKey.pem>),
+//   cert: Fs.readFileSync(<fullchain.pem>)
+// };
+
+const swagger_options = {
+  info: {
+    title: 'Sealog Server API Documentation',
+    version: Pkg.version
+  },
+  tags: [
+    {
+      name: 'auth',
+      description: 'the auth api'
+    },
+    {
+      name: 'cruises',
+      description: 'the cruises api'
+    },
+    {
+      name: 'custom_vars',
+      description: 'the custom_vars api'
+    },
+    {
+      name: 'event_aux_data',
+      description: 'the event_aux_data api'
+    },
+    {
+      name: 'event_exports',
+      description: 'the event_exports api'
+    },
+    {
+      name: 'event_templates',
+      description: 'the event_templates api'
+    },
+    {
+      name: 'events',
+      description: 'the events api'
+    },
+    {
+      name: 'lowerings',
+      description: 'the lowerings api'
+    },
+    {
+      name: 'users',
+      description: 'the users api'
+    }
+  ],
+  grouping: 'tags',
+  security: [{ API_KEY: [] }],
+  securityDefinitions: {
+    API_KEY: {
+      type: 'apiKey',
+      name: 'authorization',
+      in: 'header'
+    }
+  }
+};
+
+const {
+  sealogDB,
+  sealogDB_devel
+} = require('../config/db_constants');
+
+const port = process.env.PORT || 8000;
+const prefix = process.env.PREFIX || '/sealog-server';
+let env = process.env.NODE_ENV || 'development';
+env = (env === 'test') ? 'development' : env;
+
+const envKey = (key) => {
+
+  const configuration = {
+    development: {
+      host: '0.0.0.0',
+      port,
+      prefix,
+      db: sealogDB_devel
+    },
+    debug: {
+      host: '0.0.0.0',
+      port,
+      prefix,
+      db: sealogDB
+    },
+    production: {
+      host: '0.0.0.0',
+      port,
+      prefix,
+      db: sealogDB
+    }
+  };
+
+  return configuration[env][key];
+};
+
+const mongodb_URL = process.env.MONGODB_URL || 'mongodb://localhost:27017/' + envKey('db');
+
+const manifest = {
+  server: {
+    host: envKey('host') || '127.0.0.1',
+    port: envKey('port') || '8000',
+    // tls: tlsOptions,
+    routes: {
+      cors: true
+    }
+  },
+
+  register: {
+    plugins: [
+      { plugin: 'hapi-auth-jwt2' },
+      { plugin: 'hapi-mongodb', options:
+        {
+          url: mongodb_URL,
+          settings: {
+            maxPoolSize: 20,
+            useNewUrlParser: true,
+            useUnifiedTopology: true
+          },
+          decorate: true
+        }
+      },
+      { plugin: './plugins/auth' },
+      { plugin: './plugins/filesystem_init' },
+      { plugin: './plugins/free_space' },
+      { plugin: '@hapi/inert' },
+      { plugin: '@hapi/vision' },
+      { plugin: '@hapi/nes' },
+      { plugin: './routes/api/v1/auth', options: {},
+        routes: {
+          prefix: envKey('prefix') + '/api/v1'
+        }
+      },
+      { plugin: './routes/api/v1/cruises', options: {},
+        routes: {
+          prefix: envKey('prefix') + '/api/v1'
+        }
+      },
+      { plugin: './routes/api/v1/custom_vars', options: {},
+        routes: {
+          prefix: envKey('prefix') + '/api/v1'
+        }
+      },
+      { plugin: './routes/default', options: {},
+        routes: {
+          prefix: envKey('prefix')
+        }
+      },
+      { plugin: './routes/api/v1/event_aux_data', options: {},
+        routes: {
+          prefix: envKey('prefix') + '/api/v1'
+        }
+      },
+      { plugin: './routes/api/v1/event_exports', options: {},
+        routes: {
+          prefix: envKey('prefix') + '/api/v1'
+        }
+      },
+      { plugin: './routes/api/v1/event_templates', options: {},
+        routes: {
+          prefix: envKey('prefix') + '/api/v1'
+        }
+      },
+      { plugin: './routes/api/v1/events', options: {},
+        routes: {
+          prefix: envKey('prefix') + '/api/v1'
+        }
+      },
+      { plugin: './routes/api/v1/lowerings', options: {},
+        routes: {
+          prefix: envKey('prefix') + '/api/v1'
+        }
+      },
+      { plugin: './routes/api/v1/users', options: {},
+        routes: {
+          prefix: envKey('prefix') + '/api/v1'
+        }
+      },
+      { plugin: './plugins/db_cruises', options: {} },
+      { plugin: './plugins/db_custom_vars', options: {} },
+      { plugin: './plugins/db_event_aux_data', options: {} },
+      { plugin: './plugins/db_event_templates', options: {} },
+      { plugin: './plugins/db_events', options: {} },
+      { plugin: './plugins/db_lowerings', options: {} },
+      { plugin: './plugins/db_users', options: {} },
+      { plugin: 'hapi-pino',
+        options: {
+          logRequestComplete: process.env.NODE_ENV !== 'production',
+          redact: ['req.headers.authorization']
+        }
+      },
+      { plugin: 'hapi-swagger', options: swagger_options,
+        routes: {
+          prefix: envKey('prefix')
+        }
+      }
+    ]
+  }
+};
+
+// Additional Plugins for development
+if (env === 'development') {
+  manifest.register.plugins.push({ 'plugin': 'blipp' });
+}
+
+// Additional Plugins for production
+// else if (env === 'production') {}
+
+// Additional Plugins for debug
+// else if (env === 'debug') {}
+
+module.exports = manifest;
