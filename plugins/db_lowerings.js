@@ -107,8 +107,8 @@ exports.plugin = {
       const lowerings = db.collection(loweringsTable);
 
       // Query to find records with the sub-object
-      const filter = { 'subObject.name': 'lowering_floats_on_surface' };
-      const update = { $set: { 'subObject.name': 'lowering_on_surface' } };
+      const filter = { 'lowering_additional_meta.milestones.lowering_floats_on_surface': { $exists: true } };
+      const update = { $rename: { 'lowering_additional_meta.milestones.lowering_floats_on_surface': 'lowering_additional_meta.milestones.lowering_on_surface' } };
 
       // Update multiple records
       const result = await lowerings.updateMany(filter, update);
