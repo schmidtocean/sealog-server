@@ -12,8 +12,8 @@ venv/
 
 # customize versions of the dist scripts
 misc/cache_udp_data*.py
-# misc/influx_sealog/settings*.py
-# misc/python_sealog/settings*.py
+misc/influx_sealog/settings.py
+misc/python_sealog/settings.py
 # misc/reporting/sealog_doc_template*.py
 # misc/reporting/sealog_report_builder*.py
 # misc/sealog_*_data_export.py
