@@ -65,8 +65,8 @@ const {
   sealogDB_devel
 } = require('../config/db_constants');
 
-const port = process.env.PORT || 8100;
-const prefix = process.env.PREFIX || '/sealog-server';
+const port = process.env.SEALOG_SERVER_PORT || 8100;
+const prefix = process.env.SEALOG_SERVER_PREFIX || '/sealog-server';
 let env = process.env.NODE_ENV || 'development';
 env = (env === 'test') ? 'development' : env;
 
@@ -96,12 +96,12 @@ const envKey = (key) => {
   return configuration[env][key];
 };
 
-const mongodb_URL = process.env.MONGODB_URL || 'mongodb://localhost:27017/' + envKey('db');
+const mongodb_URL = process.env.MONGO_URL || 'mongodb://localhost:27017/' + process.env.SEALOG_DB_NAME || envKey('db');
 
 const manifest = {
   server: {
-    host: envKey('host') || '127.0.0.1',
-    port: envKey('port') || '8000',
+    host: envKey('host'),
+    port: envKey('port'),
     // tls: tlsOptions,
     routes: {
       cors: true
@@ -187,7 +187,7 @@ const manifest = {
       { plugin: './plugins/db_users', options: {} },
       { plugin: 'hapi-pino',
         options: {
-          logRequestComplete: process.env.NODE_ENV !== 'production',
+          logRequestComplete: env !== 'production',
           redact: ['req.headers.authorization']
         }
       },
