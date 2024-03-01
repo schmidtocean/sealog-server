@@ -111,8 +111,8 @@ exports.plugin = {
       const update = { $rename: { 'lowering_additional_meta.milestones.lowering_floats_on_surface': 'lowering_additional_meta.milestones.lowering_on_surface' } };
 
       // Update multiple records
-      const result = await lowerings.updateMany(filter, update);
-      console.log(`${result.modifiedCount} records updated`);
+      const update_result = await lowerings.updateMany(filter, update);
+      console.log(`${update_result.modifiedCount} records updated`);
 
       if (process.env.NODE_ENV !== 'development') {
         console.log('Lowerings Collection already exists... we\'re done here.');

@@ -1,10 +1,10 @@
-const fs = require('fs');
+const Fs = require('fs');
 
 const {
   eventTemplatesTable
 } = require('../config/db_constants');
 
-const init_data_filepath = '../init_data/system_templates.json';
+const init_data_filepath = './init_data/system_templates.json';
 
 exports.plugin = {
   name: 'db_populate_event_templates',
@@ -33,9 +33,11 @@ exports.plugin = {
       }
     }
 
+    let collection = null;
+    let modified_data = [];
     console.log('Creating Event Templates Collection');
     try {
-      const collection = await db.createCollection(eventTemplatesTable);
+      collection = await db.createCollection(eventTemplatesTable);
     }
     catch (err) {
       console.log('CREATE ERROR:', err.code);
@@ -44,28 +46,28 @@ exports.plugin = {
 
     console.log('Populating Event Templates Collection');
     try {
-      fs.readFile(init_data_filepath, 'utf8', (err, data) => {
-        if (err) {
-          console.error('Error reading JSON file:', err);
-          throw (err);
-        }
+      const data = Fs.readFileSync(init_data_filepath, 'utf8');
 
-        const init_data = JSON.parse(data);
+      const init_data = JSON.parse(data);
+      modified_data = init_data.map((template) => {
 
-        const modified_data = init_data.map(template => {
-          if (template.hasOwnProperty('id')) {
-            template._id = ObjectID(template.id);
-            delete template.id;
-          }
-          return template;
-        });
+        template._id = ObjectID(template.id);
+        delete template.id;
+        return template;
+      });
 
-        console.log(modified_data);
-        // await collection.insertMany(modified_data);
-      })
-    } catch (err) {
+    }
+    catch (err) {
+      console.error('READ ERROR event_templates.json file:', err.code);
+      throw (err);
+    }
+
+    try {
+      await collection.insertMany(modified_data);
+    }
+    catch (err) {
       console.error('INSERT ERROR:', err.code);
-      throw(err);
+      throw (err);
     }
   }
 };
