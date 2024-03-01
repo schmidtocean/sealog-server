@@ -15,12 +15,12 @@ exports.plugin = {
     const init_data = [
       {
         _id: ObjectID('5981f167212b348aed7fa9f5'),
-        username: 'admin',
-        fullname: 'Admin',
-        email: 'admin@notarealserver.com',
-        password: await hashedPassword('demo'),
+        username: 'mt',
+        fullname: 'Marine Tech',
+        email: 'mt@falkortoo.org',
+        password: await hashedPassword('Dragon2017'),
         last_login: new Date(),
-        roles: ['admin', 'event_watcher', 'event_logger', 'event_manager', 'cruise_manager'],
+        roles: ['admin', 'cruise_manager', 'event_logger', 'event_manager', 'event_watcher', 'template_manager'],
         system_user: true,
         disabled: false,
         loginToken: randomAsciiString(20)
@@ -44,9 +44,9 @@ exports.plugin = {
         email: 'pi@notarealserver.com',
         password: await hashedPassword(''),
         last_login: new Date(),
-        roles: ['event_manager', 'event_logger', 'event_watcher', 'cruise_manager'],
+        roles: ['cruise_manager', 'event_logger', 'event_manager', 'event_watcher', 'template_manager'],
         system_user: true,
-        disabled: false,
+        disabled: true,
         loginToken: randomAsciiString(20)
       }
     ];
