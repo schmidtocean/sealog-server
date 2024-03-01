@@ -91,6 +91,7 @@ cp "$install_dir/config/path_constants_FKt.js" "$install_dir/config/path_constan
 cp "$install_dir/config/secret_FKt.js" "$install_dir/config/secret.js"
 cp "$install_dir/misc/influx_sealog/settings_FKt.py" "$install_dir/misc/influx_sealog/settings.py"
 cp "$install_dir/misc/python_sealog/settings_FKt.py" "$install_dir/misc/python_sealog/settings.py"
+cp "$install_dir/init_data/system_templates_FKt.json" "$install_dir/init_data/system_templates.json"
 
 
 # Continue with the commit
@@ -204,6 +205,7 @@ cp "$install_dir/config/path_constants_Sub.js" "$install_dir/config/path_constan
 cp "$install_dir/config/secret_Sub.js" "$install_dir/config/secret.js"
 cp "$install_dir/misc/influx_sealog/settings_Sub.py" "$install_dir/misc/influx_sealog/settings.py"
 cp "$install_dir/misc/python_sealog/settings_Sub.py" "$install_dir/misc/python_sealog/settings.py"
+cp "$install_dir/init_data/system_templates_Sub.json" "$install_dir/init_data/system_templates.json"
 
 # Continue with the commit
 exit 0

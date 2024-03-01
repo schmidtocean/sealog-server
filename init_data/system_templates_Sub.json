@@ -1,0 +1,702 @@
+[
+  {
+    "event_name": "00. WATCH CHANGE",
+    "event_value": "WATCH CHANGE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "Pilot",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "Adam",
+          "Alex",
+          "Andy",
+          "Ben",
+          "C.Hill",
+          "Claude",
+          "CptPete",
+          "Doug",
+          "Drewie",
+          "Havens",
+          "JasonW.",
+          "John",
+          "Julianna",
+          "JRod",
+          "Kaarel",
+          "Koko",
+          "Kris",
+          "Mike",
+          "Nick",
+          "Russ",
+          "Scott",
+          "Tomer",
+          "Tyler",
+          "Zach"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "Co-Pilot",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "Adam",
+          "Alex",
+          "Ben",
+          "Claude",
+          "Doug",
+          "Drewie",
+          "JasonW.",
+          "John",
+          "JRod",
+          "C.Hill",
+          "Kris",
+          "Mike",
+          "Nick",
+          "Russ",
+          "Scott",
+          "Sofya",
+          "Tyler",
+          "Zach",
+          "Tomer",
+          "Julianna",
+          "Havens",
+          "CptPete",
+          "Koko",
+          "Claude",
+          "Andy",
+          "Kaarel",
+          "Rich",
+          "Josh"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "Datalogger",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "Adam",
+          "Alex",
+          "Ben",
+          "Havens",
+          "Jimbo",
+          "John",
+          "Josh",
+          "JRod",
+          "Julianna",
+          "Kaarel",
+          "Koko",
+          "Kris",
+          "Nick",
+          "Rich",
+          "Russ",
+          "Sofya",
+          "Tomer",
+          "Tyler",
+          "Zach",
+          "Veit"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5d949c6d2afbd9049e0efd43"
+  },
+  {
+    "event_name": "01. ROV OFF DECK",
+    "event_value": "VEHICLE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "milestone",
+        "event_option_type": "static text",
+        "event_option_default_value": "Off deck",
+        "event_option_required": false,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e2d2fda3785566255ab1e87"
+  },
+  {
+    "event_name": "02. IN WATER",
+    "event_value": "VEHICLE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "milestone",
+        "event_option_type": "static text",
+        "event_option_default_value": "In water",
+        "event_option_required": false,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e2d30483785566255ab1e88"
+  },
+  {
+    "event_name": "03. 1ST FLOAT ON",
+    "event_value": "VEHICLE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "milestone",
+        "event_option_type": "static text",
+        "event_option_default_value": "First float on",
+        "event_option_required": false,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e2d309d3785566255ab1e8f"
+  },
+  {
+    "event_name": "04. LAST FLOAT ON",
+    "event_value": "VEHICLE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "milestone",
+        "event_option_type": "static text",
+        "event_option_default_value": "Last float on",
+        "event_option_required": false,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Number of floats?",
+        "event_option_type": "text",
+        "event_option_required": true,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e2d30d93785566255ab1e90"
+  },
+  {
+    "event_name": "05. ON BOTTOM",
+    "event_value": "VEHICLE",
+    "event_free_text_required": true,
+    "event_options": [
+      {
+        "event_option_name": "milestone",
+        "event_option_type": "static text",
+        "event_option_default_value": "On bottom",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e2d310e3785566255ab1e91"
+  },
+  {
+    "event_name": "06. OFF BOTTOM",
+    "event_value": "VEHICLE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "milestone",
+        "event_option_type": "static text",
+        "event_option_default_value": "Off bottom",
+        "event_option_required": false,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e2d316b3785566255ab1e92"
+  },
+  {
+    "event_name": "07. FLOATS ON SURFACE",
+    "event_value": "VEHICLE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "milestone",
+        "event_option_type": "static text",
+        "event_option_default_value": "Floats on surface",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e302dda316611ad01f4b563"
+  },
+  {
+    "event_name": "08. 1ST FLOAT OFF",
+    "event_value": "VEHICLE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "milestone",
+        "event_option_type": "static text",
+        "event_option_default_value": "First float off",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e2d33c83785566255ab1ed5"
+  },
+  {
+    "event_name": "09. LAST FLOAT OFF",
+    "event_value": "VEHICLE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "milestone",
+        "event_option_type": "static text",
+        "event_option_default_value": "Last float off",
+        "event_option_required": false,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e2d34263785566255ab1ef1"
+  },
+  {
+    "event_name": "10. OUT OF WATER",
+    "event_value": "VEHICLE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "milestone",
+        "event_option_type": "static text",
+        "event_option_default_value": "Out of water",
+        "event_option_required": false,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e2d34673785566255ab1f04"
+  },
+  {
+    "event_name": "11. ROV ON DECK",
+    "event_value": "VEHICLE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "milestone",
+        "event_option_type": "static text",
+        "event_option_default_value": "On deck",
+        "event_option_required": false,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e2d34a73785566255ab1f1a"
+  },
+  {
+    "event_name": "ASNAP 1sec/10sec",
+    "event_value": "ASNAP INTERVAL",
+    "system_template": true,
+    "disabled": false,
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "TIMING",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "1 Sec",
+          "10 Sec"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      }
+    ],
+    "template_categories": [
+      "VIDEO"
+    ],
+    "id": "6429825a6594c997767aa5f8"
+  },
+  {
+    "event_name": "BEACON TRACKING",
+    "event_value": "TRACKING",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "Beacon Name",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "Alpha",
+          "Bravo",
+          "Delta",
+          "Echo"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": true
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e420334a0a3e9079deb9afa"
+  },
+  {
+    "event_name": "DIVE ABORTED",
+    "event_value": "VEHICLE",
+    "event_free_text_required": true,
+    "event_options": [],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e49e37370863776a524b2ed"
+  },
+  {
+    "event_name": "Divestream™",
+    "event_value": "DIVESTREAM",
+    "system_template": true,
+    "disabled": false,
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_type": "radio buttons",
+        "event_option_name": "Action",
+        "event_option_values": [
+          "Start",
+          "Stop"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": true,
+        "event_option_default_value": ""
+      },
+      {
+        "event_option_type": "checkboxes",
+        "event_option_name": "Platform",
+        "event_option_values": [
+          "Youtube",
+          "Facebook"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": true
+      },
+      {
+        "event_option_name": "Divestream Title",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "template_categories": [
+      "VIDEO"
+    ],
+    "id": "645e56b8a3a038133189733a"
+  },
+  {
+    "event_name": "FRAMEGRAB",
+    "event_value": "FRAMEGRAB",
+    "system_template": true,
+    "disabled": false,
+    "template_categories": [
+      "VEHICLE",
+      "VIDEO"
+    ],
+    "event_free_text_required": false,
+    "event_options": [],
+    "id": "64a18465d62e7f0892980182"
+  },
+  {
+    "event_name": "Flag Outreach",
+    "event_value": "SOI HIGHLIGHT",
+    "system_template": true,
+    "disabled": false,
+    "template_categories": [
+      "VIDEO"
+    ],
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "Comment",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "id": "6418568e6594c99776773c07"
+  },
+  {
+    "event_name": "INS RESET",
+    "event_value": "INS RESET",
+    "event_free_text_required": false,
+    "event_options": [],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e420398a0a3e9079deb9b3d"
+  },
+  {
+    "event_name": "LATE ENTRY",
+    "event_value": "LATE ENTRY",
+    "system_template": true,
+    "disabled": false,
+    "template_categories": [
+      "VEHICLE",
+      "SCIENCE"
+    ],
+    "event_free_text_required": true,
+    "event_options": [
+      {
+        "event_option_type": "static text",
+        "event_option_name": "Disclaimer",
+        "event_option_default_value": "Unless the exact event time is entered, metadata may be inaccurate.",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "id": "647d9485d62e7f089295aa00"
+  },
+  {
+    "event_name": "Nav Logging",
+    "event_value": "NAV Logging",
+    "system_template": true,
+    "disabled": false,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "Logging System",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "RVDAS",
+          "4D Nav"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_name": "Status",
+        "event_option_type": "radio buttons",
+        "event_option_values": [
+          "Start",
+          "Stop"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": true
+      }
+    ],
+    "id": "653c5379825e0fc2f2253ddc"
+  },
+  {
+    "event_name": "PROBLEM",
+    "event_value": "PROBLEM",
+    "event_free_text_required": true,
+    "event_options": [
+      {
+        "event_option_name": "Type",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "Vehicle",
+          "Sensor",
+          "Science Equipment",
+          "Ship",
+          "Data",
+          "Video",
+          "Navigation",
+          "Other"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VIDEO",
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5d949e8f2afbd9049e0efd46"
+  },
+  {
+    "event_name": "SSP to Ranger",
+    "event_value": "SSP to Ranger",
+    "event_free_text_required": false,
+    "event_options": [],
+    "system_template": true,
+    "template_categories": [
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "60ccb0d7cd0c5b05515466e8"
+  },
+  {
+    "event_name": "Sample",
+    "event_value": "SAMPLE",
+    "event_free_text_required": true,
+    "event_options": [
+      {
+        "event_option_name": "Type",
+        "event_option_type": "radio buttons",
+        "event_option_values": [
+          "Heat Flow Probe Measurement",
+          "High Temp Measurement",
+          "Fluid Collection",
+          "Push Core",
+          "Water Sample",
+          "Rock Sample (Igneous)",
+          "Rock Sample (Sulfide-Sulfate)",
+          "Rock Sample (Carbonate)",
+          "Biology Sample",
+          "Colonization Array"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_name": "Sample ID",
+        "event_option_required": true,
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_values": [],
+        "event_option_default_value": ""
+      },
+      {
+        "event_option_name": "Storage Location",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "Niskin Bottle",
+          "Gas Tight",
+          "Major",
+          "Coral Quiver 1",
+          "Coral Quiver 2",
+          "Coral Quiver 3",
+          "Coral Quiver 4",
+          "Coral Quiver 5",
+          "Coral Quiver 6",
+          "Coral Quiver 7",
+          "Coral Quiver 8",
+          "Suction Sampler 1",
+          "Suction Sampler 2",
+          "Suction Sampler 3",
+          "Suction Sampler 4",
+          "Suction Sampler 5",
+          "Suction Sampler 6",
+          "Suction Sampler 7",
+          "Suction Sampler 8",
+          "Bio Box 3",
+          "Bio Box 4",
+          "Deployed"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "SCIENCE"
+    ],
+    "disabled": true,
+    "id": "5d949dc82afbd9049e0efd44"
+  },
+  {
+    "event_name": "Video Logging",
+    "event_value": "VIDEO LOGGING",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "Status",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "Start",
+          "End"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_default_value": "Start"
+      },
+      {
+        "event_option_name": "Camera",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "ALL",
+          "SCICAM",
+          "SITCAM",
+          "HDQUAD",
+          "SDQUAD",
+          "SCITOO",
+          "SITTOO"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": true,
+        "event_option_default_value": "ALL"
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "VIDEO",
+      "VEHICLE"
+    ],
+    "disabled": false,
+    "id": "5e372e6fb9e33d8c6c60fad4"
+  }
+]
