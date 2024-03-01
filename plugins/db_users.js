@@ -32,7 +32,7 @@ exports.plugin = {
         email: 'guest@notarealserver.com',
         password: await hashedPassword(''),
         last_login: new Date(),
-        roles: ['event_manager', 'event_logger', 'event_watcher'],
+        roles: ['event_logger', 'event_manager', 'event_watcher'],
         system_user: true,
         disabled: false,
         loginToken: randomAsciiString(20)
@@ -47,6 +47,30 @@ exports.plugin = {
         roles: ['cruise_manager', 'event_logger', 'event_manager', 'event_watcher', 'template_manager'],
         system_user: true,
         disabled: true,
+        loginToken: randomAsciiString(20)
+      },
+      {
+        _id: ObjectID('6409d1879c0ebf0120843e83')
+        username: 'mmt',
+        fullname: 'Multimedia Technician',
+        email: 'outreach@falkortoo.org',
+        password: await hashedPassword('Dragon2017'),
+        last_login: new Date(),
+        roles: ['admin', 'cruise_manager', 'event_logger', 'event_manager', 'event_watcher', 'template_manager'],
+        system_user: true,
+        disabled: false,
+        loginToken: randomAsciiString(20)
+      },
+      {
+        _id: ObjectID('652db12e825e0fc2f2247dc7'),
+        username: 'streamdeck',
+        fullname: 'streamdeck',
+        email: 'mt+streamdeck@falkortoo.org',
+        password: await hashedPassword('Dragon2017'),
+        last_login: new Date(),
+        roles: ['event_logger'],
+        system_user: true,
+        disabled: false,
         loginToken: randomAsciiString(20)
       }
     ];
