@@ -1,0 +1,123 @@
+[
+  {
+    "event_name": "CRUISE STATUS",
+    "event_value": "CRUISE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "Start of Cruise",
+          "Departed Port/Dock",
+          "Transiting",
+          "Arrived at working site",
+          "Leaving working site",
+          "Transiting to Port",
+          "Arrived at Dock/Port",
+          "Entering EEZ",
+          "Leaving EEZ",
+          "Other"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": true
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "cruise"
+    ],
+    "disabled": false,
+    "id": "5dac67d6a78d2f4ec028551e"
+  },
+  {
+    "event_name": "DATA LOGGING",
+    "event_value": "CRUISE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "OpenRVDAS",
+          "OpenVDM",
+          "Sealog ASNAP",
+          "POSMV Logging",
+          "Underway Sensors",
+          "MET Sensors",
+          "PAR Sensors",
+          "NAV Sensors",
+          "UHDAS"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "radio buttons",
+        "event_option_values": [
+          "Logging Started",
+          "Logging Stopped"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "cruise"
+    ],
+    "disabled": false,
+    "id": "5fb99470e81ec104f9d62eab"
+  },
+  {
+    "event_name": "PROBLEM",
+    "event_value": "PROBLEM",
+    "event_free_text_required": true,
+    "event_options": [
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "radio buttons",
+        "event_option_values": [
+          "ADCP-OS75",
+          "ADCP-WH300",
+          "CNAV-3050",
+          "CTD Winch",
+          "CTD",
+          "EA440",
+          "EA640",
+          "EC150",
+          "EK80",
+          "EM124",
+          "EM2040",
+          "EM712",
+          "Gravimeter",
+          "Magnetometer",
+          "MET Sensors",
+          "Other\npH",
+          "POSMV",
+          "ROV",
+          "ROV Winch",
+          "SBP29",
+          "Seawater Sensors",
+          "Science Utility Winch",
+          "Seapath380",
+          "Seawater System",
+          "Ship",
+          "SU90",
+          "USBL",
+          "XBT",
+          "NTP"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "cruise"
+    ],
+    "disabled": false,
+    "id": "5dac69f7a78d2f4ec0285521"
+  }
+]
