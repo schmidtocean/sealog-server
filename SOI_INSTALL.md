@@ -1,0 +1,63 @@
+# Installation Instructions
+
+## Installing for the first time
+
+### Create the mt user
+
+```
+adduser mt
+passwd mt
+sudo usermod -aG sudo mt
+```
+
+### Switch to the mt user and mt home dir
+```
+su mt
+cd
+```
+
+### Clone the repository
+
+```
+git clone -b soi https://github.com/schmidtocean/sealog-server.git
+```
+
+### Move installation to final installation location and cd to that directory
+
+##### For Sealog-Sub
+```
+sudo mv ~/sealog-server /opt/sealog-server-Sub
+cd /opt/sealog-server-Sub`
+```
+
+##### For Sealog-FKt
+```
+sudo mv ~/sealog-server /opt/sealog-server-FKt
+cd /opt/sealog-server-FKt`
+```
+
+### Run the installation script
+
+```
+./utils/install.sh
+```
+
+You will be asked which type of install (Sealog-Sub vs Sealog-FKt) and the target invironment (development vs production).  This script will install MongoDB, NodeJS and the python virtual env if not already installed.
+
+
+
+## Updating from repo
+
+To update an existing instance from the repo:
+```
+su mt
+cd /opt/sealog-server-Sub # or sealog-server-FKt
+./utils/install.sh
+```
+
+You will be asked the same questions as during the initial install.  BE SURE TO ANSWER THOSE QUESTIONS CORRECTLY.
+
+
+
+
+
