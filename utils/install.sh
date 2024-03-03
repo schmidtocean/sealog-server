@@ -136,7 +136,7 @@ cp "$install_dir/misc/python_sealog/settings_FKt.py" "$install_dir/misc/python_s
 cp "$install_dir/init_data/system_templates_FKt.json" "$install_dir/init_data/system_templates.json"
 
 
-# Continue with the commit
+# Continue with the merge
 exit 0
 EOF
 
@@ -193,6 +193,10 @@ user=mt
 autostart=false
 autorestart=false
 stopsignal=QUIT
+
+[group:sealog-FKt]
+programs=sealog-server-FKt,sealog-asnap-FKt,sealog-aux-data-influx-FKt,sealog-cruise-sync-FKt
+
 EOF
         sudo mv "$install_dir/sealog-server-FKt.conf" /etc/supervisor/conf.d
         ;;
@@ -249,7 +253,7 @@ cp "$install_dir/misc/influx_sealog/settings_Sub.py" "$install_dir/misc/influx_s
 cp "$install_dir/misc/python_sealog/settings_Sub.py" "$install_dir/misc/python_sealog/settings.py"
 cp "$install_dir/init_data/system_templates_Sub.json" "$install_dir/init_data/system_templates.json"
 
-# Continue with the commit
+# Continue with the merge
 exit 0
 EOF
 
@@ -336,6 +340,10 @@ user=mt
 autostart=false
 autorestart=false
 stopsignal=QUIT
+
+[group:sealog-Sub]
+programs=sealog-server-Sub,sealog-asnap-Sub,sealog-auto-actions-Sub,sealog-aux-data-influx-Sub,sealog-aux-data-framegrab-Sub
+
 EOF
         sudo mv "$install_dir/sealog-server-Sub.conf" /etc/supervisor/conf.d
         ;;
