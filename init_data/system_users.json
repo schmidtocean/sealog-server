@@ -1,0 +1,93 @@
+[
+  {
+    "username": "admin",
+    "fullname": "Admin",
+    "email": "admin@notarealserver.com",
+    "last_login": "2024-03-02T10:31:50.154Z",
+    "roles": [
+      "admin",
+      "cruise_manager",
+      "event_logger",
+      "event_manager",
+      "event_watcher",
+      "template_manager"
+    ],
+    "system_user": true,
+    "disabled": false,
+    "id": "5981f167212b348aed7fa9f5"
+  },
+  {
+    "username": "guest",
+    "fullname": "Guest",
+    "email": "guest@notarealserver.com",
+    "last_login": "2024-03-02T03:42:02.677Z",
+    "roles": [
+      "event_watcher"
+    ],
+    "system_user": true,
+    "disabled": false,
+    "id": "5981f167212b348aed7fb9f5"
+  },
+  {
+    "username": "mmt",
+    "fullname": "Multimedia Technician",
+    "email": "outreach@falkortoo.org",
+    "last_login": "2024-03-02T09:49:23.497Z",
+    "roles": [
+      "admin",
+      "cruise_manager",
+      "event_logger",
+      "event_manager",
+      "event_watcher",
+      "template_manager"
+    ],
+    "system_user": true,
+    "disabled": false,
+    "id": "6409d1879c0ebf0120843e83"
+  },
+  {
+    "username": "mt",
+    "fullname": "Marine Technician",
+    "email": "mt@soi-falkor.org",
+    "roles": [
+      "admin",
+      "cruise_manager",
+      "event_logger",
+      "event_manager",
+      "event_watcher",
+      "template_manager"
+    ],
+    "system_user": true,
+    "disabled": false,
+    "last_login": "2024-03-02T10:31:47.445Z",
+    "id": "63e38d02834d07476f3b60fc"
+  },
+  {
+    "username": "pi",
+    "fullname": "Primary Investigator",
+    "email": "pi@notarealserver.com",
+    "last_login": "2022-12-10T07:24:03.590Z",
+    "roles": [
+      "cruise_manager",
+      "event_logger",
+      "event_manager",
+      "event_watcher",
+      "template_manager"
+    ],
+    "system_user": true,
+    "disabled": true,
+    "id": "5981f167212b348aed7fc9f5"
+  },
+  {
+    "username": "streamdeck",
+    "fullname": "streamdeck",
+    "email": "mt+streamdeck@falkortoo.org",
+    "roles": [
+      "event_logger"
+    ],
+    "system_user": true,
+    "disabled": false,
+    "last_login": "2023-12-06T03:23:17.135Z",
+    "id": "652db12e825e0fc2f2247dc7"
+  }
+]

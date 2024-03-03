@@ -4,6 +4,8 @@ const {
   usersTable
 } = require('../config/db_constants');
 
+const init_data_filepath = './init_data/system_users.json';
+
 exports.plugin = {
   name: 'db_populate_users',
   dependencies: ['hapi-mongodb'],
@@ -11,69 +13,6 @@ exports.plugin = {
 
     const db = server.mongo.db;
     const ObjectID = server.mongo.ObjectID;
-
-    const init_data = [
-      {
-        _id: ObjectID('5981f167212b348aed7fa9f5'),
-        username: 'mt',
-        fullname: 'Marine Tech',
-        email: 'mt@falkortoo.org',
-        password: await hashedPassword('Dragon2017'),
-        last_login: new Date(),
-        roles: ['admin', 'cruise_manager', 'event_logger', 'event_manager', 'event_watcher', 'template_manager'],
-        system_user: true,
-        disabled: false,
-        loginToken: randomAsciiString(20)
-      },
-      {
-        _id: ObjectID('5981f167212b348aed7fb9f5'),
-        username: 'guest',
-        fullname: 'Guest',
-        email: 'guest@notarealserver.com',
-        password: await hashedPassword(''),
-        last_login: new Date(),
-        roles: ['event_logger', 'event_manager', 'event_watcher'],
-        system_user: true,
-        disabled: false,
-        loginToken: randomAsciiString(20)
-      },
-      {
-        _id: ObjectID('5981f167212b348aed7fc9f5'),
-        username: 'pi',
-        fullname: 'Primary Investigator',
-        email: 'pi@notarealserver.com',
-        password: await hashedPassword(''),
-        last_login: new Date(),
-        roles: ['cruise_manager', 'event_logger', 'event_manager', 'event_watcher', 'template_manager'],
-        system_user: true,
-        disabled: true,
-        loginToken: randomAsciiString(20)
-      },
-      {
-        _id: ObjectID('6409d1879c0ebf0120843e83')
-        username: 'mmt',
-        fullname: 'Multimedia Technician',
-        email: 'outreach@falkortoo.org',
-        password: await hashedPassword('Dragon2017'),
-        last_login: new Date(),
-        roles: ['admin', 'cruise_manager', 'event_logger', 'event_manager', 'event_watcher', 'template_manager'],
-        system_user: true,
-        disabled: false,
-        loginToken: randomAsciiString(20)
-      },
-      {
-        _id: ObjectID('652db12e825e0fc2f2247dc7'),
-        username: 'streamdeck',
-        fullname: 'streamdeck',
-        email: 'mt+streamdeck@falkortoo.org',
-        password: await hashedPassword('Dragon2017'),
-        last_login: new Date(),
-        roles: ['event_logger'],
-        system_user: true,
-        disabled: false,
-        loginToken: randomAsciiString(20)
-      }
-    ];
 
     console.log('Searching for Users Collection');
     const result = await db.listCollections({ name: usersTable }).toArray();
@@ -94,15 +33,48 @@ exports.plugin = {
       }
     }
 
+    let collection = null;
+    let modified_data = [];
     console.log('Creating Users Collection');
     try {
-      const collection = await db.createCollection(usersTable);
-      console.log('Populating Users Collection');
-      await collection.insertMany(init_data);
+      collection = await db.createCollection(usersTable);
     }
     catch (err) {
       console.log('CREATE ERROR:', err.code);
       throw (err);
     }
+
+    console.log('Populating Users Collection');
+    try {
+      const data = Fs.readFileSync(init_data_filepath, 'utf8');
+
+      const init_data = JSON.parse(data);
+      modified_data = init_data.map((user) => {
+
+        user._id = ObjectID(user.id);
+        delete user.id;
+
+        user.loginToken = randomAsciiString(20)
+
+        const passwd_str = (user.username === 'guest') ? '' :'Dragon2017'
+        user.password = await hashedPassword(passwd_str),
+
+        return user;
+      });
+
+    }
+    catch (err) {
+      console.error('READ ERROR event_templates.json file:', err.code);
+      throw (err);
+    }
+
+    try {
+      await collection.insertMany(modified_data);
+    }
+    catch (err) {
+      console.error('INSERT ERROR:', err.code);
+      throw (err);
+    }
   }
 };
+

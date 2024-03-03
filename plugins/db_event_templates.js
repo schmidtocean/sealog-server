@@ -53,6 +53,7 @@ exports.plugin = {
 
         template._id = ObjectID(template.id);
         delete template.id;
+
         return template;
       });
 
