@@ -49,15 +49,15 @@ exports.plugin = {
       const data = Fs.readFileSync(init_data_filepath, 'utf8');
 
       const init_data = JSON.parse(data);
-      modified_data = init_data.map((user) => {
+      modified_data = init_data.map(async (user) => {
 
         user._id = ObjectID(user.id);
         delete user.id;
 
-        user.loginToken = randomAsciiString(20)
+        user.loginToken = randomAsciiString(20);
 
-        const passwd_str = (user.username === 'guest') ? '' :'Dragon2017'
-        user.password = await hashedPassword(passwd_str),
+        const passwd_str = (user.username === 'guest') ? '' :'Dragon2017';
+        user.password = await hashedPassword(passwd_str);
 
         return user;
       });
