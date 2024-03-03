@@ -22,6 +22,50 @@ echo "Script directory is: $script_dir"
 install_dir="$(dirname "$script_dir")"
 echo "Install directory is: $install_dir"
 
+install_prereqs() {
+    echo "Installing prerequists"
+    sudo apt install gnupg wget apt-transport-https ca-certificates software-properties-common
+}
+
+install_mongo() {
+    which -s mongod
+    if [ ! -z $? ]; then
+        echo "Installing MongoDB"
+        curl -fsSL https://pgp.mongodb.com/server-6.0.asc |  sudo gpg -o /usr/share/keyrings/mongodb-server-6.0.gpg --dearmor
+        echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+        sudo apt-get update
+        sudo apt-get install mongodb-org
+        echo "Starting MongoDB"
+        sudo systemctl start mongod
+        echo "Configuring MongoDB to autostart at boot"
+        sudo systemctl enable mongod
+    fi
+}
+
+install_node() {
+
+    which -s nodejs
+    if [ ! -z $? ]; then
+        PWD=`pwd`
+        cd ~
+        echo "Installing NodeJS"
+        wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
+        nvm install --lts
+        sudo ln -s $HOME/.nvm/versions/node/v20.11.0/bin/npm /usr/local/bin/
+        sudo ln -s $HOME/.nvm/versions/node/v20.11.0/bin/node /usr/local/bin/
+
+        cd $PWD
+    fi
+}
+
+setup_python_venv() {
+    if [ ! -d $install_dir/venv ]; then
+        #TODO Install python3-venv if missing
+        echo "Creating python virtual environment"
+        python3 -m venv $install_dir/venv
+    fi
+}
+
 cd $install_dir
 
 if [ ! -d venv ]; then
@@ -321,6 +365,10 @@ case $choice in
 
     # ;;
 esac
+
+install_prereqs
+install_node
+setup_python_venv
 
 echo "Setup Sealog config files"
 .git/hooks/post-merge
