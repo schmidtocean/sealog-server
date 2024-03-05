@@ -18,7 +18,7 @@ su mt
 cd
 ```
 
-### Clone the repository
+### Clone the "soi" branch of the schmidtocean/sealog-server repository
 
 ```
 git clone -b soi https://github.com/schmidtocean/sealog-server.git
