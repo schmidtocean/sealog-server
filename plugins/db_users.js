@@ -1,3 +1,4 @@
+const Fs = require('fs');
 const { randomAsciiString, hashedPassword } = require('../lib/utils');
 
 const {
@@ -56,7 +57,7 @@ exports.plugin = {
 
         user.loginToken = randomAsciiString(20);
 
-        const passwd_str = (user.username === 'guest') ? '' :'Dragon2017';
+        const passwd_str = (user.username === 'guest') ? '' : 'Dragon2017';
         user.password = await hashedPassword(passwd_str);
 
         return user;

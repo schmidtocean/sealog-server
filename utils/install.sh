@@ -44,9 +44,8 @@ install_mongo() {
 
 install_node() {
 
-    which node > /dev/null
-    if [ ! -z $? ]; then
-        NODE_INSTALL_PWD=`pwd`.
+    if [ ! -f /usr/local/bin/node ]; then
+        NODE_INSTALL_PWD=`pwd`
         cd ~
         echo "Installing NodeJS"
         wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash

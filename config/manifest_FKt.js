@@ -101,7 +101,7 @@ const mongodb_URL = process.env.MONGO_URL || 'mongodb://localhost:27017/' + proc
 const manifest = {
   server: {
     host: envKey('host'),
-    port: envKey('port'),
+    port,
     // tls: tlsOptions,
     routes: {
       cors: true
@@ -187,7 +187,7 @@ const manifest = {
       { plugin: './plugins/db_users', options: {} },
       { plugin: 'hapi-pino',
         options: {
-          logRequestComplete: env !== 'production',
+          logRequestComplete: process.env.NODE_ENV !== 'production',
           redact: ['req.headers.authorization']
         }
       },
