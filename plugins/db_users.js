@@ -19,7 +19,7 @@ exports.plugin = {
     const result = await db.listCollections({ name: usersTable }).toArray();
 
     if (result.length) {
-      if (process.env.NODE_ENV !== 'development') {
+      if (process.env.NODE_ENV === 'production') {
         console.log('Users Collection already exists... we\'re done here.');
         return;
       }
@@ -50,9 +50,8 @@ exports.plugin = {
       const data = Fs.readFileSync(init_data_filepath, 'utf8');
 
       const init_data = JSON.parse(data);
-      modified_data = init_data.map(async (user) => {
-
-        user._id = ObjectID(user.id);
+      await init_data.forEach(async (user) => {
+	user._id = ObjectID(user.id);
         delete user.id;
 
         user.loginToken = randomAsciiString(20);
@@ -60,9 +59,8 @@ exports.plugin = {
         const passwd_str = (user.username === 'guest') ? '' : 'Dragon2017';
         user.password = await hashedPassword(passwd_str);
 
-        return user;
+        modified_data.push(user);
       });
-
     }
     catch (err) {
       console.error('READ ERROR event_templates.json file:', err.code);
