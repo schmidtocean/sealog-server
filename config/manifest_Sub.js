@@ -96,7 +96,8 @@ const envKey = (key) => {
   return configuration[env][key];
 };
 
-const mongodb_URL = process.env.MONGO_URL || 'mongodb://localhost:27017/' + process.env.SEALOG_DB_NAME || envKey('db');
+const db = process.env.SEALOG_DB_NAME || envKey('db');
+const mongodb_URL = process.env.MONGO_URL || 'mongodb://localhost:27017/' + db;
 
 const manifest = {
   server: {
@@ -187,7 +188,7 @@ const manifest = {
       { plugin: './plugins/db_users', options: {} },
       { plugin: 'hapi-pino',
         options: {
-          logRequestComplete: process.env.NODE_ENV !== 'production',
+          logRequestComplete: env !== 'production',
           redact: ['req.headers.authorization']
         }
       },

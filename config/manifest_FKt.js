@@ -188,7 +188,7 @@ const manifest = {
       { plugin: './plugins/db_users', options: {} },
       { plugin: 'hapi-pino',
         options: {
-          logRequestComplete: process.env.NODE_ENV !== 'production',
+          logRequestComplete: env !== 'production',
           redact: ['req.headers.authorization']
         }
       },
