@@ -7,6 +7,8 @@ const {
 
 const init_data_filepath = './init_data/system_users.json';
 
+const default_passwd = process.env.SEALOG_DEFAULT_PASSWD || 'demo';
+
 exports.plugin = {
   name: 'db_populate_users',
   dependencies: ['hapi-mongodb'],
@@ -56,7 +58,7 @@ exports.plugin = {
 
         user.loginToken = randomAsciiString(20);
 
-        const passwd_str = (user.username === 'guest') ? '' : 'Dragon2017';
+        const passwd_str = (user.username === 'guest') ? '' : default_passwd;
         user.password = await hashedPassword(passwd_str);
 
         modified_data.push(user);
