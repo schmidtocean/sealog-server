@@ -1,21 +1,27 @@
 #!/usr/bin/env python3
 '''
-FILE:           sealog_aux_data_inserter.py
+FILE:           sealog_auto_actions.py
 
-DESCRIPTION:    This service listens for new events submitted to Sealog, creates
-                an aux_data record containing the specified real-time data and
-                associates the aux data record with the newly created event.
-                However if the realtime data is older than 20 seconds this service
-                will consider the data stale and will not associate it with the
-                newly created event.
+DESCRIPTION:    This service listens for new events submitted to Sealog and
+                performs additional actions depending on the recieved event.
+
+                This service listens for "Start of Cruise" and "Arrived at
+                Dock/Port" status and enables/disables the ASNAP functionality
+                and if a lowering is currently active it will set the start/
+                stop time to the time of the event.
+
+                This service listens for "On bottom" and "Off bottom" status
+                and if a lowering is currently active it will set the
+                lowering_on_bottom/lowering_off_bottom statu times to the time
+                of the event.
 
 BUGS:
 NOTES:
 AUTHOR:     Webb Pinner
 COMPANY:    OceanDataTools.org
 VERSION:    1.0
-CREATED:    2020-01-27
-REVISION:   2022-02-13
+CREATED:    2018-09-26
+REVISION:   2024-03-30
 
 LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for details)
                 Copyright (C) OceanDataTools.org 2024
@@ -24,36 +30,24 @@ LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for det
 import sys
 import asyncio
 import json
-import time
 import logging
-from datetime import datetime, timedelta
+import time
 import requests
 import websockets
-from pymongo import MongoClient
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
 
-from misc.python_sealog.settings import API_SERVER_URL, WS_SERVER_URL, EVENT_AUX_DATA_API_PATH, HEADERS
+from misc.python_sealog.custom_vars import get_custom_var_uid_by_name, set_custom_var
+from misc.python_sealog.events import get_events_by_lowering
+from misc.python_sealog.lowerings import get_lowering_by_event
+from misc.python_sealog.settings import API_SERVER_URL, WS_SERVER_URL, HEADERS, EVENTS_API_PATH, LOWERINGS_API_PATH
 
-# Names of the appropriate mongoDB database and collection containing the desired real-time data.
-DATABASE = 'sealog_udp_cache'
-COLLECTION = 'udpData'
+ASNAP_STATUS_VAR_NAME = 'asnapStatus'
 
-# Unique label of the record in the DATABASE.COLLECTION containing the desired real-time data
-RECORD_LABEL = "testData"
+INCLUDE_SET = ('CRUISE')
 
-# The data_source to use for the auxData records
-AUX_DATA_DATASOURCE = 'realtimeTestData'
-
-# time afterwhich realtime data is considered stale
-THRESHOLD = 20 # seconds
-
-# set of events to ignore
-EXCLUDE_SET = ()
-
-
-CLIENT_WSID = 'aux_data_inserter_' + AUX_DATA_DATASOURCE # needs to be unique for all currently active dataInserter scripts.
+CLIENT_WSID = 'autoActions'
 
 HELLO = {
     'type': 'hello',
@@ -62,7 +56,7 @@ HELLO = {
         'headers': HEADERS
     },
     'version': '2',
-    'subs': ['/ws/status/newEvents']
+    'subs': ['/ws/status/newEvents', '/ws/status/updateEvents']
 }
 
 PING = {
@@ -70,43 +64,53 @@ PING = {
     'id':CLIENT_WSID
 }
 
+ASNAP_LOOKUP = {
+    'Start of Cruise': 'On',
+    'Arrived at Dock/Port': 'Off'
+}
 
-def aux_data_record_builder(event, record):
+def _handle_vessel_event(event):
     '''
-    Build the aux_data record using the new event and real-time data record
+    The function handle auto actions for the VEHICLE event_value.  It uses the
+    included event_options to set the lowering start/stop times, ASNAP status
+    and dive milestones.
     '''
 
-    if not record:
-        return None
+    status = None
 
-    aux_data_record = {
-        'event_id': event['id'],
-        'data_source': AUX_DATA_DATASOURCE,
-        'data_array': []
-    }
+    # if event has status event_option, pass status to _set_asnap and _set_statuss
+    for option in event['event_options']:
+        if option['event_option_name'] == "status":
+            status = option['event_option_value']
+            break
 
-    for key, value in record['data'].items():
-        aux_data_record['data_array'].append({ 'data_name': key,'data_value': value, 'data_uom': '??' })
+    if status is not None:
+        _set_asnap(status)
+        
 
-    logging.debug("Aux Data Record:\n%s", json.dumps(aux_data_record, indent=2))
-
-    if len(aux_data_record['data_array']) == 0:
-        return None
-
-    return aux_data_record
-
-
-async def aux_data_inserter():
+def _set_asnap(evt_status):
     '''
-    Connect to the websocket feed for new events.  When new events arrive,
-    build aux_data records and submit them to the sealog-server.
+    Sets the ASNAP status variable based on the evt_status
+    '''
+
+    # if evt_status not in ASNAP_LOOKUP, return
+    if evt_status not in ASNAP_LOOKUP:
+        return
+
+    # Get the UID for the ASNAP custom_var
+    asnap_status_var_uid = get_custom_var_uid_by_name(ASNAP_STATUS_VAR_NAME)
+
+    logging.info("Setting ASNAP to %s", ASNAP_LOOKUP[evt_status])
+    set_custom_var(asnap_status_var_uid, ASNAP_LOOKUP[evt_status])
+
+
+async def auto_actions(): #pylint: disable=too-many-branches, too-many-statements
+    '''
+    Listen to the new and updated events and respond as instructed based on the
+    event and it's options
     '''
 
     try:
-
-        # establish database connection
-        client = MongoClient()
-        collection = client[DATABASE][COLLECTION]
 
         async with websockets.connect(WS_SERVER_URL) as websocket:
 
@@ -114,63 +118,26 @@ async def aux_data_inserter():
 
             while True:
 
-                event = await websocket.recv()
-                event_obj = json.loads(event)
+                msg = await websocket.recv()
+                msg_obj = json.loads(msg)
 
-                if event_obj['type'] and event_obj['type'] == 'ping':
+                if msg_obj['type'] and msg_obj['type'] == 'ping':
                     await websocket.send(json.dumps(PING))
 
-                elif event_obj['type'] and event_obj['type'] == 'pub':
+                elif msg_obj['type'] and msg_obj['type'] == 'pub':
 
-                    if event_obj['message']['event_value'] in EXCLUDE_SET:
-                        logging.debug("Skipping because event value is in the exclude set")
+                    event = msg_obj['message']
+                    logging.debug("Event: \n%s", json.dumps(event, indent=2))
+
+                    if event['event_value'] not in INCLUDE_SET:
+                        logging.debug("Skipping because event value is not in the include set")
                         continue
 
-                    if datetime.strptime(event_obj['message']['ts'], '%Y-%m-%dT%H:%M:%S.%fZ') < datetime.utcnow()-timedelta(seconds=THRESHOLD):
-                        logging.debug("Skipping because event ts is older than thresold")
-                        continue
-
-                    try:
-                        record = collection.find_one({"label": RECORD_LABEL})
-
-                        logging.debug("Record from database:\n%s", json.dumps(record['data'], indent=2))
-
-                        if not record:
-                            logging.error("No data record found in %s.%s with a label of %s", DATABASE, COLLECTION, RECORD_LABEL )
-                            continue
-
-                        if not 'updated' in record:
-                            logging.error("Data record must contain and 'updated' field containing a datetime object of when the data was last updated")
-                            continue
-
-                        if record['updated'] < datetime.utcnow()-timedelta(seconds=THRESHOLD):
-                            logging.debug("Data record is considered stale, skipping")
-                            continue
-
-                    except Exception as error:
-                        logging.error("Error retrieving auxData record")
-                        logging.debug(str(error))
-                        continue
-
-                    aux_data_record = aux_data_record_builder(event_obj['message'], record)
-
-                    if not aux_data_record:
-                        logging.debug("Skipping because there's no data to add")
-                        continue
-
-                    try:
-                        logging.debug("Submitting AuxData record to Sealog Server")
-                        req = requests.post(API_SERVER_URL + EVENT_AUX_DATA_API_PATH, headers=HEADERS, data = json.dumps(aux_data_record))
-                        logging.debug("Response: %s", req.text)
-
-                    except Exception as error:
-                        logging.error("Error submitting auxData record")
-                        logging.debug(str(error))
-                        raise error
+                    _handle_vessel_event(event)
 
     except Exception as error:
         logging.error(str(error))
-        raise error
+
 
 # -------------------------------------------------------------------------------------
 # Required python code for running the script as a stand-alone utility
@@ -180,7 +147,7 @@ if __name__ == '__main__':
     import argparse
     import os
 
-    parser = argparse.ArgumentParser(description='Aux Data Inserter Service - ' + AUX_DATA_DATASOURCE)
+    parser = argparse.ArgumentParser(description='Auto-Actions Service')
     parser.add_argument('-v', '--verbosity', dest='verbosity',
                         default=0, action='count',
                         help='Increase output verbosity')
@@ -205,8 +172,8 @@ if __name__ == '__main__':
         time.sleep(5)
 
         try:
-            logging.debug("Connecting to event websocket feed...")
-            asyncio.get_event_loop().run_until_complete(aux_data_inserter())
+            logging.debug("Listening to event websocket feed...")
+            asyncio.get_event_loop().run_until_complete(auto_actions())
         except KeyboardInterrupt:
             logging.error('Keyboard Interrupted')
             try:
