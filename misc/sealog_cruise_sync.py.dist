@@ -56,12 +56,12 @@ SEALOG_SERVER_INSTANCES = [
 ]
 
 
-def update_cruise_record(cruise_record):
+def update_cruise_record(cruise_record, server_instances):
     '''
     Update the cruise record on the other sealog-servers
     '''
 
-    for instance in SEALOG_SERVER_INSTANCES:
+    for instance in server_instances:
         # check to see if a cruise record with the cruiseID in cruise_record already exists
 
         instance_headers = {
@@ -121,7 +121,7 @@ def update_cruise_record(cruise_record):
 # -------------------------------------------------------------------------------------
 # The main loop of the utility
 # -------------------------------------------------------------------------------------
-async def cruise_sync():
+async def cruise_sync(server_instances):
     '''
     Listen to the newCruise and updateCruise subscriptions and call
     update_cruise_record whenever there is a change.
@@ -165,6 +165,8 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbosity', dest='verbosity',
                                             default=0, action='count',
                                             help='Increase output verbosity')
+    parser.add_argument('-f', '--server_instance_file',
+                                            help='use the specifed server instance file')
 
     parsed_args = parser.parse_args()
 
@@ -179,9 +181,23 @@ if __name__ == '__main__':
     parsed_args.verbosity = min(parsed_args.verbosity, max(LOG_LEVELS))
     logging.getLogger().setLevel(LOG_LEVELS[parsed_args.verbosity])
 
+    server_instances = []
+
+    if parsed_args.server_instance_file:
+
+        try:
+            with open(parsed_args.server_instance_file) as file:
+                server_instances = json.load(file)
+
+        except:
+            logging.error("Could not load server configurations from file")
+            sys.exit(1)
+    else:
+        server_instances = SEALOG_SERVER_INSTANCES
+
     # Run the main loop
     try:
-        asyncio.get_event_loop().run_until_complete(cruise_sync())
+        asyncio.get_event_loop().run_until_complete(cruise_sync(server_instances))
     except KeyboardInterrupt:
         print('Interrupted')
         try:

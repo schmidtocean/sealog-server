@@ -90,9 +90,6 @@ def _handle_vehicle_event(event):
     and dive milestones.
     '''
 
-    if event['event_value'] != 'VEHICLE':
-        return
-
     milestone = None
 
     # if event has milestone event_option, pass milestone to _set_asnap and _set_milestones
