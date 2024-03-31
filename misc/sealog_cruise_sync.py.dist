@@ -189,7 +189,7 @@ if __name__ == '__main__':
             with open(parsed_args.server_instance_file) as file:
                 server_instances = json.load(file)
 
-        except:
+        except Exception as err:
             logging.error("Could not load server configurations from file")
             sys.exit(1)
     else:
