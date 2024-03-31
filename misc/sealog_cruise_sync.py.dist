@@ -58,7 +58,7 @@ SEALOG_SERVER_INSTANCES = [
 
 def update_cruise_record(cruise_record, server_instances):
     '''
-    Update the cruise record on the other sealog-servers
+    Update the cruise record on the other sealog-servers/
     '''
 
     for instance in server_instances:
@@ -145,7 +145,7 @@ async def cruise_sync(server_instances):
 
                     logging.debug(json.dumps(cruise_obj, indent=2))
                     logging.info("Updating cruise record on other sealog instances")
-                    update_cruise_record(cruise_obj['message'])
+                    update_cruise_record(cruise_obj['message'], server_instances)
 
                 else:
                     logging.debug("Skipping because cruise value is in the exclude set")
