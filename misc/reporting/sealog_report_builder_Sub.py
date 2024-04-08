@@ -483,6 +483,7 @@ class CruiseReportCreator: # pylint: disable=too-many-instance-attributes,too-fe
             watch_change_events = get_events_by_lowering(lowering['id'],event_filter=['WATCH CHANGE'], export_format='csv')
             
             if not watch_change_events:
+                logging.warning("No WATCH CHANGE events captured, can't build watch change table.")
                 continue
 
             # load data into dataframe
@@ -1956,7 +1957,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
         
         watch_change_data = self.lowering_data[idx,:]
         
-        if len(watch_change_data) == 0:
+        if not watch_change_data:
             logging.warning("No WATCH CHANGE events captured, can't build watch change table.")
             return None
 
@@ -2011,7 +2012,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
 
         watch_change_data = self.lowering_data[idx,:]
 
-        if len(watch_change_data) == 0:
+        if not watch_change_data:
             logging.warning("No WATCH CHANGE events captured, can't build watch change chart.")
             return None
 
@@ -2110,7 +2111,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
 
         watch_change_data = self.lowering_data[idx,:]
 
-        if len(watch_change_data) == 0:
+        if not watch_change_data:
             logging.warning("No WATCH CHANGE events captured, can't build watch sumary table.")
             return None
 
