@@ -11,10 +11,10 @@ AUTHOR:     Webb Pinner
 COMPANY:    OceanDataTools.org
 VERSION:    1.0
 CREATED:    2021-04-21
-REVISION:   2021-04-27
+REVISION:   2023-07-21
 
 LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for details)
-                Copyright (C) OceanDataTools.org 2024
+                Copyright (C) OceanDataTools.org 2023
 '''
 
 import os
@@ -33,6 +33,13 @@ class FileCropUtility():
         self.delimiter = delimiter
         self.dt_format = dt_format
         self.header = header
+        self._header_str = None
+
+
+    @property
+    def header_str(self):
+        return self._header_str
+    
 
     def cull_files(self, data_files):
         '''
@@ -51,7 +58,8 @@ class FileCropUtility():
             with open( data_file, 'rb' ) as file :
 
                 if self.header:
-                    _ = file.readline()
+                    self._header_str = file.readline().decode()
+                    self._header_str = self._header_str or header_str
 
                 first_line = file.readline().decode().rstrip('\n')
                 try:
@@ -94,29 +102,44 @@ class FileCropUtility():
         timestamps.
         '''
 
+        header_sent = not self.header
+
         logging.info("Cropping file data")
 
         if not isinstance(data_files, list):
             data_files = [data_files]
 
-        for data_file in data_files:
-            logging.debug("File: %s", data_file)
-            with open( data_file, 'r' ) as file :
-                while True:
-                    line_str = file.readline()
+        while True:
 
-                    if not line_str:
-                        break
+            # send header
+            if not header_sent:
+                header_sent = True
+                yield self._header_str
 
-                    try:
-                        line_ts = datetime.strptime(line_str.split(self.delimiter)[0],self.dt_format)
+            for idx, data_file in enumerate(data_files):
+                logging.debug("File: %s", data_file)
 
-                    except Exception as err:
-                        logging.warning("Could not process line: %s", line_str)
-                        logging.debug(str(err))
+                with open( data_file, 'r' ) as file:
 
-                    else:
+                    if self.header:
+                        _ = file.readline()
 
-                        if (line_ts - self.start_dt).total_seconds() >= 0 and (self.stop_dt - line_ts).total_seconds() >= 0:
-                            yield line_str
+                    while True:
+                        line_str = file.readline()
 
+                        if not line_str:
+                            break
+
+                        try:
+                            line_ts = datetime.strptime(line_str.split(self.delimiter)[0],self.dt_format)
+
+                        except Exception as err:
+                            logging.warning("Could not process line: %s", line_str)
+                            logging.debug(str(err))
+
+                        else:
+
+                            if (line_ts - self.start_dt).total_seconds() >= 0 and (self.stop_dt - line_ts).total_seconds() >= 0:
+                                yield line_str
+
+            break

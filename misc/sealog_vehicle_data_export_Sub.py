@@ -513,7 +513,7 @@ def _build_cruise_reports(cruise):
     except Exception as err:
         logging.error("Unable to build report")
         logging.debug(str(err))
-
+        raise(err)
 
 def _build_lowering_reports(cruise, lowering): #pylint: disable=redefined-outer-name
     '''
@@ -535,6 +535,7 @@ def _build_lowering_reports(cruise, lowering): #pylint: disable=redefined-outer-
     except Exception as err:
         logging.error("Unable to build report")
         logging.error(str(err))
+        raise(err)
 
     vehicle_report_filename = cruise['cruise_id'] + '_' + lowering['lowering_id'] + '_Vehicle_Report.pdf'
     logging.info("Building Lowering Vehicle Report: %s", vehicle_report_filename)
@@ -547,7 +548,7 @@ def _build_lowering_reports(cruise, lowering): #pylint: disable=redefined-outer-
     except Exception as err:
         logging.error("Unable to build report")
         logging.error(str(err))
-
+        raise(err)
 
 def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-name
     '''

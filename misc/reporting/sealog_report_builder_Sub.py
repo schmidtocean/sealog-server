@@ -1957,7 +1957,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
         
         watch_change_data = self.lowering_data[idx,:]
         
-        if not watch_change_data:
+        if watch_change_data.size == 0:
             logging.warning("No WATCH CHANGE events captured, can't build watch change table.")
             return None
 
@@ -2012,7 +2012,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
 
         watch_change_data = self.lowering_data[idx,:]
 
-        if not watch_change_data:
+        if watch_change_data.size == 0 :
             logging.warning("No WATCH CHANGE events captured, can't build watch change chart.")
             return None
 
@@ -2111,7 +2111,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
 
         watch_change_data = self.lowering_data[idx,:]
 
-        if not watch_change_data:
+        if watch_change_data.size == 0:
             logging.warning("No WATCH CHANGE events captured, can't build watch sumary table.")
             return None
 
@@ -2234,20 +2234,17 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
 
         idx=(self.lowering_data[:,self.lowering_data_headers.index( 'event_value' )] == "PROBLEM")
 
-        logging.warning("Here")
         problem_data = self.lowering_data[idx,:]
 
-        if not problem_data:
+        if problem_data.size == 0:
             logging.warning("No PROBLEM events captured, can't build problem table.")
             return list()
 
-        logging.warning("Here 2")
         problem_tables = []
 
 
         for row in range(len(problem_data)):
 
-            logging.warning("Here 3")
 
             problem_table_data = [
                 [
