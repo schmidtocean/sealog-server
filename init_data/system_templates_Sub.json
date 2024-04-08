@@ -25,6 +25,7 @@
           "Kaarel",
           "Koko",
           "Kris",
+          "Leo",
           "Mike",
           "Nick",
           "Russ",
@@ -41,6 +42,7 @@
         "event_option_type": "dropdown",
         "event_option_values": [
           "Adam",
+          "Andy",
           "Alex",
           "Ben",
           "Claude",
@@ -51,6 +53,7 @@
           "JRod",
           "C.Hill",
           "Kris",
+          "Leo",
           "Mike",
           "Nick",
           "Russ",
@@ -381,7 +384,15 @@
           "Alpha",
           "Bravo",
           "Delta",
-          "Echo"
+          "Echo",
+          "Fox",
+          "Golf",
+          "Hotel",
+          "India",
+          "Juliet",
+          "Kilo",
+          "Lima",
+          "Mike"
         ],
         "event_option_allow_freeform": false,
         "event_option_required": true
@@ -429,7 +440,8 @@
         "event_option_name": "Platform",
         "event_option_values": [
           "Youtube",
-          "Facebook"
+          "Facebook",
+          "Twich"
         ],
         "event_option_allow_freeform": false,
         "event_option_required": true

@@ -17,6 +17,7 @@
           "Arrived at Dock/Port",
           "Entering EEZ",
           "Leaving EEZ",
+          "End of Cruise",
           "Other"
         ],
         "event_option_allow_freeform": false,
@@ -29,6 +30,184 @@
     ],
     "disabled": false,
     "id": "5dac67d6a78d2f4ec028551e"
+  },
+  {
+    "event_name": "CTD Operation",
+    "event_value": "CTD",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "static text",
+        "event_option_default_value": "CTD",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "checkboxes",
+        "event_option_default_value": "",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": [
+          "CTD Deployed",
+          "CTD Recovered"
+        ]
+      },
+      {
+        "event_option_name": "Cast Number",
+        "event_option_type": "text",
+        "event_option_required": true,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Beacon",
+        "event_option_type": "radio buttons",
+        "event_option_values": [
+          "Alpha",
+          "Bravo",
+          "Delta",
+          "Echo",
+          "Fox",
+          "Golf",
+          "Hotel",
+          "India"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "ctd"
+    ],
+    "disabled": false,
+    "id": "5efdf5e54928d32b2a4fd40a"
+  },
+  {
+    "event_name": "CTD PROBLEM",
+    "event_value": "PROBLEM",
+    "event_free_text_required": true,
+    "event_options": [
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "static text",
+        "event_option_default_value": "CTD",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "ctd"
+    ],
+    "disabled": false,
+    "id": "5efdf7524928d32b2a4fd411"
+  },
+  {
+    "event_name": "CTD Tow-Yo",
+    "event_value": "CTD Tow-Yo",
+    "system_template": true,
+    "disabled": false,
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "Activity",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "at Top",
+          "at Bottom",
+          "Bottle Fired"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_name": "USBL LAT",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "USBL LON",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "CTD Depth",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "CTD Altitude",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Wire Out",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "ORP",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "LSS",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "template_categories": [
+      "ctd"
+    ],
+    "id": "640b412b9fdf3e2dbea2cf24"
+  },
+  {
+    "event_name": "CTD WINCH PROBLEM",
+    "event_value": "PROBLEM",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "text",
+        "event_option_default_value": "",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "static text",
+        "event_option_default_value": "CTD WINCH",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "ctd"
+    ],
+    "disabled": false,
+    "id": "5efdf89e4928d32b2a4fd41b"
   },
   {
     "event_name": "DATA LOGGING",
@@ -71,6 +250,358 @@
     "id": "5fb99470e81ec104f9d62eab"
   },
   {
+    "event_name": "EQUIPMENT",
+    "event_value": "EQUIPMENT",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "SSP",
+          "USBL",
+          "CTD",
+          "Buoy",
+          "AUV",
+          "UAV",
+          "Sediment Grab",
+          "Drifter",
+          "Float",
+          "Lander",
+          "Magnetometer"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "Deployed",
+          "Recovered",
+          "Problem",
+          "On Seafloor",
+          "Data Logging Started",
+          "Data Logging Stopped"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "Beacon",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "Alpha",
+          "Bravo",
+          "Charlie",
+          "Delta",
+          "Echo",
+          "Foxtrot",
+          "Golf",
+          "Hotel",
+          "India",
+          "Juliet",
+          "Kilo",
+          "Mike",
+          "November"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "EQUIPMENT"
+    ],
+    "disabled": false,
+    "id": "5f9f5e69e81ec104f9d62d83"
+  },
+  {
+    "event_name": "LANDER",
+    "event_value": "EQUIPMENT",
+    "system_template": true,
+    "disabled": false,
+    "template_categories": [
+      "EQUIPMENT",
+      "LANDER"
+    ],
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "SOI Lander",
+          "MISO Lander",
+          "Other Lander"
+        ],
+        "event_option_default_value": "SOI Lander",
+        "event_option_required": false,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "Deployed",
+          "Problem",
+          "On Seafloor",
+          "Data Logging Started",
+          "Data Logging Stopped",
+          "Off Seafloor",
+          "On Surface",
+          "Recovered"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "Beacon",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "Alpha",
+          "Bravo",
+          "Charlie",
+          "Delta",
+          "Echo",
+          "Foxtrot",
+          "Golf",
+          "Hotel",
+          "India",
+          "Juliet",
+          "Kilo",
+          "Mike",
+          "November"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_type": "text",
+        "event_option_name": "Payload Weight",
+        "event_option_default_value": "16kg",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Ballast Weight",
+        "event_option_type": "text",
+        "event_option_default_value": "39.5kg",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Drop Weight",
+        "event_option_type": "text",
+        "event_option_default_value": "71.1kg",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Decent Weight",
+        "event_option_type": "text",
+        "event_option_default_value": "64.5kg",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Descent Wire Length",
+        "event_option_type": "text",
+        "event_option_default_value": "10m",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Observed Descent Speed",
+        "event_option_type": "text",
+        "event_option_default_value": "",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_type": "text",
+        "event_option_name": "Observed Ascent Speed",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": [],
+        "event_option_default_value": ""
+      }
+    ],
+    "id": "659ef41ddc7028b246f711d9"
+  },
+  {
+    "event_name": "Maintenance",
+    "event_value": "MAINTENANCE",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "ADCP-OS38",
+          "ADCP-OS75",
+          "ADCP-WH300",
+          "Computers",
+          "CTD Winch",
+          "EA440",
+          "EA640",
+          "EC150",
+          "EK80",
+          "EM124",
+          "EM2040",
+          "EM712",
+          "Light Sensors",
+          "Magnetometer",
+          "MET Sensors",
+          "Other",
+          "SBP29",
+          "Science Utility Winch",
+          "Seawater Sensors",
+          "SU90",
+          "Underway Sensors",
+          "USBL",
+          "XBT"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "MAINTENANCE"
+    ],
+    "disabled": false,
+    "id": "5ffe86d544f457051022eb40"
+  },
+  {
+    "event_name": "Mapping Highlight",
+    "event_value": "SONAR",
+    "system_template": true,
+    "disabled": false,
+    "template_categories": [
+      "sonar",
+      "observation",
+      "science"
+    ],
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "Type of feature",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "Bathymetric",
+          "Sub-Bottom",
+          "Watercolumn"
+        ],
+        "event_option_default_value": "Bathymetric",
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_name": "Echosounder",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "EM124",
+          "EM712",
+          "EM2040",
+          "SBP29",
+          "EK80"
+        ],
+        "event_option_default_value": "EM124",
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_name": "Feature Description",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "Seamount",
+          "Canyon",
+          "Seep",
+          "Biomass",
+          "Other(describe below)"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      }
+    ],
+    "id": "6605bae471e228b468d806f7"
+  },
+  {
+    "event_name": "NAVIGATION ERROR",
+    "event_value": "NAVIGATION",
+    "system_template": true,
+    "disabled": false,
+    "template_categories": [
+      "NAVIGATION",
+      "sonar",
+      "ROV"
+    ],
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "Equipment",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "Posmv",
+          "Seapath",
+          "DPS122"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_name": "Event",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "Problem",
+          "Event",
+          "Corrections Loss"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_name": "Estimated Position Jump",
+        "event_option_type": "radio buttons",
+        "event_option_values": [
+          "<1m",
+          "1-5m",
+          "6-10m",
+          "11-50m",
+          "51- 100m",
+          ">100m"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "How mad is the bridge?",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "mad",
+          "very mad"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      }
+    ],
+    "id": "65fbdbe3a38d7c0be6192e8e"
+  },
+  {
     "event_name": "PROBLEM",
     "event_value": "PROBLEM",
     "event_free_text_required": true,
@@ -93,6 +624,7 @@
           "EM712",
           "Gravimeter",
           "Magnetometer",
+          "Jimbo",
           "MET Sensors",
           "Other\npH",
           "POSMV",
@@ -119,5 +651,701 @@
     ],
     "disabled": false,
     "id": "5dac69f7a78d2f4ec0285521"
+  },
+  {
+    "event_name": "ROV",
+    "event_value": "ROV",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "Deployed",
+          "Recovered",
+          "Problem"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "Dive Number",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Beacon",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "Alpha",
+          "Bravo",
+          "Charlie",
+          "Delta",
+          "Echo",
+          "Foxtrot",
+          "Golf",
+          "Hotel",
+          "India",
+          "Juliet",
+          "Kilo",
+          "Mike",
+          "November"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "ROV"
+    ],
+    "disabled": false,
+    "id": "5f9f612be81ec104f9d62d8a"
+  },
+  {
+    "event_name": "SEAWATER SYSTEM",
+    "event_value": "SEAWATER",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "checkboxes",
+        "event_option_default_value": "",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": [
+          "Seawater strainers cleaned",
+          "Problem",
+          "Started",
+          "Stopped"
+        ]
+      },
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "SBE45_1",
+          "SBE38_1",
+          "FLUOR_1",
+          "PH_1",
+          "XMISS_1",
+          "SBE45_2",
+          "SBE38_2",
+          "FLUOR_2",
+          "PH_2",
+          "XMISS_2"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "seawater"
+    ],
+    "disabled": false,
+    "id": "5efdfcbf4928d32b2a4fd424"
+  },
+  {
+    "event_name": "SIS RESTART",
+    "event_value": "SONAR",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "EM124",
+          "EM2040",
+          "EM712"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "static text",
+        "event_option_default_value": "SIS RESTART",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "sonar"
+    ],
+    "disabled": false,
+    "id": "5fac6388e81ec104f9d62e21"
+  },
+  {
+    "event_name": "SONAR",
+    "event_value": "SONAR",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "dropdown",
+        "event_option_default_value": "",
+        "event_option_allow_freeform": false,
+        "event_option_required": true,
+        "event_option_values": [
+          "Sonar Started",
+          "Sonar Stopped",
+          "Survey Started",
+          "Survey Stopped"
+        ]
+      },
+      {
+        "event_option_name": "START/STOP",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "START LOGGING",
+          "STOP LOGGING"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "ADCP-OS38",
+          "ADCP-WH300",
+          "EC150",
+          "EA440",
+          "EA640",
+          "EK80",
+          "EM124",
+          "EM2040",
+          "EM712",
+          "SBP29",
+          "miniSVS",
+          "SU90"
+        ],
+        "event_option_name": "SYSTEM",
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "sonar"
+    ],
+    "disabled": false,
+    "id": "5efe05244928d32b2a4fd428"
+  },
+  {
+    "event_name": "SONAR PROBLEM",
+    "event_value": "PROBLEM",
+    "event_free_text_required": true,
+    "event_options": [
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "ADCP-OS38",
+          "ADCP-OS75",
+          "ADCP-WH300",
+          "EA440",
+          "EA640",
+          "EC150",
+          "EK80",
+          "EM124",
+          "EM2040",
+          "EM712",
+          "SBP29",
+          "miniSVS",
+          "SU90"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "static text",
+        "event_option_default_value": "Problem",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "sonar"
+    ],
+    "disabled": false,
+    "id": "5efe06da4928d32b2a4fd42b"
+  },
+  {
+    "event_name": "SONAR SETTINGS",
+    "event_value": "SONAR",
+    "event_free_text_required": true,
+    "event_options": [
+      {
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "ADCP-OS38",
+          "ADCP-OS75",
+          "ADCP-WH300",
+          "EA440",
+          "EA640",
+          "EC150",
+          "EK80",
+          "EM124",
+          "EM2040",
+          "EM712",
+          "SBP29"
+        ],
+        "event_option_name": "SYSTEM",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_default_value": ""
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "static text",
+        "event_option_default_value": "Setting Change",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "sonar"
+    ],
+    "disabled": false,
+    "id": "5f9f1ea3e81ec104f9d62d75"
+  },
+  {
+    "event_name": "SSM Server Started",
+    "event_value": "SSP",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "EM124",
+          "EM2040",
+          "EM712"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "static text",
+        "event_option_default_value": "SSP Server Started",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "SOUND SPEED"
+    ],
+    "disabled": false,
+    "id": "5fa84b48e81ec104f9d62df2"
+  },
+  {
+    "event_name": "SSM Server Stopped",
+    "event_value": "SSP",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "EM124",
+          "EM2040",
+          "EM712"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "static text",
+        "event_option_default_value": "SSP Server Stopped",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "SOUND SPEED"
+    ],
+    "disabled": false,
+    "id": "5fe9b8462362012269577243"
+  },
+  {
+    "event_name": "SVP Sent To USBL",
+    "event_value": "SVP",
+    "system_template": true,
+    "disabled": false,
+    "template_categories": [
+      "SOUND SPEED",
+      "sonar",
+      "ctd"
+    ],
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "System",
+        "event_option_type": "radio buttons",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": [
+          "CTD",
+          "ROV",
+          "XBT",
+          "SSM Server"
+        ]
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": [],
+        "event_option_default_value": "SVP Sent to USBL"
+      }
+    ],
+    "id": "6512817e81b86dfcc23050cd"
+  },
+  {
+    "event_name": "SVP Sent to Sonar",
+    "event_value": "SVP",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "EM124",
+          "EM2040",
+          "EM712"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": true,
+        "event_option_default_value": "EM124"
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "text",
+        "event_option_default_value": "SVP Sent to Sonars",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "SOUND SPEED",
+      "sonar"
+    ],
+    "disabled": false,
+    "id": "5f9f62bde81ec104f9d62d92"
+  },
+  {
+    "event_name": "Sonar Quality",
+    "event_value": "SONAR QUALITY",
+    "system_template": true,
+    "disabled": false,
+    "template_categories": [
+      "sonar"
+    ],
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "Primary Sonar",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "EM2040",
+          "EM712",
+          "EM124",
+          "WH300",
+          "EC150",
+          "OS38",
+          "EK80",
+          "SBP29",
+          "SU90"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_name": "Auxiliary Sonars",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "EM2040",
+          "EM712",
+          "EM124",
+          "WH300",
+          "EC150",
+          "OS38",
+          "EK80",
+          "SBP29",
+          "SU90"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "Survey Type ",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "Transit",
+          "Survey",
+          "Other"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_name": "Survey Location",
+        "event_option_type": "text",
+        "event_option_required": false,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Survey Description",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Sonar Quality",
+        "event_option_type": "radio buttons",
+        "event_option_values": [
+          "Excellent",
+          "Good",
+          "Fair",
+          "Poor",
+          "Abysmal"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": true
+      },
+      {
+        "event_option_name": "Sonar Quality Comments",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Bubble Sweeps?",
+        "event_option_type": "radio buttons",
+        "event_option_values": [
+          "Yes",
+          "No",
+          "See Comments"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": true
+      },
+      {
+        "event_option_name": "Bubble Sweep Comments",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Interference?",
+        "event_option_type": "radio buttons",
+        "event_option_values": [
+          "Yes",
+          "No",
+          "See Comments"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": true
+      },
+      {
+        "event_option_name": "Interference Comments",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Beaufort Scale",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "0: calm wind (0kts) and glassy waves (0m)",
+          "1: light air (1-3kts) and rippled waves (0.1m)",
+          "2: light breeze (4-6kts) and smooth wavelets (.2m)",
+          "3: gentle breeze (7-10kts) and slight waves (.5m)",
+          "4: moderate breeze (11-16 kts) and slight-moderate waves (1m)",
+          "5: fresh breeze (17-21kts) and moderate waves (2m)",
+          "6: strong breeze (22-27kts) and rough waves (3m)",
+          "7: near gale (28-33kts) and rough-very rough waves (4m)",
+          "8: gale (34-40kts) and very rough-high waves (5.5m)",
+          "9: strong gale (41-47kts) and high waves (7m)",
+          "10: storm (48-55kts) and very high waves (9m)",
+          "11: violent storm (56-63kts) and very high waves (11.5)",
+          "12: hurricane (64+ kts) and phenomenal waves (14+m)"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": true
+      },
+      {
+        "event_option_name": "Weather Comments",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "Direction of Weather Relative to the Ship",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "Ahead",
+          "Abroad",
+          "Abeam",
+          "Quarter",
+          "Astern",
+          "Varying"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      },
+      {
+        "event_option_name": "Ship Condition Comments",
+        "event_option_type": "text",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "id": "651ce131d16f5ffb0217f831"
+  },
+  {
+    "event_name": "Sound Speed Profile",
+    "event_value": "SSP",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_type": "checkboxes",
+        "event_option_name": "STATUS",
+        "event_option_values": [
+          "SSP Conducted",
+          "SSP Aborted/Failed"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "Filename",
+        "event_option_type": "text",
+        "event_option_required": true,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "SOUND SPEED"
+    ],
+    "disabled": false,
+    "id": "5f9f5dece81ec104f9d62d82"
+  },
+  {
+    "event_name": "USBL",
+    "event_value": "EQUIPMENT",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "checkboxes",
+        "event_option_values": [
+          "USBL Spar Deployed",
+          "USBL Spar Recovered",
+          "Beacons Tracking",
+          "Problem"
+        ],
+        "event_option_allow_freeform": false,
+        "event_option_required": false
+      },
+      {
+        "event_option_name": "SYSTEM",
+        "event_option_type": "static text",
+        "event_option_default_value": "USBL",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "ROV",
+      "ctd",
+      "EQUIPMENT"
+    ],
+    "disabled": false,
+    "id": "5f9f6160e81ec104f9d62d8b"
+  },
+  {
+    "event_name": "Weather Note",
+    "event_value": "OBSERVATION",
+    "event_free_text_required": true,
+    "event_options": [
+      {
+        "event_option_name": "Observation",
+        "event_option_type": "static text",
+        "event_option_default_value": "WEATHER",
+        "event_option_allow_freeform": false,
+        "event_option_required": false,
+        "event_option_values": []
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "OBSERVATION",
+      "SCIENCE"
+    ],
+    "disabled": false,
+    "id": "60e3a2f365ec0c0590c3eef6"
+  },
+  {
+    "event_name": "XBT",
+    "event_value": "XBT",
+    "event_free_text_required": false,
+    "event_options": [
+      {
+        "event_option_name": "Filename",
+        "event_option_type": "text",
+        "event_option_required": true,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      },
+      {
+        "event_option_name": "STATUS",
+        "event_option_type": "dropdown",
+        "event_option_values": [
+          "XBT Success",
+          "XBT Failed",
+          "Deck Test - Failed",
+          "Deck Test - Passed"
+        ],
+        "event_option_required": true,
+        "event_option_allow_freeform": false
+      }
+    ],
+    "system_template": true,
+    "template_categories": [
+      "SOUND SPEED"
+    ],
+    "disabled": false,
+    "id": "5dac68afa78d2f4ec028551f"
   }
 ]
