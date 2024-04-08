@@ -481,6 +481,9 @@ class CruiseReportCreator: # pylint: disable=too-many-instance-attributes,too-fe
             logging.info(f'\t- Dive: {lowering["lowering_id"]}')
 
             watch_change_events = get_events_by_lowering(lowering['id'],event_filter=['WATCH CHANGE'], export_format='csv')
+            
+            if not watch_change_events:
+                continue
 
             # load data into dataframe
             buf = StringIO(watch_change_events)
@@ -1139,7 +1142,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
 
         ax_dive_track.set_extent([mid_x-side/2.0, mid_x+side/2.0, mid_y-side/2.0, mid_y+side/2.0])   # map coordinates, meters
 
-        idx=(self.lowering_data[:,self.lowering_data_headers.index( 'ts' )].astype('datetime64') >= np.datetime64(self.lowering_record['milestones']['descending_dt'])) & (self.lowering_data[:,self.lowering_data_headers.index( 'ts' )].astype('datetime64') < np.datetime64(self.lowering_record['milestones']['on_surface_dt']))
+        idx=(self.lowering_data[:,self.lowering_data_headers.index( 'ts' )].astype('datetime64') >= np.datetime64(self.lowering_record['milestones']['descending_dt'])) & (self.lowering_data[:,self.lowering_data_headers.index( 'ts' )].astype('datetime64') < np.datetime64(self.lowering_record['milestones']['on_surface_dt'])) & (self.lowering_data[:,self.lowering_data_headers.index( trackline_data_source + '.latitude_value' )] != '0.0')
 
         dive_track_data = self.lowering_data[idx,:]
 
@@ -1950,9 +1953,9 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
     def _build_watch_change_table(self):
 
         idx = (self.lowering_data[:,self.lowering_data_headers.index( 'event_value' )] == "WATCH CHANGE")
-
+        
         watch_change_data = self.lowering_data[idx,:]
-
+        
         if len(watch_change_data) == 0:
             logging.warning("No WATCH CHANGE events captured, can't build watch change table.")
             return None

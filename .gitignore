@@ -37,7 +37,9 @@ misc/sealog_udp2MongoDB*.py
 misc/sealog_vessel_postCruise.sh
 misc/sealog_repeater.py
 
+misc/sealog_influx_embed.yml
 init_data/system_templates.json
+init_data/system_users.json
 
 # files that need to be updated to the v2.1 standard or deleted
 misc/merge_*

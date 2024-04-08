@@ -46,8 +46,7 @@ from misc.reporting.sealog_build_lowering_summary_report import LoweringSummaryR
 from misc.reporting.sealog_build_lowering_vehicle_report import LoweringVehicleReport
 
 # Location of exported files
-EXPORT_ROOT_DIR = '/Users/webbpinner/Desktop/Sealog-Related/sealog-exports'
-# EXPORT_ROOT_DIR = '/data/sealog-Sub-export'
+EXPORT_ROOT_DIR = '/data/sealog-Sub-export'
 
 # Name of Vehicle
 VEHICLE_NAME = 'SuBastian'
