@@ -132,6 +132,14 @@
             name: usbl_depth_echo
             uom: m
             round: 6 
+        USBL_Depth_FOXTROT:
+            name: usbl_depth_foxtrot
+            uom: m
+            round: 6 
+        USBL_Depth_JULIET:
+            name: usbl_depth_juliet
+            uom: m
+            round: 6 
         USBL_Depth_MIKE:
             name: usbl_depth_mike
             uom: m
@@ -143,7 +151,15 @@
         USBL_Latitude_ECHO:
             name: usbl_latitude_echo
             uom: ddeg
-            round: 6     
+            round: 6   
+        USBL_Latitude_FOXTROT:
+            name: usbl_latitude_foxtrot
+            uom: ddeg
+            round: 6   
+        USBL_Latitude_JULIET:
+            name: usbl_latitude_juliet
+            uom: ddeg
+            round: 6    
         USBL_Latitude_MIKE:
             name: usbl_latitude_mike
             uom: ddeg
@@ -154,6 +170,14 @@
             round: 6 
         USBL_Longitude_ECHO:
             name: usbl_longitude_echo
+            uom: ddeg
+            round: 6 
+        USBL_Longitude_FOXTROT:
+            name: usbl_longitude_foxtrot
+            uom: ddeg
+            round: 6 
+        USBL_Longitude_JULIET:
+            name: usbl_longitude_juliet
             uom: ddeg
             round: 6 
         USBL_Longitude_MIKE:
