@@ -23,6 +23,7 @@ misc/sealog_asnap.py
 misc/sealog_auto_actions.py
 misc/sealog_aux_data_inserter_influx.py
 misc/sealog_aux_data_inserter_nav.py
+misc/sealog_aux_data_inserter_framegrab_vnc.py
 misc/sealog_auxDataInserter*.py
 misc/sealog_backupDB.sh
 misc/sealog_build_*_report*.py

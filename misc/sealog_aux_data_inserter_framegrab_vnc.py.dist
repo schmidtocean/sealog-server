@@ -1,0 +1,248 @@
+#!/usr/bin/env python3
+'''
+FILE:           sealog_aux_data_inserter_framegrab.py
+
+DESCRIPTION:    This service listens for new events submitted to Sealog, captures
+                a screenshot from a VNC server, renames/copies the file to the
+                sealog-files/images directory and creates an aux_data record
+                containing the image path
+                Works reliably with vncdotool 0.12 - later versions may produce blank image
+
+BUGS:
+NOTES:
+AUTHOR:     Webb Pinner / Kaarel-SOI
+COMPANY:    OceanDataTools.org
+VERSION:    1.2
+CREATED:    2020-01-27
+REVISION:   2024-04-17
+
+LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for details)
+                Copyright (C) OceanDataTools.org 2024
+'''
+
+import sys
+import asyncio
+import json
+import time
+import glob
+import shutil
+import logging
+from datetime import datetime, timedelta
+import requests
+import websockets
+
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(realpath(__file__))))
+
+from misc.python_sealog.settings import API_SERVER_URL, WS_SERVER_URL, EVENT_AUX_DATA_API_PATH, HEADERS
+from vncdotool import api
+from os import environ
+
+# VNC server details
+VNC_PORT = 5900
+VNC_PASSWORD = environ.get('VNC_VIEWONLY')
+# The data_source to use for the auxData records
+AUX_DATA_DATASOURCE = 'vesselRealtimeFramegrabberData'
+
+# Set of events to ignore
+EXCLUDE_SET = ()
+
+CLIENT_WSID = 'aux_data_inserter_' + AUX_DATA_DATASOURCE
+
+THRESHOLD = 20  # seconds
+dest_dir = '/data/sealog-FKt-files/images/'
+
+sources = [
+{
+'source_name': 'POSMV',
+'source_address': '10.23.10.52',
+'filename_prefix': 'POSMV',
+'filename_suffix': '.png'
+},
+{
+'source_name': 'EM124',
+'source_address': '10.23.10.60',
+'filename_prefix': 'EM124',
+'filename_suffix': '.png'
+},
+{
+'source_name': 'EM712',
+'source_address': '10.23.10.62',
+'filename_prefix': 'EM712',
+'filename_suffix': '.png'
+},
+{
+'source_name': 'EM2040',
+'source_address': '10.23.10.64',
+'filename_prefix': 'EM2040',
+'filename_suffix': '.png'
+},
+{
+'source_name': 'EK80',
+'source_address': '10.23.10.66',
+'filename_prefix': 'EK80',
+'filename_suffix': '.png'
+},
+{
+'source_name': 'SBP29',
+'source_address': '10.23.10.69',
+'filename_prefix': 'SBP29',
+'filename_suffix': '.png'
+},
+{
+'source_name': 'KSYNC',
+'source_address': '10.23.10.72',
+'filename_prefix': 'KSYNC',
+'filename_suffix': '.png'
+},
+{
+'source_name': 'UHDAS',
+'source_address': '10.23.10.73',
+'filename_prefix': 'UHDAS-1',
+'filename_suffix': '.png'
+},
+{
+'source_name': 'CTD',
+'source_address': '10.23.10.75',
+'filename_prefix': 'CTD',
+'filename_suffix': '.png'
+}
+]
+
+HELLO = {
+    'type': 'hello',
+    'id': CLIENT_WSID,
+    'auth': {
+        'headers': HEADERS
+    },
+    'version': '2',
+    'subs': ['/ws/status/newEvents']
+}
+
+PING = {
+    'type': 'ping',
+    'id': CLIENT_WSID
+}
+
+def capture_screenshot(vnc_server, vnc_password, filename):
+    try:
+        with api.connect(vnc_server, password=vnc_password, timeout=20.0) as client:
+            client.refreshScreen()
+            client.captureScreen(filename)
+    except Exception as error:
+        logging.error("Error capturing screenshot: %s", str(error))
+
+async def aux_data_inserter():
+    '''
+    Connect to the websocket feed for new events. When new events arrive,
+    capture a screenshot, build aux_data records, and submit them to the sealog-server.
+    '''
+
+    logging.debug("Connecting to event websocket feed...")
+    try:
+        async with websockets.connect(WS_SERVER_URL) as websocket:
+
+            await websocket.send(json.dumps(HELLO))
+
+            while True:
+
+                event = await websocket.recv()
+                event_obj = json.loads(event)
+
+                if event_obj['type'] and event_obj['type'] == 'ping':
+                    await websocket.send(json.dumps(PING))
+
+                elif event_obj['type'] and event_obj['type'] == 'pub':
+
+                    if event_obj['message']['event_value'] in EXCLUDE_SET:
+                        logging.debug("Skipping because event value is in the exclude set")
+                        continue
+
+                    if datetime.strptime(event_obj['message']['ts'], '%Y-%m-%dT%H:%M:%S.%fZ') < datetime.utcnow() - timedelta(seconds=THRESHOLD):
+                        logging.debug("Skipping because event ts is older than threshold")
+                        continue
+
+                    aux_data_record = {
+                        'event_id': event_obj['message']['id'],
+                        'data_source': AUX_DATA_DATASOURCE,
+                        'data_array': []
+                    }
+
+                    for source in sources:
+
+                        if source['source_name'] not in event_obj['message']['event_value']:
+                            logging.debug("Skipping because event value not VNC source")
+                            continue
+
+                        filename_date = datetime.date(datetime.strptime(event_obj['message']['ts'], '%Y-%m-%dT%H:%M:%S.%fZ'))
+                        filename_time = datetime.time(datetime.strptime(event_obj['message']['ts'], '%Y-%m-%dT%H:%M:%S.%fZ'))
+                        filename_middle = datetime.combine(filename_date, filename_time).strftime("%Y%m%d_%H%M%S%f")[:-3]
+
+                        dst = os.path.join(dest_dir, f"{source['filename_prefix']}_{filename_middle}_{event_obj['message']['event_value'].upper().replace(' ','_')}{source['filename_suffix']}")
+
+                        logging.debug("dst: %s", dst)
+
+                        try:
+                            screenshot_file = f"{source['filename_prefix']}_{filename_middle}_{event_obj['message']['event_value'].upper().replace(' ','_')}{source['filename_suffix']}"
+                            await asyncio.to_thread(capture_screenshot, f"{source['source_address']}::{VNC_PORT}", VNC_PASSWORD, screenshot_file)
+
+                            if os.path.exists(screenshot_file):
+                                shutil.move(screenshot_file, dst)
+                                aux_data_record['data_array'].append({'data_name': "camera_name", 'data_value': source['source_name']})
+                                aux_data_record['data_array'].append({'data_name': "filename", 'data_value': dst})
+
+                        except Exception as error:
+                            logging.error("Unable to save screenshot")
+                            logging.error(error)
+
+                    if len(aux_data_record['data_array']) > 0:
+                        req = requests.post(API_SERVER_URL + EVENT_AUX_DATA_API_PATH, headers=HEADERS, data=json.dumps(aux_data_record))
+                        logging.debug(req.text)
+
+    except Exception as error:
+        logging.error(str(error))
+        raise error
+
+# -------------------------------------------------------------------------------------
+# Required python code for running the script as a stand-alone utility
+# -------------------------------------------------------------------------------------
+if __name__ == '__main__':
+
+    import argparse
+    import os
+
+    parser = argparse.ArgumentParser(description='Aux Data Inserter Service - ' + AUX_DATA_DATASOURCE)
+    parser.add_argument('-v', '--verbosity', dest='verbosity',
+                        default=0, action='count',
+                        help='Increase output verbosity')
+
+    parsed_args = parser.parse_args()
+
+    ############################
+    # Set up logging before we do any other argument parsing (so that we
+    # can log problems with argument parsing).
+
+    LOGGING_FORMAT = '%(asctime)-15s %(levelname)s - %(message)s'
+    logging.basicConfig(format=LOGGING_FORMAT)
+
+    LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+    parsed_args.verbosity = min(parsed_args.verbosity, max(LOG_LEVELS))
+    logging.getLogger().setLevel(LOG_LEVELS[parsed_args.verbosity])
+
+    # Run the main loop
+    while True:
+
+        # Wait 5 seconds for the server to complete startup
+        time.sleep(5)
+
+        try:
+            asyncio.get_event_loop().run_until_complete(aux_data_inserter())
+        except KeyboardInterrupt:
+            logging.error('Keyboard Interrupted')
+            try:
+                sys.exit(0)
+            except SystemExit:
+                os._exit(0)  # pylint: disable=protected-access
+        except Exception as error:
+            logging.error("Lost connection to server, trying again in 5 seconds")
+            logging.debug(str(error))
