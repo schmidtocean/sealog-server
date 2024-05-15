@@ -38,7 +38,7 @@ VESSEL_NAME = 'R/V Falkor (too)'
 OPENVDM_IP='10.23.9.20'
 OPENVDM_USER='mt'
 OPENVDM_SSH_KEY='/home/mt/.ssh/id_rsa_openvdm'
-CRUISEDATA_DIR_ON_DATA_WAREHOUSE='/mnt/soi_data1/vault/CruiseData'
+CRUISEDATA_DIR_ON_DATA_WAREHOUSE='/mnt/soi_data1/CruiseData'
 SEALOG_DIR='Falkor_too/Raw/Sealog'
 
 CREATE_DEST_DIR = False
@@ -169,7 +169,8 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbosity', dest='verbosity',
                         default=0, action='count',
                         help='Increase output verbosity')
-    parser.add_argument('-n', '--no-transfer', action='store_true', default=False, help='build reports and export data but do not push to data warehouse')
+    parser.add_argument('-n', '--no_transfer', action='store_true', default=False, help='build reports and export data but do not push to data warehouse')
+    parser.add_argument('-t', '--transfer_only', action='store_true', default=False, help='only push the exported data to data warehouse')
     parser.add_argument('-C', '--cruise_id', help='export data for the specified cruise (i.e. SL200329)')
 
     parsed_args = parser.parse_args()
@@ -198,6 +199,11 @@ if __name__ == '__main__':
     # if no cruise found, exit
     if selected_cruise is None:
         logging.error("Cruise %s not found", parsed_args.cruise_id)
+        sys.exit(0)
+
+    if parsed_args.transfer_only:
+        _push_2_data_warehouse(selected_cruise)
+        logging.debug("Done")
         sys.exit(0)
 
     # Verify source directories

@@ -45,17 +45,37 @@ from misc.reporting.sealog_build_cruise_summary_report_Sub import CruiseSummaryR
 from misc.reporting.sealog_build_lowering_summary_report import LoweringSummaryReport
 from misc.reporting.sealog_build_lowering_vehicle_report import LoweringVehicleReport
 
+
 # Location of exported files
 EXPORT_ROOT_DIR = '/data/sealog-Sub-export'
 
 # Name of Vehicle
 VEHICLE_NAME = 'SuBastian'
 
+# OpenVDM Connetion information
+OPENVDM_IP='10.23.9.20'
+OPENVDM_USER='mt'
+OPENVDM_SSH_KEY='/home/mt/.ssh/id_rsa_openvdm'
+CRUISEDATA_DIR_ON_DATA_WAREHOUSE='/mnt/soi_data1/CruiseData'
+OPENVDM_VEHICLE_DIR='Vehicles/' + VEHICLE_NAME
+SEALOG_DIR='Sealog'
+
+# Flag to create the lowering directory within the cruise data directory if it
+# does not exist.
+CREATE_DEST_DIR = False
+
+# Local file paths to the sealog-server files. 
+CRUISES_FILE_PATH = os.path.join(API_SERVER_FILE_PATH, 'cruises')
+IMAGES_FILE_PATH = os.path.join(API_SERVER_FILE_PATH, 'images')
+LOWERINGS_FILE_PATH = os.path.join(API_SERVER_FILE_PATH, 'lowerings')
+
+# Directory names used in various parts of the export process
+REPORTS_DIRNAME = 'Reports'
+IMAGES_DIRNAME = 'Images'
+FILES_DIRNAME = 'Files'
+
 # data source name in aux_data records containing vehicle position
 NAV_DATASOURCE = 'vehicleRealtimeNavData'
-
-# Location of Cruise Data directory
-RAW_DATA_DIR = '/mnt/soi_data1/vault/CruiseData/'
 
 # Location of cropped data files
 CROPPED_DATA_DIR = '/data/sealog_Sub_cropped_data'
@@ -93,28 +113,6 @@ DATA_FILES_DEFS = [
     { 'source_regex': '*usbl_gga_alpha-*', 'output_prefix': 'usbl_gga_alpha_'},
     { 'source_regex': '*usbl_gga_foxtrot-*', 'output_prefix': 'usbl_gga_foxtrot_'}
 ]
-
-# OpenVDM Connetion information
-OPENVDM_IP='10.23.9.20'
-OPENVDM_USER='mt'
-OPENVDM_SSH_KEY='/home/mt/.ssh/id_rsa_openvdm'
-CRUISEDATA_DIR_ON_DATA_WAREHOUSE='/mnt/soi_data1/vault/CruiseData'
-OPENVDM_VEHICLE_DIR='Vehicles/' + VEHICLE_NAME
-SEALOG_DIR='Sealog'
-
-# Flag to create the lowering directory within the cruise data directory if it
-# does not exist.
-CREATE_DEST_DIR = False
-
-# Local file paths to the sealog-server files. 
-CRUISES_FILE_PATH = os.path.join(API_SERVER_FILE_PATH, 'cruises')
-IMAGES_FILE_PATH = os.path.join(API_SERVER_FILE_PATH, 'images')
-LOWERINGS_FILE_PATH = os.path.join(API_SERVER_FILE_PATH, 'lowerings')
-
-# Directory names used in various parts of the export process
-REPORTS_DIRNAME = 'Reports'
-IMAGES_DIRNAME = 'Images'
-FILES_DIRNAME = 'Files'
 
 def _export_dir_name(cruise_id, lowering_id):
     '''
@@ -417,8 +415,8 @@ def _export_lowering_openrvdas_data_files(cruise, lowering): #pylint: disable=re
 
     for data_file_def in DATA_FILES_DEFS:
 
-        source_regex = os.path.join(RAW_DATA_DIR,cruise['cruise_id'], OPENRVDAS_SOURCE_DIR, data_file_def['source_regex'])
-        source_files = glob.glob(os.path.join(RAW_DATA_DIR,cruise['cruise_id'], OPENRVDAS_SOURCE_DIR, data_file_def['source_regex']))
+        source_regex = os.path.join(CRUISEDATA_DIR_ON_DATA_WAREHOUSE,cruise['cruise_id'], OPENRVDAS_SOURCE_DIR, data_file_def['source_regex'])
+        source_files = glob.glob(os.path.join(CRUISEDATA_DIR_ON_DATA_WAREHOUSE,cruise['cruise_id'], OPENRVDAS_SOURCE_DIR, data_file_def['source_regex']))
         destination_file = os.path.join(CROPPED_DATA_DIR,cruise['cruise_id'],_export_dir_name(cruise['cruise_id'], lowering['lowering_id']),OPENRVDAS_DEST_DIR,cruise['cruise_id'] + '_' + data_file_def['output_prefix'] + lowering['lowering_id'] + '.txt')
 
         logging.debug('Source regex: %s', source_regex)
@@ -658,8 +656,8 @@ if __name__ == '__main__':
     parser.add_argument('-v', '--verbosity', dest='verbosity',
                         default=0, action='count',
                         help='Increase output verbosity')
-    parser.add_argument('-n', '--no-transfer', action='store_true', default=False, help='build reports and export data but do not push to data warehouse')
-    parser.add_argument('-t', '--transfer-only', action='store_true', default=False, help='only push the exproted data to data warehouse')
+    parser.add_argument('-n', '--no_transfer', action='store_true', default=False, help='build reports and export data but do not push to data warehouse')
+    parser.add_argument('-t', '--transfer_only', action='store_true', default=False, help='only push the exported data to data warehouse')
     parser.add_argument('-c', '--current_cruise', action='store_true', default=False, help=' export the data for the most recent cruise')
     parser.add_argument('-L', '--lowering_id', help='export data for the specified lowering (i.e. S0314)')
     parser.add_argument('-C', '--cruise_id', help='export all cruise and lowering data for the specified cruise (i.e. FK200126)')
