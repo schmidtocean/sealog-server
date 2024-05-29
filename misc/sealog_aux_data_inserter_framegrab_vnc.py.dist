@@ -29,6 +29,7 @@ import shutil
 import logging
 from datetime import datetime, timedelta
 import requests
+import yaml
 import websockets
 
 from os.path import dirname, realpath
@@ -45,69 +46,19 @@ VNC_PASSWORD = environ.get('VNC_VIEWONLY')
 AUX_DATA_DATASOURCE = 'vesselRealtimeFramegrabberData'
 
 # Set of events to ignore
-EXCLUDE_SET = ()
+EXCLUDE_SET = ('ASNAP')
 
 CLIENT_WSID = 'aux_data_inserter_' + AUX_DATA_DATASOURCE
 
 THRESHOLD = 20  # seconds
 dest_dir = '/data/sealog-FKt-files/images/'
 
-sources = [
-{
-'source_name': 'POSMV',
-'source_address': '10.23.10.52',
-'filename_prefix': 'POSMV',
-'filename_suffix': '.png'
-},
-{
-'source_name': 'EM124',
-'source_address': '10.23.10.60',
-'filename_prefix': 'EM124',
-'filename_suffix': '.png'
-},
-{
-'source_name': 'EM712',
-'source_address': '10.23.10.62',
-'filename_prefix': 'EM712',
-'filename_suffix': '.png'
-},
-{
-'source_name': 'EM2040',
-'source_address': '10.23.10.64',
-'filename_prefix': 'EM2040',
-'filename_suffix': '.png'
-},
-{
-'source_name': 'EK80',
-'source_address': '10.23.10.66',
-'filename_prefix': 'EK80',
-'filename_suffix': '.png'
-},
-{
-'source_name': 'SBP29',
-'source_address': '10.23.10.69',
-'filename_prefix': 'SBP29',
-'filename_suffix': '.png'
-},
-{
-'source_name': 'KSYNC',
-'source_address': '10.23.10.72',
-'filename_prefix': 'KSYNC',
-'filename_suffix': '.png'
-},
-{
-'source_name': 'UHDAS',
-'source_address': '10.23.10.73',
-'filename_prefix': 'UHDAS-1',
-'filename_suffix': '.png'
-},
-{
-'source_name': 'CTD',
-'source_address': '10.23.10.75',
-'filename_prefix': 'CTD',
-'filename_suffix': '.png'
-}
-]
+# Import sources list
+# event_list is list of event_values that trigger screengrab
+with open('sealog_aux_data_inserter_framegrab_vnc_sources.yml', 'r') as file:
+    config = yaml.safe_load(file)
+
+sources = config['sources']
 
 HELLO = {
     'type': 'hello',
@@ -169,8 +120,7 @@ async def aux_data_inserter():
                     }
 
                     for source in sources:
-
-                        if source['source_name'] not in event_obj['message']['event_value']:
+                        if source['source_name'] not in event_obj['message']['event_value'] and event_obj['message']['event_value'] not in source['event_list']:
                             logging.debug("Skipping because event value not VNC source")
                             continue
 

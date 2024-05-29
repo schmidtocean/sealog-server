@@ -173,6 +173,17 @@ autostart=true
 autorestart=true
 stopsignal=QUIT
 
+[program:sealog-FKt-aux-data-framegrab-vnc]
+directory=$install_dir
+command=$install_dir/venv/bin/python ./misc/sealog_aux_data_inserter_framegrab_vnc.py
+environment=VNC_VIEWONLY="*****"
+redirect_stderr=true
+stdout_logfile=/var/log/sealog-aux-data-framegrab-vnc-FKt_STDOUT.log
+user=mt
+autostart=true
+autorestart=true
+stopsignal=QUIT
+
 [program:sealog-cruise-sync-FKt]
 directory=$install_dir
 command=$install_dir/venv/bin/python ./misc/sealog_cruise_sync_FKt.py
