@@ -168,11 +168,16 @@ async def aux_data_inserter():
                         'data_array': []
                     }
 
+                    sonar_quality_framegrabs = ['EM124', 'EM2040', 'EM712']
+                    
                     for source in sources:
-
-                        if source['source_name'] not in event_obj['message']['event_value']:
+                        if source['source_name'] not in event_obj['message']['event_value'] and event_obj['message']['event_value'] != 'SONAR QUALITY':
                             logging.debug("Skipping because event value not VNC source")
                             continue
+                        if event_obj['message']['event_value'] == 'SONAR QUALITY' and source['source_name'] not in sonar_quality_framegrabs:
+                          logging.debug("Sonar quality but not multibeam, skipping")
+                          continue
+
 
                         filename_date = datetime.date(datetime.strptime(event_obj['message']['ts'], '%Y-%m-%dT%H:%M:%S.%fZ'))
                         filename_time = datetime.time(datetime.strptime(event_obj['message']['ts'], '%Y-%m-%dT%H:%M:%S.%fZ'))
