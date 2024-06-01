@@ -63,3 +63,4 @@ config/secret.js
 # python generated files
 *.pyc
 __pycache__
+misc/sealog_aux_data_inserter_framegrab_vnc_sources.yml

@@ -78,6 +78,17 @@ class FileCropUtility():
                     file.seek(-2, os.SEEK_CUR)
 
                 last_line = file.readline().decode().rstrip('\n')
+                logging.warn(f'lastline: {last_line}')
+                # Hack to deal with extra newline characters in data files.
+                if last_line == '':
+                    file.seek(-4, os.SEEK_CUR)
+                    while file.read(1) != b'\n':
+                        file.seek(-2, os.SEEK_CUR)
+
+                    last_line = file.readline().decode().rstrip('\n')
+                
+                    logging.warn(f'lastline hack: {last_line}')
+                # End of hack
 
                 try:
                     last_ts = datetime.strptime(last_line.split(self.delimiter)[0],self.dt_format)
@@ -129,6 +140,9 @@ class FileCropUtility():
 
                         if not line_str:
                             break
+
+                        if line_str.rstrip('\n').rstrip('\r') == '':
+                            continue
 
                         try:
                             line_ts = datetime.strptime(line_str.split(self.delimiter)[0],self.dt_format)
