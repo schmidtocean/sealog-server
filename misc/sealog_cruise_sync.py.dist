@@ -51,7 +51,7 @@ PING = {
 SEALOG_SERVER_INSTANCES = [
     {
         'apiServerURL': '',
-        'token':''
+        'token': ''
     }
 ]
 
