@@ -784,7 +784,7 @@ if __name__ == '__main__':
             sys.exit(1)
 
         # build lowering export dirs
-        # _build_lowering_export_dirs(selected_cruise, selected_lowering)
+        _build_lowering_export_dirs(selected_cruise, selected_lowering)
 
         # export lowering cropped data files
         _export_lowering_openrvdas_data_files(selected_cruise, selected_lowering)
