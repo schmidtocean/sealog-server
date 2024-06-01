@@ -79,6 +79,14 @@ class FileCropUtility():
 
                 last_line = file.readline().decode().rstrip('\n')
 
+                # Hack to deal with extra newline characters in data files.
+                if last_line == '':
+                    while file.read(1) != b'\n':
+                        file.seek(-2, os.SEEK_CUR)
+
+                last_line = file.readline().decode().rstrip('\n')
+                # End of hack
+
                 try:
                     last_ts = datetime.strptime(last_line.split(self.delimiter)[0],self.dt_format)
                 except Exception as err:
