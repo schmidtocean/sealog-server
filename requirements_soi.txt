@@ -19,6 +19,6 @@ shapely==2.0.3
 svglib==1.5.1
 tinycss2==1.2.1
 tzdata==2024.1
-vncdotool=0.12
+vncdotool==0.12
 webencodings==0.5.1
 
