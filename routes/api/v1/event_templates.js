@@ -22,7 +22,7 @@ const _renameAndClearFields = (doc, admin = false) => {
   if (!admin) {
     delete doc.disabled;
   }
-
+  
   return doc;
 };
 
@@ -186,6 +186,10 @@ exports.plugin = {
           event_template.disabled = false;
         }
 
+        if (typeof event_template.is_power_logger !== 'undefined') {
+          event_template.is_power_logger = !!event_template.is_power_logger;
+        }
+
         try {
           const result = await db.collection(eventTemplatesTable).insertOne(event_template);
 
@@ -257,6 +261,14 @@ exports.plugin = {
         }
 
         const event_template = request.payload;
+
+        // Only update is_power_logger if it's explicitly included in the payload
+        if (typeof event_template.is_power_logger !== 'undefined') {
+          event_template.is_power_logger = !!event_template.is_power_logger;
+        } else {
+          // Remove is_power_logger from the update if it's not in the payload
+          delete event_template.is_power_logger;
+        }
 
         try {
           const result = await db.collection(eventTemplatesTable).findOneAndUpdate(query, { $set: event_template },{ returnDocument: 'after' });
