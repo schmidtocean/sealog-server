@@ -20,6 +20,7 @@ import os
 import sys
 import json
 import logging
+import tempfile
 import subprocess
 
 from os.path import dirname, realpath
@@ -31,6 +32,7 @@ from misc.python_sealog.events import get_events_by_cruise
 from misc.python_sealog.event_aux_data import get_event_aux_data_by_cruise
 from misc.python_sealog.event_exports import get_event_exports_by_cruise
 from misc.python_sealog.event_templates import get_event_templates
+from misc.python_sealog.misc import get_framegrab_list_by_cruise
 
 EXPORT_ROOT_DIR = '/data/sealog-FKt-export'
 VESSEL_NAME = 'R/V Falkor (too)'
@@ -44,6 +46,9 @@ SEALOG_DIR='Falkor_too/Raw/Sealog'
 CREATE_DEST_DIR = False
 
 CRUISES_FILE_PATH = os.path.join(API_SERVER_FILE_PATH, 'cruises')
+IMAGES_FILE_PATH = os.path.join(API_SERVER_FILE_PATH, 'images')
+
+IMAGES_DIRNAME = 'Images'
 
 def _verify_source_directories():
 
@@ -63,6 +68,15 @@ def _build_cruise_export_dirs(cruise):
         logging.debug("cruise export directory already exists")
     except Exception as err:
         logging.error("Could not create cruise export directory")
+        logging.debug(str(err))
+        sys.exit(1)
+
+    try:
+        os.mkdir(os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], IMAGES_DIRNAME))
+    except FileExistsError:
+        logging.debug("cruise export images directory already exists")
+    except Exception as err:
+        logging.error("Could not create cruise export images directory")
         logging.debug(str(err))
         sys.exit(1)
 
@@ -148,6 +162,26 @@ def _export_cruise_sealog_data_files(cruise): #pylint: disable=too-many-statemen
         logging.error('could not create data file: %s', dest_filepath)
         logging.debug(str(err))
 
+def _export_cruise_images(cruise):
+    logging.info("Export Images")
+    framegrab_list = get_framegrab_list_by_cruise(cruise['id'])
+    existing_framegrab_list = os.listdir(os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], IMAGES_DIRNAME))
+    delete_framegrab_list = list(set(existing_framegrab_list) - set([os.path.basename(filepath) for filepath in framegrab_list]))
+
+    if delete_framegrab_list:
+        for filename in delete_framegrab_list:
+            try:
+                logging.info('Deleting: %s', filename)
+                os.remove(os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], IMAGES_DIRNAME, filename))
+            except:
+                pass
+
+    with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as file:
+        for framegrab in framegrab_list:
+            framegrab = os.path.basename(framegrab)
+            file.write(str.encode(framegrab + '\n'))
+        file.seek(0,0)
+        subprocess.call(['rsync','-avi','--progress', '--files-from=' + file.name , os.path.join(API_SERVER_FILE_PATH, 'images', ''), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], IMAGES_DIRNAME)])
 
 def _push_2_data_warehouse(cruise): #pylint: disable=redefined-outer-name
 
@@ -237,6 +271,9 @@ if __name__ == '__main__':
 
     # export cruise data files
     _export_cruise_sealog_data_files(selected_cruise)
+
+    # export cruise image files
+    _export_cruise_images(selected_cruise)
 
     # sync data to data warehouse
     if not parsed_args.no_transfer:
