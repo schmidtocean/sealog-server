@@ -765,8 +765,9 @@ exports.plugin = {
           return Boom.badRequest('id must be a single String of 12 bytes or a string of 24 hex characters');
         }
 
+        let auxData;
         try {
-          const auxData = await db.collection(eventAuxDataTable).findOne(query);
+          auxData = await db.collection(eventAuxDataTable).findOne(query);
           if (!auxData) {
             return Boom.notFound('No record found for id: ' + request.params.id);
           }
@@ -777,12 +778,19 @@ exports.plugin = {
 
         try {
           await db.collection(eventAuxDataTable).deleteOne(query);
+          
+          // Publish WebSocket message for deleted aux data
+          server.publish('/ws/status/deleteEventAuxData', {
+            id: auxData._id.toString(),
+            event_id: auxData.event_id.toString()
+          });
+
+    
           return h.response().code(204);
         }
         catch (err) {
           return Boom.serverUnavailable('database error', err);
         }
-
       },
       config: {
         auth: {
