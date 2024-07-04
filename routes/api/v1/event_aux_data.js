@@ -1,6 +1,15 @@
 const Boom = require('@hapi/boom');
+const Fs = require('fs').promises;
+const Path = require('path');
 
 const THRESHOLD = 120; //seconds
+
+const {IMAGE_PATH} = require('../../../config/path_constants');
+const FILEPOND_UPLOAD_PATH = '/tmp'
+
+const {
+  mvFilesToDir
+} = require('../../../lib/utils');
 
 const {
   useAccessControl
@@ -36,6 +45,42 @@ const _renameAndClearFields = (doc) => {
   return doc;
 };
 
+async function processFilepondUpload(event_aux_data) {
+  const filepondFolder = Path.join(FILEPOND_UPLOAD_PATH, event_aux_data.data_array.find(d => d.data_name === 'filename').data_value);
+  const files = await Fs.readdir(filepondFolder);
+
+  if (files.length === 0) {
+    throw new Error('No files found in upload folder');
+  }
+
+  const fileDataArray = event_aux_data.data_array.filter(item => item.data_name === "source");
+
+  for (const filename of files) {
+    const fileExtension = Path.extname(filename);
+    const filenameWithoutExt = Path.basename(filename, fileExtension);
+    const newFilename = `${event_aux_data.event_id}_${filenameWithoutExt}${fileExtension}`;
+
+    fileDataArray.push({ data_name: "filename", data_value: newFilename });
+
+    await Fs.mkdir(IMAGE_PATH, { recursive: true });
+    const oldPath = Path.join(filepondFolder, filename);
+    const newPath = Path.join(IMAGE_PATH, newFilename);
+    
+    try {
+      await Fs.copyFile(oldPath, newPath);
+      await Fs.unlink(oldPath);
+      console.log(`Moved and renamed file from ${oldPath} to ${newPath}`);
+    } catch (err) {
+      console.error(`Error moving file from ${oldPath} to ${newPath}:`, err);
+      throw err;
+    }
+  }
+
+  // Clean up the FilePond folder
+  await Fs.rmdir(filepondFolder, { recursive: true });
+
+  return fileDataArray;
+}
 
 exports.plugin = {
   name: 'routes-api-event_aux_data',
@@ -443,13 +488,47 @@ exports.plugin = {
       method: 'POST',
       path: '/event_aux_data',
       async handler(request, h) {
-
         const db = server.mongo.db;
         const ObjectID = server.mongo.ObjectID;
-
+    
         const event_aux_data = request.payload;
+    
+        console.log('Received payload:', JSON.stringify(event_aux_data, null, 2));
+    
+        // Check if the file upload is coming from the UI via FilePond
+        const isFilepondUpload = event_aux_data.data_source === 'SealogVesselUI';
+    
+        if (isFilepondUpload) {
+          if (!event_aux_data.event_id) {
+            console.error('Missing event_id in payload');
+            return Boom.badRequest('Missing event_id in payload');
+          }
+    
+          try {
+            const fileDataArray = await processFilepondUpload(event_aux_data);
+            const auxData = {
+              event_id: new ObjectID(event_aux_data.event_id),
+              data_source: event_aux_data.data_source,
+              data_array: fileDataArray
+            };
+    
+            const insertResult = await db.collection(eventAuxDataTable).insertOne(auxData);
+    
+            if (!insertResult.acknowledged || !insertResult.insertedId) {
+              return Boom.serverUnavailable('Failed to insert aux_data record');
+            }
+    
+            // Publish WebSocket message for new aux data
+            server.publish('/ws/status/newEventAuxData', auxData);
+    
+            return h.response(insertResult).code(201);
+          } catch (err) {
+            console.error('Error processing files:', err);
+            return Boom.serverUnavailable('Unable to process files', err);
+          }
+        }
 
-        // If payload includes a valid _id, try to insert/update
+        // Non-FilePond upload logic (preserved from original implementation)
         if (request.payload.id) {
           try {
             event_aux_data._id = new ObjectID(request.payload.id);
@@ -686,8 +765,9 @@ exports.plugin = {
           return Boom.badRequest('id must be a single String of 12 bytes or a string of 24 hex characters');
         }
 
+        let auxData;
         try {
-          const auxData = await db.collection(eventAuxDataTable).findOne(query);
+          auxData = await db.collection(eventAuxDataTable).findOne(query);
           if (!auxData) {
             return Boom.notFound('No record found for id: ' + request.params.id);
           }
@@ -698,12 +778,19 @@ exports.plugin = {
 
         try {
           await db.collection(eventAuxDataTable).deleteOne(query);
+          
+          // Publish WebSocket message for deleted aux data
+          server.publish('/ws/status/deleteEventAuxData', {
+            id: auxData._id.toString(),
+            event_id: auxData.event_id.toString()
+          });
+
+    
           return h.response().code(204);
         }
         catch (err) {
           return Boom.serverUnavailable('database error', err);
         }
-
       },
       config: {
         auth: {

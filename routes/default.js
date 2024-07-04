@@ -12,6 +12,7 @@ const {
 
 
 const IMAGE_ROUTE = '/files/images';
+const EVENT_ROUTE = '/files/events';
 const CRUISE_ROUTE = '/files/cruises';
 const LOWERING_ROUTE = '/files/lowerings';
 
@@ -417,6 +418,123 @@ exports.plugin = {
         notes: '<p>Requires authorization via: <strong>JWT token</strong></p>\
           <p>Available to: <strong>cruise_managers</strong></p>',
         tags: ['lowerings','api', 'files']
+      }
+    });
+    
+    server.route({
+      method: 'POST',
+      path: EVENT_ROUTE + '/filepond/process/{id}',
+      async handler(request, h) {
+        const { payload } = request;
+        let tmpobj = null;
+        tmpobj = Tmp.dirSync({ mode: '0750', prefix: request.params.id + '_' });
+    
+        try {
+          await handleFileUpload(tmpobj.name, payload.filepond[1]);
+          return h.response(Path.basename(tmpobj.name)).code(201);
+        }
+        catch (err) {
+          return Boom.serverUnavailable('Upload Error', err);
+        }
+      },
+      config: {
+        auth: {
+          strategy: 'jwt',
+          scope: ['admin', 'write_events']
+        },
+        payload: {
+          maxBytes: 1024 * 1024 * 20, // 20 Mb
+          output: 'stream',
+          parse: true,
+          multipart: true,
+          allow: 'multipart/form-data'
+        },
+        validate: {
+          headers: authorizationHeader,
+          params: filepondFileParam,
+          payload: filepondFilePayload,
+          failAction: (request, h, err) => {
+            throw Boom.badRequest(err.message);
+          }
+        },
+        description: 'Upload event file via filepond',
+        notes: '<p>Requires authorization via: <strong>JWT token</strong></p>\
+          <p>Available to: <strong>admin</strong>, <strong>event_manager</strong></p>',
+        tags: ['events', 'api', 'filepond']
+      }
+    });
+    
+    server.route({
+      method: 'POST',
+      path: EVENT_ROUTE + '/{id}',
+      async handler(request, h) {
+        const { payload } = request;
+        const upload = await handleFileUpload(IMAGE_PATH + '/' + request.params.id, payload.file);
+        return h.response({ message: upload.message }).code(201);
+      },
+      config: {
+        auth: {
+          strategy: 'jwt',
+          scope: ['admin', 'write_events']
+        },
+        payload: {
+          maxBytes: 1024 * 1024 * 20, // 20 Mb
+          output: 'stream',
+          multipart: true,
+          allow: 'multipart/form-data'
+        },
+        validate: {
+          headers: authorizationHeader,
+          params: fileParam,
+          payload: filePayload
+        },
+        description: 'Upload event file',
+        notes: '<p>Requires authorization via: <strong>JWT token</strong></p>\
+          <p>Available to: <strong>admin</strong>, <strong>event_manager</strong></p>',
+        tags: ['events', 'api', 'files']
+      }
+    });
+    
+    server.route({
+      method: 'GET',
+      path: EVENT_ROUTE + '/{param*}',
+      handler: {
+        directory: {
+          path: IMAGE_PATH
+        }
+      },
+      config: {
+        auth: {
+          strategy: 'jwt',
+          scope: ['admin', 'read_events']
+        },
+        validate: {
+          headers: authorizationHeader,
+          params: fileParam
+        },
+        description: 'This route is used for serving files associated with events.',
+        tags: ['events', 'api', 'files']
+      }
+    });
+    
+    server.route({
+      method: 'DELETE',
+      path: EVENT_ROUTE + '/{file*}',
+      async handler(request, h) {
+        const filePath = Path.join(IMAGE_PATH, request.params.file);
+        await handleFileDelete(filePath);
+        return h.response().code(204);
+      },
+      config: {
+        auth: {
+          strategy: 'jwt',
+          scope: ['admin', 'write_events']
+        },
+        validate: {
+          headers: authorizationHeader
+        },
+        description: 'This route is used for deleting files associated with events.',
+        tags: ['events', 'api', 'files']
       }
     });
 
