@@ -3,6 +3,8 @@
 FILE:           sealog_vessel_data_export.py
 
 DESCRIPTION:    This script exports all the data for a given cruise.
+                example usage:
+                /opt/sealog-server-FKt/venv/bin/python /opt/sealog-server-FKt/misc/sealog_vessel_data_export_FKt.py -v -C FKt291212
 
 BUGS:
 NOTES:
@@ -10,7 +12,7 @@ AUTHOR:     Webb Pinner
 COMPANY:    OceanDataTools.org
 VERSION:    1.0
 CREATED:    2018-11-07
-REVISION:   2022-02-13
+REVISION:   2024-07-05
 
 LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for details)
                 Copyright (C) OceanDataTools.org 2024
@@ -32,7 +34,7 @@ from misc.python_sealog.events import get_events_by_cruise
 from misc.python_sealog.event_aux_data import get_event_aux_data_by_cruise
 from misc.python_sealog.event_exports import get_event_exports_by_cruise
 from misc.python_sealog.event_templates import get_event_templates
-from misc.python_sealog.misc import get_framegrab_list_by_cruise
+from misc.python_sealog.misc import get_framegrab_list_by_cruise_vessel
 
 EXPORT_ROOT_DIR = '/data/sealog-FKt-export'
 VESSEL_NAME = 'R/V Falkor (too)'
@@ -164,7 +166,7 @@ def _export_cruise_sealog_data_files(cruise): #pylint: disable=too-many-statemen
 
 def _export_cruise_images(cruise):
     logging.info("Export Images")
-    framegrab_list = get_framegrab_list_by_cruise(cruise['id'])
+    framegrab_list = get_framegrab_list_by_cruise_vessel(cruise['id'])
     existing_framegrab_list = os.listdir(os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], IMAGES_DIRNAME))
     delete_framegrab_list = list(set(existing_framegrab_list) - set([os.path.basename(filepath) for filepath in framegrab_list]))
 
