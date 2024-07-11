@@ -46,7 +46,10 @@ const _renameAndClearFields = (doc) => {
 };
 
 async function processFilepondUpload(event_aux_data) {
-  const filepondFolder = Path.join(FILEPOND_UPLOAD_PATH, event_aux_data.data_array.find(d => d.data_name === 'filename').data_value);
+  const filenameData = event_aux_data.data_array.find(d => d.data_name === 'filename').data_value;
+  const [tempFileId, newFilename] = filenameData.split('|');
+
+  const filepondFolder = Path.join(FILEPOND_UPLOAD_PATH, tempFileId);
   const files = await Fs.readdir(filepondFolder);
 
   if (files.length === 0) {
@@ -57,14 +60,13 @@ async function processFilepondUpload(event_aux_data) {
 
   for (const filename of files) {
     const fileExtension = Path.extname(filename);
-    const filenameWithoutExt = Path.basename(filename, fileExtension);
-    const newFilename = `${event_aux_data.event_id}_${filenameWithoutExt}${fileExtension}`;
+    const finalFilename = `${Path.basename(newFilename, Path.extname(newFilename))}${fileExtension}`;
 
-    fileDataArray.push({ data_name: "filename", data_value: newFilename });
+    fileDataArray.push({ data_name: "filename", data_value: finalFilename });
 
     await Fs.mkdir(IMAGE_PATH, { recursive: true });
     const oldPath = Path.join(filepondFolder, filename);
-    const newPath = Path.join(IMAGE_PATH, newFilename);
+    const newPath = Path.join(IMAGE_PATH, finalFilename);
     
     try {
       await Fs.copyFile(oldPath, newPath);
