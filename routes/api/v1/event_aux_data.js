@@ -495,8 +495,6 @@ exports.plugin = {
     
         const event_aux_data = request.payload;
     
-        console.log('Received payload:', JSON.stringify(event_aux_data, null, 2));
-    
         // Check if the file upload is coming from the UI via FilePond
         const isFilepondUpload = event_aux_data.data_source === 'SealogVesselUI';
     
