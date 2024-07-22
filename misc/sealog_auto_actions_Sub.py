@@ -79,7 +79,7 @@ MILESTONE_LOOKUP = {
     'First float on': ['lowering_descending'],
     'On bottom': ['lowering_on_bottom'],
     'Off bottom': ['lowering_off_bottom'],
-    'Floats on surface': ['lowering_on_surface'],
+    'Last float off': ['lowering_on_surface'],
     'Aborted': ['lowering_aborted']
 }
 
