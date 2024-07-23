@@ -140,6 +140,10 @@
             name: usbl_depth_juliet
             uom: m
             round: 6 
+        USBL_Depth_LIMA:
+            name: usbl_depth_lima
+            uom: m
+            round: 6 
         USBL_Depth_MIKE:
             name: usbl_depth_mike
             uom: m
@@ -160,6 +164,10 @@
             name: usbl_latitude_juliet
             uom: ddeg
             round: 6    
+        USBL_Latitude_LIMA:
+            name: usbl_latitude_lima
+            uom: ddeg
+            round: 6     
         USBL_Latitude_MIKE:
             name: usbl_latitude_mike
             uom: ddeg
@@ -178,6 +186,10 @@
             round: 6 
         USBL_Longitude_JULIET:
             name: usbl_longitude_juliet
+            uom: ddeg
+            round: 6 
+        USBL_Longitude_LIMA:
+            name: usbl_longitude_lima
             uom: ddeg
             round: 6 
         USBL_Longitude_MIKE:
