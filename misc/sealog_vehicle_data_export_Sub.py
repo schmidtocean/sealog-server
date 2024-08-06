@@ -581,10 +581,10 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
         lowering_source_dir = os.path.join(cruise_source_dir, _export_dir_name(cruise['cruise_id'], lowering['lowering_id']))
 
         logging.info("Export Reports")
-        subprocess.call(['rsync','-avi','--progress', '--delete', '--include=*.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(lowering_source_dir, REPORTS_DIRNAME)])
+        subprocess.call(['rsync','-avi','--progress', '--delete', '--include=*_Report.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(lowering_source_dir, REPORTS_DIRNAME)])
 
         logging.info("Export User Uploaded Files")
-        subprocess.call(['rsync','-avi','--progress', '--delete', '--include=*', '--exclude=*.pdf', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(lowering_source_dir, FILES_DIRNAME)])
+        subprocess.call(['rsync','-avi','--progress', '--delete', '--exclude=*_Report.pdf', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(lowering_source_dir, FILES_DIRNAME)])
 
         if os.path.isdir(lowering_source_dir):
             if CREATE_DEST_DIR:
