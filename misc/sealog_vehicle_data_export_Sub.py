@@ -562,6 +562,9 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
     logging.info("Export Reports")
     subprocess.call(['rsync','-avi','--progress', '--delete', '--include=*.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'cruises', cruise['id'], ''), os.path.join(cruise_source_dir, REPORTS_DIRNAME)])
 
+    logging.info("Export User Uploaded Files")
+    subprocess.call(['rsync','-avi','--progress', '--delete', '--include=*', '--exclude=*.pdf', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(lowering_source_dir, FILES_DIRNAME)])
+
     # rsync cruise-level report from sealog-subastion to cruise data directory
     command = [
         'rsync',
