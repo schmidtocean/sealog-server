@@ -42,7 +42,7 @@ VESSEL_NAME = 'R/V Falkor (too)'
 OPENVDM_IP='10.23.9.20'
 OPENVDM_USER='mt'
 OPENVDM_SSH_KEY='/home/mt/.ssh/id_rsa_openvdm'
-CRUISEDATA_DIR_ON_DATA_WAREHOUSE='/mnt/soi_data1/CruiseData'
+CRUISEDATA_DIR_ON_DATA_WAREHOUSE='/mnt/CruiseData'
 SEALOG_DIR='Falkor_too/Raw/Sealog'
 
 CREATE_DEST_DIR = False
