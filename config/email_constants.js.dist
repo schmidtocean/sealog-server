@@ -39,6 +39,36 @@ const Nodemailer = require('nodemailer'); // eslint-disable-line no-unused-vars
 //   }
 // }); // eslint-disable-line no-dupe-keys
 
+// ------------------------------------------------------------------------- //
+// GMail OAuth
+// ------------------------------------------------------------------------- //
+
+const { google } = require('googleapis');
+
+const OAuth2 = google.auth.OAuth2;
+const oauth2Client = new OAuth2(
+  '<YOUR-OAuthportal.apps.googleusercontent.com>',
+  '<CLIENT-SECRET>',
+  'http://sealog-local-install.io'
+);
+
+oauth2Client.setCredentials({
+  refresh_token: '<REFRESH-TOKEN>'
+});
+
+const accessToken = oauth2Client.getAccessToken;
+
+emailTransporter = Nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    type: 'OAuth2',
+    user: 'datasystems@schmidtocean.org',
+    accessToken,
+    clientId: '<YOUR-OAuthportal.apps.googleusercontent.com>',
+    clientSecret: '<CLIENT-SECRET>',
+    refreshToken: '<REFRESH-TOKEN>'
+  }
+});// eslint-disable-line no-dupe-keys
 
 // ------------------------------------------------------------------------- //
 // MailGun integration

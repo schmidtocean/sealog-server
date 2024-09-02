@@ -38,6 +38,7 @@
     "bcryptjs": "^2.4.3",
     "check-disk-space": "^3.4.0",
     "deepcopy": "^2.1.0",
+    "googleapis": "^143.0.0",
     "hapi-auth-jwt2": "^10.5.1",
     "hapi-mongodb": "^10.0.3",
     "hapi-pino": "^12.1.0",
