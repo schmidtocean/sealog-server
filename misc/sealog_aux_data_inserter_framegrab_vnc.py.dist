@@ -55,7 +55,7 @@ dest_dir = '/data/sealog-FKt-files/images/'
 
 # Import sources list
 # event_list is list of event_values that trigger screengrab
-with open('sealog_aux_data_inserter_framegrab_vnc_sources.yml', 'r') as file:
+with open('misc/sealog_aux_data_inserter_framegrab_vnc_sources.yml', 'r') as file:
     config = yaml.safe_load(file)
 
 sources = config['sources']
