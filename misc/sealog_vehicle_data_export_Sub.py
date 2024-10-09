@@ -434,8 +434,9 @@ def _export_lowering_openrvdas_data_files(cruise, lowering): #pylint: disable=re
                 with open(destination_file, 'w', encoding='utf-8') as file:
                     for line in fcu.crop_file_data(culled_files):
                         file.write(line)
+                logging.info(f"Data exported for instrument: {data_file_def['output_prefix']}")
             else:
-                logging.warning("No files containing data in the specified range")
+                logging.warning(f"No files containing data in the specified range for instrument: {data_file_def['output_prefix']}")
 
         except Exception as err:
             logging.warning("Could not create cropped data file: %s", destination_file)
