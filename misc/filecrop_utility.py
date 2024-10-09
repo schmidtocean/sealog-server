@@ -61,7 +61,15 @@ class FileCropUtility():
                     self._header_str = file.readline().decode()
                     self._header_str = self._header_str or header_str
 
-                first_line = file.readline().decode().rstrip('\n')
+                # Read lines until we get a non-empty one
+                while True:
+                    first_line = file.readline().decode().strip()
+                    if first_line:  # If line is not empty
+                        break
+
+                if not first_line:
+                    logging.warning(f"No valid data found in {data_file}")
+                    continue
                 try:
                     first_ts = datetime.strptime(first_line.split(self.delimiter)[0],self.dt_format)
 
