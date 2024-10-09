@@ -57,6 +57,7 @@ OPENVDM_IP='10.23.9.20'
 OPENVDM_USER='mt'
 OPENVDM_SSH_KEY='/home/mt/.ssh/id_rsa_openvdm'
 CRUISEDATA_DIR_ON_DATA_WAREHOUSE='/mnt/CruiseData'
+CRUISEDATA_LOCAL_MOUNT='/mnt/CruiseData'
 OPENVDM_VEHICLE_DIR='Vehicles/' + VEHICLE_NAME
 SEALOG_DIR='Sealog'
 
@@ -417,8 +418,8 @@ def _export_lowering_openrvdas_data_files(cruise, lowering): #pylint: disable=re
 
     for data_file_def in DATA_FILES_DEFS:
 
-        source_regex = os.path.join(CRUISEDATA_DIR_ON_DATA_WAREHOUSE,cruise['cruise_id'], OPENRVDAS_SOURCE_DIR, data_file_def['source_regex'])
-        source_files = glob.glob(os.path.join(CRUISEDATA_DIR_ON_DATA_WAREHOUSE,cruise['cruise_id'], OPENRVDAS_SOURCE_DIR, data_file_def['source_regex']))
+        source_regex = os.path.join(CRUISEDATA_LOCAL_MOUNT,cruise['cruise_id'], OPENRVDAS_SOURCE_DIR, data_file_def['source_regex'])
+        source_files = glob.glob(os.path.join(CRUISEDATA_LOCAL_MOUNT,cruise['cruise_id'], OPENRVDAS_SOURCE_DIR, data_file_def['source_regex']))
         destination_file = os.path.join(CROPPED_DATA_DIR,cruise['cruise_id'],_export_dir_name(cruise['cruise_id'], lowering['lowering_id']),OPENRVDAS_DEST_DIR,cruise['cruise_id'] + '_' + data_file_def['output_prefix'] + lowering['lowering_id'] + '.txt')
 
         logging.debug('Source regex: %s', source_regex)
