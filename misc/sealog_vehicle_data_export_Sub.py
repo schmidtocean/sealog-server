@@ -106,7 +106,7 @@ DATA_FILES_DEFS = [
     { 'source_regex': '*sb_oxygen-*', 'output_prefix': 'sb_oxygen_'},
     { 'source_regex': '*sb_oxygen_corr-*', 'output_prefix': 'sb_oxygen_corr_'},
     { 'source_regex': '*sb_ph-*', 'output_prefix': 'sb_ph_'},
-    { 'source_regex': '*sb_ph_corr-*', 'output_prefix': 'sb_ph_corr'},
+    { 'source_regex': '*sb_ph_corr-*', 'output_prefix': 'sb_ph_corr_'},
     { 'source_regex': '*sb_paro-*', 'output_prefix': 'sb_paro_'},
     { 'source_regex': '*sb_paro_depth_corr-*', 'output_prefix': 'sb_paro_depth_corr_'},
     { 'source_regex': '*sb_sprint-*', 'output_prefix': 'sb_sprint_'},
