@@ -136,6 +136,14 @@
             name: usbl_depth_foxtrot
             uom: m
             round: 6 
+        USBL_Depth_HOTEL:
+            name: usbl_depth_hotel
+            uom: m
+            round: 6 
+        USBL_Depth_INDIGO:
+            name: usbl_depth_indigo
+            uom: m
+            round: 6 
         USBL_Depth_JULIET:
             name: usbl_depth_juliet
             uom: m
@@ -158,6 +166,14 @@
             round: 6   
         USBL_Latitude_FOXTROT:
             name: usbl_latitude_foxtrot
+            uom: ddeg
+            round: 6  
+        USBL_Latitude_HOTEL:
+            name: usbl_latitude_hotel
+            uom: ddeg
+            round: 6  
+        USBL_Latitude_INDIGO:
+            name: usbl_latitude_indigo
             uom: ddeg
             round: 6   
         USBL_Latitude_JULIET:
@@ -182,6 +198,14 @@
             round: 6 
         USBL_Longitude_FOXTROT:
             name: usbl_longitude_foxtrot
+            uom: ddeg
+            round: 6 
+        USBL_Longitude_HOTEL:
+            name: usbl_longitude_hotel
+            uom: ddeg
+            round: 6 
+        USBL_Longitude_INDIGO:
+            name: usbl_longitude_indigo
             uom: ddeg
             round: 6 
         USBL_Longitude_JULIET:
