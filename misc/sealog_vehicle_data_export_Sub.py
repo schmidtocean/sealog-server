@@ -103,6 +103,8 @@ DATA_FILES_DEFS = [
     { 'source_regex': '*sb_hightemp_pt100-*', 'output_prefix': 'sb_hightemp_pt100_'},
     { 'source_regex': '*sb_mech_comps-*', 'output_prefix': 'sb_mech_comps_'},
     { 'source_regex': '*sb_mech_valves-*', 'output_prefix': 'sb_mech_valves_'},
+    { 'source_regex': '*sb_miniips-*', 'output_prefix': 'sb_miniips_'},
+    { 'source_regex': '*sb_miniips_depth_corr-*', 'output_prefix': 'sb_miniips_depth_corr_'},
     { 'source_regex': '*sb_oxygen-*', 'output_prefix': 'sb_oxygen_'},
     { 'source_regex': '*sb_oxygen_corr-*', 'output_prefix': 'sb_oxygen_corr_'},
     { 'source_regex': '*sb_ph-*', 'output_prefix': 'sb_ph_'},
