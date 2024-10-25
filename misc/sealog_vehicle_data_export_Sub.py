@@ -45,6 +45,13 @@ from misc.reporting.sealog_build_cruise_summary_report_Sub import CruiseSummaryR
 from misc.reporting.sealog_build_lowering_summary_report import LoweringSummaryReport
 from misc.reporting.sealog_build_lowering_vehicle_report import LoweringVehicleReport
 
+from misc.python_sealog.slack import PooledSlackHandler
+
+# Get webhook URL from environment variable
+SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL')
+
+if not SLACK_WEBHOOK_URL:
+    raise ValueError("SLACK_WEBHOOK_URL environment variable is not set")
 
 # Location of exported files
 EXPORT_ROOT_DIR = '/data/sealog-Sub-export'
@@ -683,6 +690,11 @@ if __name__ == '__main__':
     LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
     parsed_args.verbosity = min(parsed_args.verbosity, max(LOG_LEVELS))
     logging.getLogger().setLevel(LOG_LEVELS[parsed_args.verbosity])
+
+    # Set up Slack logging
+    slack_handler = PooledSlackHandler(SLACK_WEBHOOK_URL, minimum_level=parsed_args.slack_level)
+    slack_handler.setFormatter(logging.Formatter('%(message)s'))
+    logging.getLogger().addHandler(slack_handler)
 
     if parsed_args.current_cruise and ( parsed_args.lowering_id or parsed_args.cruise_id ):
         logging.error("Can not specify current_cruise and also a lowering {(}-l{)} or cruise {(}-c{)}")
