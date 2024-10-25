@@ -692,11 +692,6 @@ if __name__ == '__main__':
     parsed_args.verbosity = min(parsed_args.verbosity, max(LOG_LEVELS))
     logging.getLogger().setLevel(LOG_LEVELS[parsed_args.verbosity])
 
-    # Set up Slack logging
-    slack_handler = PooledSlackHandler(SLACK_WEBHOOK_URL, minimum_level=SLACK_LOG_LEVEL)
-    slack_handler.setFormatter(logging.Formatter('%(message)s'))
-    logging.getLogger().addHandler(slack_handler)
-
     if parsed_args.current_cruise and ( parsed_args.lowering_id or parsed_args.cruise_id ):
         logging.error("Can not specify current_cruise and also a lowering {(}-l{)} or cruise {(}-c{)}")
         sys.exit(0)
@@ -759,6 +754,19 @@ if __name__ == '__main__':
         _push_2_data_warehouse(selected_cruise, selected_lowerings)
         logging.debug("Done")
         sys.exit(0)
+
+    # Set up Slack logging
+    report_title = f"Sealog Export Summary Report - {selected_cruise['cruise_id']}"
+    if selected_lowerings and len(selected_lowerings) == 1:
+        report_title += f" - {selected_lowerings[0]['lowering_id']}"
+
+    slack_handler = PooledSlackHandler(
+        SLACK_WEBHOOK_URL, 
+        minimum_level=SLACK_LOG_LEVEL,
+        report_title=report_title
+    )
+    slack_handler.setFormatter(logging.Formatter('%(message)s'))
+    logging.getLogger().addHandler(slack_handler)
 
     # Verify source directories
     success, msg = _verify_source_directories()

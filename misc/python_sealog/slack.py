@@ -1,4 +1,5 @@
 import sys
+import json
 import logging
 import requests
 from collections import defaultdict
@@ -8,10 +9,11 @@ import atexit
 class PooledSlackHandler(logging.Handler):
     """Custom logging handler that pools messages and sends them as a single digest"""
     
-    def __init__(self, webhook_url, minimum_level='WARNING', max_retries=3):
+    def __init__(self, webhook_url, minimum_level='WARNING', max_retries=3, report_title=None):
         super().__init__()
         self.webhook_url = webhook_url
         self.max_retries = max_retries
+        self.report_title = report_title or "Log Summary Report"
         self.setLevel(getattr(logging, minimum_level))
         
         # Initialize message pools for different log levels
@@ -48,17 +50,20 @@ class PooledSlackHandler(logging.Handler):
             return  # No messages to send
             
         try:
-            # Build the message blocks
+            # Debug print
+            print("Debug message pools:", dict(self.message_pools))
+            
             blocks = [{
                 'type': 'header',
                 'text': {
                     'type': 'plain_text',
-                    'text': f'Sealog Export Summary Report'
+                    'text': self.report_title
                 }
             }]
             
-            # Add divider after header
-            blocks.append({'type': 'divider'})
+            # Only add divider if we have messages
+            if any(self.message_pools.values()):
+                blocks.append({'type': 'divider'})
             
             # Process each level of messages
             for level in sorted(self.message_pools.keys(), reverse=True):
@@ -68,37 +73,46 @@ class PooledSlackHandler(logging.Handler):
                     
                 level_name, color = self._get_level_name_and_color(level)
                 
-                # Add section for this level
-                blocks.append({
-                    'type': 'section',
-                    'text': {
-                        'type': 'mrkdwn',
-                        'text': f"\n{level_name}"
-                    }
-                })
-                
-                # Add messages for this level
+                # Only add sections if we have messages
                 message_text = ""
                 for msg in messages:
                     message_text += f"• {msg['timestamp']} - {msg['message']}\n"
                 
-                blocks.append({
-                    'type': 'section',
-                    'text': {
-                        'type': 'mrkdwn',
-                        'text': message_text
-                    }
-                })
-                
-                blocks.append({'type': 'divider'})
+                if message_text:
+                    blocks.extend([
+                        {
+                            'type': 'section',
+                            'text': {
+                                'type': 'mrkdwn',
+                                'text': f"\n{level_name}"
+                            }
+                        },
+                        {
+                            'type': 'section',
+                            'text': {
+                                'type': 'mrkdwn',
+                                'text': message_text
+                            }
+                        },
+                        {'type': 'divider'}
+                    ])
             
-            # Create the payload
+            # Remove the last divider if it exists
+            if blocks and blocks[-1]['type'] == 'divider':
+                blocks.pop()
+                
             payload = {
-                'blocks': blocks,
-                'attachments': [{
+                'blocks': blocks
+            }
+            
+            # Only add attachment if we have messages
+            if self.message_pools:
+                payload['attachments'] = [{
                     'color': self._get_level_name_and_color(max(self.message_pools.keys()))[1]
                 }]
-            }
+                
+            # Debug print payload
+            print("Debug payload:", json.dumps(payload, indent=2))
             
             # Implement retry logic
             for attempt in range(self.max_retries):
@@ -115,7 +129,7 @@ class PooledSlackHandler(logging.Handler):
                 except requests.exceptions.RequestException as e:
                     if attempt == self.max_retries - 1:  # Last attempt
                         print(f"Error sending digest to Slack after {self.max_retries} attempts: {str(e)}", 
-                              file=sys.stderr)
+                            file=sys.stderr)
                         
         except Exception as e:
             print(f"Error sending message digest to Slack: {str(e)}", file=sys.stderr)
