@@ -26,6 +26,15 @@ class PooledSlackHandler(logging.Handler):
         """Store the log record in the appropriate pool"""
         try:
             msg = self.format(record)
+            # Deduplicate messages by keeping count
+            for existing_msg in self.message_pools[record.levelno]:
+                if existing_msg['message'] == msg:
+                    if 'count' not in existing_msg:
+                        existing_msg['count'] = 2
+                    else:
+                        existing_msg['count'] += 1
+                    return
+            
             self.message_pools[record.levelno].append({
                 'message': msg,
                 'timestamp': datetime.fromtimestamp(record.created).strftime('%H:%M:%S'),
@@ -44,76 +53,86 @@ class PooledSlackHandler(logging.Handler):
             return "ℹ️ *Info*", "#36A64F"
         return "🔍 *Debug*", "#999999"
 
+    def _truncate_message(self, text, max_length=2900):
+        """Truncate message if it exceeds max_length"""
+        if len(text) > max_length:
+            return text[:max_length] + "..."
+        return text
+
     def send_digest(self):
         """Send all pooled messages as a single digest"""
         if not any(self.message_pools.values()):
-            return  # No messages to send
-            
+            return
+
         try:
-            # Debug print
-            print("Debug message pools:", dict(self.message_pools))
-            
             blocks = [{
                 'type': 'header',
                 'text': {
                     'type': 'plain_text',
-                    'text': self.report_title
+                    'text': self.report_title,
+                    'emoji': True
                 }
             }]
-            
-            # Only add divider if we have messages
-            if any(self.message_pools.values()):
-                blocks.append({'type': 'divider'})
-            
+
             # Process each level of messages
             for level in sorted(self.message_pools.keys(), reverse=True):
                 messages = self.message_pools[level]
                 if not messages:
                     continue
-                    
+
                 level_name, color = self._get_level_name_and_color(level)
-                
-                # Only add sections if we have messages
                 message_text = ""
-                for msg in messages:
-                    message_text += f"• {msg['timestamp']} - {msg['message']}\n"
                 
+                # Group similar messages
+                for msg in messages:
+                    count_text = f" (×{msg['count']})" if 'count' in msg else ""
+                    message_text += f"• {msg['timestamp']} - {msg['message']}{count_text}\n"
+
                 if message_text:
-                    blocks.extend([
-                        {
+                    # Split messages if they're too long
+                    message_chunks = [message_text[i:i+2900] for i in range(0, len(message_text), 2900)]
+                    
+                    blocks.append({
+                        'type': 'section',
+                        'text': {
+                            'type': 'mrkdwn',
+                            'text': f"\n{level_name}"
+                        }
+                    })
+                    
+                    for chunk in message_chunks:
+                        blocks.append({
                             'type': 'section',
                             'text': {
                                 'type': 'mrkdwn',
-                                'text': f"\n{level_name}"
+                                'text': chunk
                             }
-                        },
-                        {
-                            'type': 'section',
-                            'text': {
-                                'type': 'mrkdwn',
-                                'text': message_text
-                            }
-                        },
-                        {'type': 'divider'}
-                    ])
-            
+                        })
+                    
+                    blocks.append({'type': 'divider'})
+
             # Remove the last divider if it exists
             if blocks and blocks[-1]['type'] == 'divider':
                 blocks.pop()
-                
+
+            # Ensure we don't exceed block limit
+            if len(blocks) > 50:
+                blocks = blocks[:49]
+                blocks.append({
+                    'type': 'section',
+                    'text': {
+                        'type': 'mrkdwn',
+                        'text': "⚠️ *Some messages were truncated due to Slack message limits*"
+                    }
+                })
+
             payload = {
-                'blocks': blocks
-            }
-            
-            # Only add attachment if we have messages
-            if self.message_pools:
-                payload['attachments'] = [{
+                'blocks': blocks,
+                'attachments': [{
                     'color': self._get_level_name_and_color(max(self.message_pools.keys()))[1]
                 }]
-                
-            # Debug print payload
-            print("Debug payload:", json.dumps(payload, indent=2))
-            
+            }
+
             # Implement retry logic
             for attempt in range(self.max_retries):
                 try:
@@ -127,9 +146,9 @@ class PooledSlackHandler(logging.Handler):
                     self.message_pools.clear()
                     break
                 except requests.exceptions.RequestException as e:
-                    if attempt == self.max_retries - 1:  # Last attempt
+                    if attempt == self.max_retries - 1:
                         print(f"Error sending digest to Slack after {self.max_retries} attempts: {str(e)}", 
                             file=sys.stderr)
-                        
+
         except Exception as e:
             print(f"Error sending message digest to Slack: {str(e)}", file=sys.stderr)
