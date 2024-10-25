@@ -49,6 +49,7 @@ from misc.python_sealog.slack import PooledSlackHandler
 
 # Get webhook URL from environment variable
 SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL')
+SLACK_LOG_LEVEL = 'INFO'
 
 if not SLACK_WEBHOOK_URL:
     raise ValueError("SLACK_WEBHOOK_URL environment variable is not set")
@@ -692,7 +693,7 @@ if __name__ == '__main__':
     logging.getLogger().setLevel(LOG_LEVELS[parsed_args.verbosity])
 
     # Set up Slack logging
-    slack_handler = PooledSlackHandler(SLACK_WEBHOOK_URL, minimum_level=parsed_args.slack_level)
+    slack_handler = PooledSlackHandler(SLACK_WEBHOOK_URL, minimum_level=SLACK_LOG_LEVEL)
     slack_handler.setFormatter(logging.Formatter('%(message)s'))
     logging.getLogger().addHandler(slack_handler)
 
