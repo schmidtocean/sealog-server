@@ -408,13 +408,13 @@ def _export_lowering_sealog_data_files(cruise, lowering): # pylint: disable=too-
 
         file.seek(0,0)
 
-        subprocess.call(['rsync','-avi','--progress', '--files-from=' + file.name , os.path.join(API_SERVER_FILE_PATH, 'images', ''), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), IMAGES_DIRNAME)])
+        subprocess.run(['rsync','-avi','--progress', '--files-from=' + file.name , os.path.join(API_SERVER_FILE_PATH, 'images', ''), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), IMAGES_DIRNAME)])
 
     # logging.info("Export Reports")
-    # subprocess.call(['rsync','-avi','--progress', '--delete', '--include=*.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), REPORTS_DIRNAME)])
+    # subprocess.run(['rsync','-avi','--progress', '--delete', '--include=*.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), REPORTS_DIRNAME)])
 
     # logging.info("Export Nav CSV")
-    # subprocess.call(['rsync','-avi','--progress', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], VEHICLE_NAME + '_' + lowering['lowering_id'] + '_nav.csv'), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']))])
+    # subprocess.run(['rsync','-avi','--progress', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], VEHICLE_NAME + '_' + lowering['lowering_id'] + '_nav.csv'), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']))])
 
 
 def _export_lowering_openrvdas_data_files(cruise, lowering): #pylint: disable=redefined-outer-name
@@ -502,7 +502,7 @@ def _export_cruise_sealog_data_files(cruise):
         logging.debug(str(err))
 
     # logging.info("Export Reports")
-    # subprocess.call(['rsync','-avi','--progress', '--delete', '--include=*.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'cruises', cruise['id'], ''), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], REPORTS_DIRNAME)])
+    # subprocess.run(['rsync','-avi','--progress', '--delete', '--include=*.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'cruises', cruise['id'], ''), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], REPORTS_DIRNAME)])
 
 
 def _build_cruise_reports(cruise):
@@ -570,7 +570,7 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
         return
 
     logging.info("Export Reports")
-    subprocess.call(['rsync','-avi','--progress', '--delete', '--include=*.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'cruises', cruise['id'], ''), os.path.join(cruise_source_dir, REPORTS_DIRNAME)])
+    subprocess.run(['rsync','-avi','--progress', '--delete', '--include=*.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'cruises', cruise['id'], ''), os.path.join(cruise_source_dir, REPORTS_DIRNAME)])
 
     # rsync cruise-level report from sealog-subastion to cruise data directory
     command = [
@@ -584,17 +584,17 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
     ]
 
     logging.debug(' '.join(command))
-    subprocess.call(command)
+    subprocess.run(command)
 
     for lowering in lowerings: # pylint: disable=redefined-outer-name
 
         lowering_source_dir = os.path.join(cruise_source_dir, _export_dir_name(cruise['cruise_id'], lowering['lowering_id']))
 
         logging.info("Export Reports")
-        subprocess.call(['rsync','-avi','--progress', '--delete', '--include=*_Report.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(lowering_source_dir, REPORTS_DIRNAME)])
+        subprocess.run(['rsync','-avi','--progress', '--delete', '--include=*_Report.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(lowering_source_dir, REPORTS_DIRNAME)])
 
         logging.info("Export User Uploaded Files")
-        subprocess.call(['rsync','-avi','--progress', '--delete', '--exclude=*_Report.pdf', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(lowering_source_dir, FILES_DIRNAME)])
+        subprocess.run(['rsync','-avi','--progress', '--delete', '--exclude=*_Report.pdf', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(lowering_source_dir, FILES_DIRNAME)])
 
         if os.path.isdir(lowering_source_dir):
             if CREATE_DEST_DIR:
@@ -609,7 +609,7 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
                 ]
 
                 logging.debug(' '.join(command))
-                subprocess.call(command)
+                subprocess.run(command)
 
             # rsyncs sealog data to destination folder
             command = ['rsync','-trimv',
@@ -622,7 +622,7 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
                 OPENVDM_USER + '@' + OPENVDM_IP + ':' + os.path.join( CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'], OPENVDM_VEHICLE_DIR, _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), SEALOG_DIR, '')
             ]
             logging.debug(' '.join(command))
-            subprocess.call(command)
+            subprocess.run(command)
 
         else:
             logging.error('Exported directory for lowering data not found')
@@ -641,7 +641,7 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
                 ]
 
                 logging.debug(' '.join(command))
-                subprocess.call(command)
+                subprocess.run(command)
 
             # rsyncs openrvdas data to destination folder
             command = [
@@ -656,7 +656,7 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
                 OPENVDM_USER + '@' + OPENVDM_IP + ':' + os.path.join(CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'], OPENVDM_VEHICLE_DIR, _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), OPENRVDAS_DEST_DIR, '')
             ]
             logging.debug(' '.join(command))
-            subprocess.call(command)
+            subprocess.run(command)
 
         else:
             logging.error('Cropped data directory for lowering data not found')
