@@ -36,6 +36,8 @@ LOWERINGS_API_PATH = '/api/v1/lowerings'
 
 API_SERVER_FILE_PATH = '/home/sealog/sealog-files'
 
+SLACK_WEBHOOK_URL = 'YOU-SLACK-WEBHOOK'
+
 TOKEN = ''
 
 HEADERS = {

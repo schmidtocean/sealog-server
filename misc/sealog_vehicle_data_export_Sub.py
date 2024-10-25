@@ -30,7 +30,7 @@ from datetime import datetime
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
 
-from misc.python_sealog.settings import API_SERVER_FILE_PATH
+from misc.python_sealog.settings import API_SERVER_FILE_PATH, SLACK_WEBHOOK_URL
 from misc.python_sealog.cruises import get_cruises, get_cruise_by_id, get_cruise_by_lowering
 from misc.python_sealog.lowerings import get_lowerings, get_lowering_by_id, get_lowerings_by_cruise
 from misc.python_sealog.misc import get_framegrab_list_by_lowering
@@ -47,14 +47,9 @@ from misc.reporting.sealog_build_lowering_vehicle_report import LoweringVehicleR
 
 from misc.python_sealog.slack import PooledSlackHandler
 
-# Get webhook URL from environment variable
-SLACK_WEBHOOK_URL = os.getenv('SLACK_WEBHOOK_URL')
 SLACK_LOG_LEVEL = 'INFO'
 
-if not SLACK_WEBHOOK_URL:
-    raise ValueError("SLACK_WEBHOOK_URL environment variable is not set")
-
-# Location of exported files
+# Location of exported files -n
 EXPORT_ROOT_DIR = '/data/sealog-Sub-export'
 
 # Name of Vehicle
