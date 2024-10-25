@@ -95,7 +95,7 @@ class FileCropUtility():
 
                     last_line = file.readline().decode().rstrip('\n')
                 
-                    logging.warn(f'lastline hack: {last_line}')
+                    logging.info(f'lastline hack: {last_line}')
                 # End of hack
 
                 try:
