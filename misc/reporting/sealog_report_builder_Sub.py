@@ -967,7 +967,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
             [
                 Paragraph('<b>Max Depth:</b> ' + str(self.lowering_record['stats']['max_depth']) + ' m' if self.lowering_record['stats']['max_depth'] else '', self.table_text),
                 '',
-                Paragraph('<b>Track Length:</b> ' + track_length_str, self.table_text),
+                Paragraph('<b>On-bottom Track Length:</b> ' + track_length_str, self.table_text),
             ],
             [
                 Paragraph('<b>Samples Collected:</b> ' + str(self.lowering_record['stats']['samples_collected']) if self.lowering_record['stats']['samples_collected'] else 'No samples collected', self.table_text)
@@ -1207,8 +1207,8 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
             return None
 
         # Get data within time bounds and with valid positions
-        idx = (self.lowering_data[:,self.lowering_data_headers.index('ts')].astype('datetime64') >= np.datetime64(self.lowering_record['milestones']['descending_dt'])) & \
-            (self.lowering_data[:,self.lowering_data_headers.index('ts')].astype('datetime64') < np.datetime64(self.lowering_record['milestones']['on_surface_dt'])) & \
+        idx = (self.lowering_data[:,self.lowering_data_headers.index('ts')].astype('datetime64') >= np.datetime64(self.lowering_record['milestones']['on_bottom_dt'])) & \
+            (self.lowering_data[:,self.lowering_data_headers.index('ts')].astype('datetime64') < np.datetime64(self.lowering_record['milestones']['off_bottom_dt'])) & \
             (self.lowering_data[:,self.lowering_data_headers.index(trackline_data_source + '.latitude_value')] != '0.0')
 
         dive_track_data = self.lowering_data[idx,:]
