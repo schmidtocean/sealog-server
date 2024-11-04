@@ -483,7 +483,7 @@ class CruiseReportCreator: # pylint: disable=too-many-instance-attributes,too-fe
             watch_change_events = get_events_by_lowering(lowering['id'],event_filter=['WATCH CHANGE'], export_format='csv')
             
             if not watch_change_events:
-                logging.warning("No WATCH CHANGE events captured, can't build watch change table.")
+                logging.warning("No WATCH CHANGE events captured, can't build watch change summary table.")
                 continue
 
             # load data into dataframe
@@ -1588,7 +1588,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
         free_form_data = self.lowering_data[idx,:]
 
         if len(free_form_data) == 0:
-            logging.warning("No FREE_FORM events captured, can't build FREE_FORM tables.")
+            logging.info("No FREE_FORM events captured, can't build FREE_FORM tables.")
             return list()
 
         position_data_source = None
@@ -1750,7 +1750,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
             event_value_data = self.lowering_data[idx,:]
 
             if len(event_value_data) == 0:
-                logging.warning("No %s events captured, can't build %s tables.", event_template_value, event_template_value)
+                logging.info("No %s events captured, can't build %s tables.", event_template_value, event_template_value)
                 event_value_tables_tables.append(list())
                 continue
 
@@ -1880,7 +1880,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
             event_value_data = self.lowering_data[idx,:]
 
             if len(event_value_data) == 0:
-                logging.warning("No %s events captured, can't build %s tables.", event_template_value, event_template_value)
+                logging.info("No %s events captured, can't build %s tables.", event_template_value, event_template_value)
                 event_value_tables_tables.append(list())
                 continue
 

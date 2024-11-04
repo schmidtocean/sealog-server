@@ -95,8 +95,8 @@ POST_CRUISE_REPORT_DIR = 'Vehicles/SuBastian'
 
 # Array of OpenRVDAS files to crop
 DATA_FILES_DEFS = [
-    { 'source_regex': '*_pt_uaf_oxygen-*', 'output_prefix': 'pt_uaf_oxygen_'},
-    { 'source_regex': '*_pt_whoi_mag-*', 'output_prefix': 'pt_whoi_mag_'},
+    #{ 'source_regex': '*_pt_uaf_oxygen-*', 'output_prefix': 'pt_uaf_oxygen_'},
+    #{ 'source_regex': '*_pt_whoi_mag-*', 'output_prefix': 'pt_whoi_mag_'},
     { 'source_regex': '*_pt_pmel_mapr-*', 'output_prefix': 'pt_pmel_mapr_'},
     { 'source_regex': '*sb_ctd_sbe49-*', 'output_prefix': 'sb_ctd_sbe49_'},
     { 'source_regex': '*sb_ctd_sbe49_depth_corr-*', 'output_prefix': 'sb_ctd_sbe49_depth_corr_'},
@@ -441,7 +441,7 @@ def _export_lowering_openrvdas_data_files(cruise, lowering): #pylint: disable=re
                         file.write(line)
                 logging.info(f"Data exported for instrument: {data_file_def['output_prefix']}")
             else:
-                logging.warning(f"No files containing data in the specified range for instrument: {data_file_def['output_prefix']}")
+                logging.warning(f"No files containing data in the specified range for : {data_file_def['output_prefix']}")
 
         except Exception as err:
             logging.warning("Could not create cropped data file: %s", destination_file)
