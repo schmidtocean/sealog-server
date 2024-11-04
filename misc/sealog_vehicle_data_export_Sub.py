@@ -30,7 +30,7 @@ from datetime import datetime
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
 
-from misc.python_sealog.settings import API_SERVER_FILE_PATH, SLACK_WEBHOOK_URL
+from misc.python_sealog.settings import API_SERVER_FILE_PATH, SLACK_WEBHOOK_URL, OPENVDM_IP
 from misc.python_sealog.cruises import get_cruises, get_cruise_by_id, get_cruise_by_lowering
 from misc.python_sealog.lowerings import get_lowerings, get_lowering_by_id, get_lowerings_by_cruise
 from misc.python_sealog.misc import get_framegrab_list_by_lowering
@@ -56,7 +56,7 @@ EXPORT_ROOT_DIR = '/data/sealog-Sub-export'
 VEHICLE_NAME = 'SuBastian'
 
 # OpenVDM Connetion information
-OPENVDM_IP='10.23.9.20'
+#OPENVDM_IP='10.23.9.20' - moved to python_sealog/settings.py
 OPENVDM_USER='mt'
 OPENVDM_SSH_KEY='/home/mt/.ssh/id_rsa_openvdm'
 CRUISEDATA_DIR_ON_DATA_WAREHOUSE='/mnt/CruiseData'
