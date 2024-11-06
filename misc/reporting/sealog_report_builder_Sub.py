@@ -483,7 +483,7 @@ class CruiseReportCreator: # pylint: disable=too-many-instance-attributes,too-fe
             watch_change_events = get_events_by_lowering(lowering['id'],event_filter=['WATCH CHANGE'], export_format='csv')
             
             if not watch_change_events:
-                logging.warning("No WATCH CHANGE events captured, can't build watch change table.")
+                logging.warning("No WATCH CHANGE events captured, can't build watch change summary table.")
                 continue
 
             # load data into dataframe
@@ -912,6 +912,10 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
         dive_stage_image._restrictSize(PAGE_WIDTH/2, 20 * cm) # pylint: disable=protected-access
         dive_stage_image.hAlign = 'CENTER'
 
+        # Calculate track length
+        track_length = self.calculate_dive_track_length()
+        track_length_str = f"{track_length:.2f} km" if track_length is not None else "N/A"
+
         summary_data = [
             [
                 dive_stage_image
@@ -961,9 +965,12 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
                 Paragraph('<b>Bounding Box:</b> ' + ', '.join([str(pos) for pos in self.lowering_record['stats']['bounding_box']]), self.table_text) if self.lowering_record['stats']['bounding_box'] else ''
             ],
             [
-                Paragraph('<b>Max Depth:</b> ' + str(self.lowering_record['stats']['max_depth']) if self.lowering_record['stats']['max_depth'] else '', self.table_text),
+                Paragraph('<b>Max Depth:</b> ' + str(self.lowering_record['stats']['max_depth']) + ' m' if self.lowering_record['stats']['max_depth'] else '', self.table_text),
                 '',
-                Paragraph('<b>Samples Collected:</b> ' + str(self.lowering_record['stats']['samples_collected']) if self.lowering_record['stats']['samples_collected'] else '0', self.table_text),
+                Paragraph('<b>On-bottom Track Length:</b> ' + track_length_str, self.table_text),
+            ],
+            [
+                Paragraph('<b>Samples Collected:</b> ' + str(self.lowering_record['stats']['samples_collected']) if self.lowering_record['stats']['samples_collected'] else 'No samples collected', self.table_text)
 
             ]
         ]
@@ -983,6 +990,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
                                 ('SPAN',(0,10),(3,10)),
                                 ('SPAN',(0,11),(1,11)),
                                 ('SPAN',(2,11),(3,11)),
+                                ('SPAN',(0,12),(3,12)),
                                 ('FONTSIZE',(0,0),(-1,-1),8),
                                 ('ALIGNMENT',(0,0),(-1,-1),'CENTER'),
                                 ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
@@ -1174,7 +1182,68 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
         svg_2_image_file = svg2rlg(imgdata)
 
         return svg_2_image_file
+    
+    def calculate_dive_track_length(self):
+        """
+        Calculate the total length of the dive track using the Haversine formula.
+        Returns distance in kilometers.
+        """
+        EARTH_RADIUS = 6371  # Earth's radius in kilometers
+        
+        trackline_data_source = None
 
+        for data_source in POS_DATA_SOURCES:
+            if data_source + '.latitude_value' in self.lowering_data_headers:
+                trackline_data_source = data_source
+                break
+
+            logging.warning("No %s lat/lng data captured, can't calculate track length from this source.", data_source)
+
+        if trackline_data_source is None:
+            return None
+
+        if not self.lowering_record['stats']['bounding_box']:
+            logging.warning("No bounding box defined, can't calculate track length.")
+            return None
+
+        # Get data within time bounds and with valid positions
+        idx = (self.lowering_data[:,self.lowering_data_headers.index('ts')].astype('datetime64') >= np.datetime64(self.lowering_record['milestones']['on_bottom_dt'])) & \
+            (self.lowering_data[:,self.lowering_data_headers.index('ts')].astype('datetime64') < np.datetime64(self.lowering_record['milestones']['off_bottom_dt'])) & \
+            (self.lowering_data[:,self.lowering_data_headers.index(trackline_data_source + '.latitude_value')] != '0.0')
+
+        dive_track_data = self.lowering_data[idx,:]
+
+        # Extract and clean longitude data
+        lons = np.array([float(lonStr[0]) if lonStr[0] else None for lonStr in 
+                        dive_track_data[:,[self.lowering_data_headers.index(trackline_data_source + '.longitude_value')]]])
+        lons = lons[lons != np.array(None)]
+
+        # Extract and clean latitude data
+        lats = np.array([float(latStr[0]) if latStr[0] else None for latStr in 
+                        dive_track_data[:,[self.lowering_data_headers.index(trackline_data_source + '.latitude_value')]]])
+        lats = lats[lats != np.array(None)]
+
+        if len(lats) < 2:
+            logging.warning("Insufficient position data to calculate track length")
+            return 0.0
+
+        # Calculate total distance using Haversine formula
+        total_distance = 0.0
+        for i in range(len(lats) - 1):
+            lat1, lon1 = math.radians(lats[i]), math.radians(lons[i])
+            lat2, lon2 = math.radians(lats[i + 1]), math.radians(lons[i + 1])
+            
+            dlat = lat2 - lat1
+            dlon = lon2 - lon1
+            
+            # Haversine formula
+            a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
+            distance = EARTH_RADIUS * c
+            
+            total_distance += distance
+
+        return total_distance
 
     def _build_downcast_ctd_data(self):
 
@@ -1519,7 +1588,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
         free_form_data = self.lowering_data[idx,:]
 
         if len(free_form_data) == 0:
-            logging.warning("No FREE_FORM events captured, can't build FREE_FORM tables.")
+            logging.info("No FREE_FORM events captured, can't build FREE_FORM tables.")
             return list()
 
         position_data_source = None
@@ -1681,7 +1750,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
             event_value_data = self.lowering_data[idx,:]
 
             if len(event_value_data) == 0:
-                logging.warning("No %s events captured, can't build %s tables.", event_template_value, event_template_value)
+                logging.info("No %s events captured, can't build %s tables.", event_template_value, event_template_value)
                 event_value_tables_tables.append(list())
                 continue
 
@@ -1811,7 +1880,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
             event_value_data = self.lowering_data[idx,:]
 
             if len(event_value_data) == 0:
-                logging.warning("No %s events captured, can't build %s tables.", event_template_value, event_template_value)
+                logging.info("No %s events captured, can't build %s tables.", event_template_value, event_template_value)
                 event_value_tables_tables.append(list())
                 continue
 
@@ -1958,7 +2027,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
         watch_change_data = self.lowering_data[idx,:]
         
         if watch_change_data.size == 0:
-            logging.warning("No WATCH CHANGE events captured, can't build watch change table.")
+            logging.warning("No WATCH CHANGE events captured, can't build watch change table")
             return None
 
         logging.debug('Building watch_change tables')
@@ -2237,7 +2306,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
         problem_data = self.lowering_data[idx,:]
 
         if problem_data.size == 0:
-            logging.warning("No PROBLEM events captured, can't build problem table.")
+            logging.info("No PROBLEM events captured, can't build problem table.")
             return list()
 
         problem_tables = []
