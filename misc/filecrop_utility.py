@@ -156,7 +156,7 @@ class FileCropUtility():
                             line_ts = datetime.strptime(line_str.split(self.delimiter)[0],self.dt_format)
 
                         except Exception as err:
-                            logging.warning("Could not process line: %s", line_str)
+                            logging.warning("Could not process line: %s in %s", line_str, data_file)
                             logging.debug(str(err))
 
                         else:
