@@ -22,6 +22,7 @@ import logging
 from datetime import datetime
 from collections import defaultdict
 
+
 class FileCropUtility():
     '''
     This class handles culling subsets of data from files based on start/stop
@@ -35,9 +36,8 @@ class FileCropUtility():
         self.dt_format = dt_format
         self.header = header
         self._header_str = None
-
-        # Track error counts per file for improved logging
         self._error_counts = defaultdict(lambda: defaultdict(int))
+        self._current_file = None
 
     @property
     def header_str(self):
@@ -45,12 +45,25 @@ class FileCropUtility():
 
     def _log_error(self, message, filename, details=None):
         """Track error occurrences and log first instance with details"""
-        self._error_counts[filename][message] += 1
-        if self._error_counts[filename][message] == 1:
+        basename = os.path.basename(filename)
+        self._error_counts[basename][message] += 1
+        count = self._error_counts[basename][message]
+        
+        # Only log the first occurrence with details
+        if count == 1:
             if details:
-                logging.warning("%s in %s: %s", message, filename, details)
+                logging.warning("%s in %s: %s", message, basename, details)
             else:
-                logging.warning("%s in %s", message, filename)
+                logging.warning("%s in %s", message, basename)
+
+    def _report_errors(self):
+        """Report accumulated errors if any"""
+        for filename, errors in self._error_counts.items():
+            for message, count in errors.items():
+                if count > 1:
+                    logging.warning("%s occurred %d times in %s", message, count, filename)
+        # Clear counts after reporting
+        self._error_counts.clear()
 
     def cull_files(self, data_files):
         '''
@@ -64,7 +77,11 @@ class FileCropUtility():
         logging.info("Culling file list")
         culled_files = []
 
+        # Clear any previous error counts
+        self._error_counts.clear()
+
         for data_file in data_files:
+            self._current_file = data_file
             logging.debug("File: %s", data_file)
             with open(data_file, 'rb') as file:
 
@@ -79,13 +96,13 @@ class FileCropUtility():
                         break
 
                 if not first_line:
-                    self._log_error("No valid data found", os.path.basename(data_file))
+                    self._log_error("No valid data found", data_file)
                     continue
 
                 try:
                     first_ts = datetime.strptime(first_line.split(self.delimiter)[0], self.dt_format)
                 except Exception as err:
-                    self._log_error("Could not process first line", os.path.basename(data_file), first_line)
+                    self._log_error("Could not process first line", data_file, first_line)
                     logging.debug(str(err))
                     continue
 
@@ -105,14 +122,13 @@ class FileCropUtility():
                         file.seek(-2, os.SEEK_CUR)
 
                     last_line = file.readline().decode().rstrip('\n')
-                
                     logging.info(f'lastline hack: {last_line}')
                 # End of hack
 
                 try:
                     last_ts = datetime.strptime(last_line.split(self.delimiter)[0], self.dt_format)
                 except Exception as err:
-                    self._log_error("Could not process last line", os.path.basename(data_file), last_line)
+                    self._log_error("Could not process last line", data_file, last_line)
                     logging.debug(str(err))
                     continue
 
@@ -123,6 +139,7 @@ class FileCropUtility():
                 logging.debug("    ** Include this file **")
                 culled_files.append(data_file)
 
+        self._report_errors()  # Report errors after processing all files
         logging.debug("Culled file list: \n\t%s", '\n\t'.join(culled_files))
         return culled_files
 
@@ -139,14 +156,17 @@ class FileCropUtility():
         if not isinstance(data_files, list):
             data_files = [data_files]
 
-        while True:
+        # Clear any previous error counts
+        self._error_counts.clear()
 
+        try:
             # send header
             if not header_sent:
                 header_sent = True
                 yield self._header_str
 
             for idx, data_file in enumerate(data_files):
+                self._current_file = data_file
                 logging.debug("File: %s", data_file)
 
                 with open(data_file, 'r') as file:
@@ -165,16 +185,12 @@ class FileCropUtility():
                         try:
                             line_ts = datetime.strptime(line_str.split(self.delimiter)[0], self.dt_format)
                         except Exception as err:
-                            self._log_error("Could not process line", os.path.basename(data_file), line_str.rstrip('\n'))
+                            self._log_error("Could not process line", data_file, line_str.rstrip('\n'))
                             logging.debug(str(err))
                             continue
 
                         if (line_ts - self.start_dt).total_seconds() >= 0 and (self.stop_dt - line_ts).total_seconds() >= 0:
                             yield line_str
 
-            # Report aggregated errors at the end of processing
-            for filename, errors in self._error_counts.items():
-                for message, count in errors.items():
-                    if count > 1:
-                        logging.warning("%s occurred %d times in %s", message, count, filename)
-            break
+        finally:
+            self._report_errors()  # Report errors after all files are processed
