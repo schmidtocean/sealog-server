@@ -9,9 +9,9 @@ BUGS:
 NOTES:
 AUTHOR:     Webb Pinner
 COMPANY:    OceanDataTools.org
-VERSION:    1.0
+VERSION:    1.2
 CREATED:    2021-04-21
-REVISION:   2023-07-21
+REVISION:   2024-11-19
 
 LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for details)
                 Copyright (C) OceanDataTools.org 2023
@@ -20,6 +20,7 @@ LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for det
 import os
 import logging
 from datetime import datetime
+from collections import defaultdict
 
 class FileCropUtility():
     '''
@@ -35,11 +36,21 @@ class FileCropUtility():
         self.header = header
         self._header_str = None
 
+        # Track error counts per file for improved logging
+        self._error_counts = defaultdict(lambda: defaultdict(int))
 
     @property
     def header_str(self):
         return self._header_str
-    
+
+    def _log_error(self, message, filename, details=None):
+        """Track error occurrences and log first instance with details"""
+        self._error_counts[filename][message] += 1
+        if self._error_counts[filename][message] == 1:
+            if details:
+                logging.warning("%s in %s: %s", message, filename, details)
+            else:
+                logging.warning("%s in %s", message, filename)
 
     def cull_files(self, data_files):
         '''
@@ -55,7 +66,7 @@ class FileCropUtility():
 
         for data_file in data_files:
             logging.debug("File: %s", data_file)
-            with open( data_file, 'rb' ) as file :
+            with open(data_file, 'rb') as file:
 
                 if self.header:
                     self._header_str = file.readline().decode()
@@ -68,13 +79,13 @@ class FileCropUtility():
                         break
 
                 if not first_line:
-                    logging.warning(f"No valid data found in {data_file}")
+                    self._log_error("No valid data found", os.path.basename(data_file))
                     continue
-                try:
-                    first_ts = datetime.strptime(first_line.split(self.delimiter)[0],self.dt_format)
 
+                try:
+                    first_ts = datetime.strptime(first_line.split(self.delimiter)[0], self.dt_format)
                 except Exception as err:
-                    logging.warning("Could not process first line in %s: %s", data_file, first_line)
+                    self._log_error("Could not process first line", os.path.basename(data_file), first_line)
                     logging.debug(str(err))
                     continue
 
@@ -99,9 +110,9 @@ class FileCropUtility():
                 # End of hack
 
                 try:
-                    last_ts = datetime.strptime(last_line.split(self.delimiter)[0],self.dt_format)
+                    last_ts = datetime.strptime(last_line.split(self.delimiter)[0], self.dt_format)
                 except Exception as err:
-                    logging.warning("Could not process last line in %s: %s", data_file, last_line)
+                    self._log_error("Could not process last line", os.path.basename(data_file), last_line)
                     logging.debug(str(err))
                     continue
 
@@ -138,8 +149,7 @@ class FileCropUtility():
             for idx, data_file in enumerate(data_files):
                 logging.debug("File: %s", data_file)
 
-                with open( data_file, 'r' ) as file:
-
+                with open(data_file, 'r') as file:
                     if self.header:
                         _ = file.readline()
 
@@ -153,15 +163,18 @@ class FileCropUtility():
                             continue
 
                         try:
-                            line_ts = datetime.strptime(line_str.split(self.delimiter)[0],self.dt_format)
-
+                            line_ts = datetime.strptime(line_str.split(self.delimiter)[0], self.dt_format)
                         except Exception as err:
-                            logging.warning("Could not process line: %s in %s", line_str, data_file.split('/')[-1])
+                            self._log_error("Could not process line", os.path.basename(data_file), line_str.rstrip('\n'))
                             logging.debug(str(err))
+                            continue
 
-                        else:
+                        if (line_ts - self.start_dt).total_seconds() >= 0 and (self.stop_dt - line_ts).total_seconds() >= 0:
+                            yield line_str
 
-                            if (line_ts - self.start_dt).total_seconds() >= 0 and (self.stop_dt - line_ts).total_seconds() >= 0:
-                                yield line_str
-
+            # Report aggregated errors at the end of processing
+            for filename, errors in self._error_counts.items():
+                for message, count in errors.items():
+                    if count > 1:
+                        logging.warning("%s occurred %d times in %s", message, count, filename)
             break
