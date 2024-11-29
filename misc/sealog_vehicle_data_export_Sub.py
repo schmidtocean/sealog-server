@@ -147,6 +147,9 @@ def _verify_source_directories():
 
     if not os.path.isdir(LOWERINGS_FILE_PATH):
         return False, "Cannot find lowerings file path: %s" % LOWERINGS_FILE_PATH
+    
+    if not os.path.isdir(CRUISEDATA_LOCAL_MOUNT):
+        return False, "Cannot find local CruiseData mount: %s" % CRUISEDATA_LOCAL_MOUNT
 
     return True, ''
 
@@ -420,15 +423,15 @@ def _export_lowering_openrvdas_data_files(cruise, lowering): #pylint: disable=re
     logging.info("Exporting lowering-level OpenRVDAS data files")
 
     fcu = FileCropUtility(datetime.strptime(lowering['start_ts'], '%Y-%m-%dT%H:%M:%S.%fZ'), datetime.strptime(lowering['stop_ts'], '%Y-%m-%dT%H:%M:%S.%fZ'), header=True)
-
+    logging.debug('FCU init success')
     for data_file_def in DATA_FILES_DEFS:
 
         source_regex = os.path.join(CRUISEDATA_LOCAL_MOUNT,cruise['cruise_id'], OPENRVDAS_SOURCE_DIR, data_file_def['source_regex'])
+        logging.debug('Source regex: %s', source_regex)
         source_files = glob.glob(os.path.join(CRUISEDATA_LOCAL_MOUNT,cruise['cruise_id'], OPENRVDAS_SOURCE_DIR, data_file_def['source_regex']))
+        logging.debug('Source files: \n\t%s', '\n\t'.join(source_files))
         destination_file = os.path.join(CROPPED_DATA_DIR,cruise['cruise_id'],_export_dir_name(cruise['cruise_id'], lowering['lowering_id']),OPENRVDAS_DEST_DIR,cruise['cruise_id'] + '_' + data_file_def['output_prefix'] + lowering['lowering_id'] + '.txt')
 
-        logging.debug('Source regex: %s', source_regex)
-        logging.debug('Source files: \n\t%s', '\n\t'.join(source_files))
         logging.debug('Destination file: %s', destination_file)
 
         try:
