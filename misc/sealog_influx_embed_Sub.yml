@@ -40,6 +40,14 @@
             name: altitude
             uom: m
             round: 2
+        SB_Sprint_Roll:
+            name: roll
+            uom: deg
+            round: 2
+        SB_Sprint_Pitch:
+            name: pitch
+            uom: deg
+            round: 2
 -
     data_source: vehicleRealtimeUSBLData
     query_measurements:
