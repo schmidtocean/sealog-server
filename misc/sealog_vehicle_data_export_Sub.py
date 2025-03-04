@@ -97,7 +97,7 @@ POST_CRUISE_REPORT_DIR = 'Vehicles/SuBastian'
 DATA_FILES_DEFS = [
     #{ 'source_regex': '*_pt_uaf_oxygen-*', 'output_prefix': 'pt_uaf_oxygen_'},
     #{ 'source_regex': '*_pt_whoi_mag-*', 'output_prefix': 'pt_whoi_mag_'},
-    { 'source_regex': '*_pt_pmel_mapr-*', 'output_prefix': 'pt_pmel_mapr_'},
+   # { 'source_regex': '*_pt_pmel_mapr-*', 'output_prefix': 'pt_pmel_mapr_'},
     { 'source_regex': '*sb_ctd_sbe49-*', 'output_prefix': 'sb_ctd_sbe49_'},
     { 'source_regex': '*sb_ctd_sbe49_depth_corr-*', 'output_prefix': 'sb_ctd_sbe49_depth_corr_'},
     { 'source_regex': '*sb_ctd_uvsvx-*', 'output_prefix': 'sb_ctd_uvsvx_'},
@@ -119,6 +119,7 @@ DATA_FILES_DEFS = [
     { 'source_regex': '*sb_sprint_diag-*', 'output_prefix': 'sb_sprint_diag_'},
     { 'source_regex': '*sb_sprint_psonnav-*', 'output_prefix': 'sb_sprint_psonnav_'},
     { 'source_regex': '*usbl_gga_alpha-*', 'output_prefix': 'usbl_gga_alpha_'},
+    { 'source_regex': '*usbl_gga_bravo-*', 'output_prefix': 'usbl_gga_bravo'},
     { 'source_regex': '*usbl_gga_foxtrot-*', 'output_prefix': 'usbl_gga_foxtrot_'}
 ]
 
