@@ -796,13 +796,13 @@ exports.plugin = {
 
           // if a start date and/or stop date is provided, ensure the new date works with the existing date
           if (lowering.start_ts && lowering.stop_ts && (lowering.start_ts >= lowering.stop_ts)) {
-            return Boom.badRequest('Start date must be older than stop date');
+            return Boom.badRequest('Start date must be before stop date');
           }
-          else if (lowering.start_ts && lowering.start_ts >= result.stop_ts) {
-            return Boom.badRequest('Start date must be older than stop date');
+          else if (lowering.start_ts && !lowering.stop_ts && lowering.start_ts >= result.stop_ts) {
+            return Boom.badRequest('New start date must be before the existing stop date');
           }
-          else if (lowering.stop_ts && result.start_ts >= lowering.stop_ts) {
-            return Boom.badRequest('Start date must be older than stop date');
+          else if (lowering.stop_ts && !lowering.start_ts && result.start_ts >= lowering.stop_ts) {
+            return Boom.badRequest('New stop date must be after the existing start date');
           }
 
         }
