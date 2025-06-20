@@ -124,6 +124,10 @@
     query_measurements:
         - usbl_gga
     aux_record_lookup:
+        USBL_Depth_CHARLIE:
+            name: usbl_depth_charlie
+            uom: m
+            round: 6 
         USBL_Depth_DELTA:
             name: usbl_depth_delta
             uom: m
@@ -156,6 +160,10 @@
             name: usbl_depth_mike
             uom: m
             round: 6        
+        USBL_Latitude_CHARLIE:
+            name: usbl_latitude_charlie
+            uom: ddeg
+            round: 6 
         USBL_Latitude_DELTA:
             name: usbl_latitude_delta
             uom: ddeg
@@ -188,6 +196,10 @@
             name: usbl_latitude_mike
             uom: ddeg
             round: 6      
+        USBL_Longitude_CHARLIE:
+            name: usbl_longitude_charlie
+            uom: ddeg
+            round: 6 
         USBL_Longitude_DELTA:
             name: usbl_longitude_delta
             uom: ddeg
