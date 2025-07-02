@@ -53,15 +53,15 @@
     query_measurements:
         - usbl_gga
     aux_record_lookup:
-        USBL_Latitude_BRAVO:
+        USBL_Latitude_ALPHA:
             name: latitude
             uom: ddeg
             round: 6
-        USBL_Longitude_BRAVO:
+        USBL_Longitude_ALPHA:
             name: longitude
             uom: ddeg
             round: 6
-        USBL_Depth_BRAVO:
+        USBL_Depth_ALPHA:
             name: depth
             uom: m
             round: 2
