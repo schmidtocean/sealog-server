@@ -68,54 +68,51 @@ def update_cruise_record(cruise_record, server_instances):
             "authorization": instance['token']
         }
 
-        cruise_found = None
-
         try:
+            cruise_found = None
+            
+            # Check if cruise exists on the remote server
             url = instance['apiServerURL'] + CRUISES_API_PATH + '/' + cruise_record['id']
-            req = requests.get(url, headers=instance_headers)
+            # Timeout to prevent the request from hanging indefinitely
+            req = requests.get(url, headers=instance_headers, timeout=10)
 
             if req.status_code != 404:
+                # This will raise an exception if HTTP err 500, 401 etc
+                req.raise_for_status()
                 logging.debug("Cruise found for Cruise UID: %s", cruise_record['id'])
-                logging.debug(req.text)
-                cruise_found = json.loads(req.text)
-                logging.debug(json.dumps(cruise_found, indent=2))
-
+                cruise_found = req.json()
             else:
                 logging.debug("Cruise NOT found for Cruise UID: %s", cruise_record['id'])
 
+            # If a cruise record with the cruiseID does exist, perform an update
+            if cruise_found:
+                update_url = instance['apiServerURL'] + CRUISES_API_PATH + '/' + cruise_found['id']
+                update_data = deepcopy(cruise_record)
+                del update_data['id']
+                
+                patch_req = requests.patch(update_url, headers=instance_headers, data=json.dumps(update_data), timeout=10)
+                patch_req.raise_for_status() # Check for errors on the PATCH request
+                logging.info(f"Successfully updated cruise {cruise_record['id']} on {instance['apiServerURL']}")
+                logging.debug(patch_req.text)
+
+            # If a cruise record with the cruiseID does NOT exist, perform insert
+            else:
+                insert_url = instance['apiServerURL'] + CRUISES_API_PATH
+                
+                post_req = requests.post(insert_url, headers=instance_headers, data=json.dumps(cruise_record), timeout=10)
+                post_req.raise_for_status() # Check for errors on POST request
+                logging.info(f"Successfully inserted cruise {cruise_record['id']} on {instance['apiServerURL']}")
+                logging.debug(post_req.text)
+
+        # Catch specific network exceptions
+        except requests.exceptions.RequestException as error:
+            # The 'raise' statement is removed. The script now logs the error and
+            # continues to the next server instance if present
+            logging.error(f"Could not connect to server {instance.get('apiServerURL', 'N/A')}: {error}")
+
+        # Catch any other potential errors gracefully
         except Exception as error:
-            logging.error(str(error))
-            raise error
-
-        # if a cruise record with the cruiseID does exist, perform an update
-        if cruise_found is not None:
-            try:
-                url = instance['apiServerURL'] + CRUISES_API_PATH + '/' + cruise_found['id']
-                logging.debug(url)
-                logging.debug(json.dumps(cruise_record))
-                update_cruise_record = deepcopy(cruise_record)
-                del update_cruise_record['id']
-                req = requests.patch(url, headers=instance_headers, data = json.dumps(update_cruise_record))
-                logging.debug(req.text)
-
-            except Exception as error:
-                logging.error('Error updating existing cruise record')
-                logging.debug(str(error))
-                raise error
-
-        # if a cruise record with the cruiseID does NOT exist, perform an insert
-        else:
-            try:
-                url = instance['apiServerURL'] + CRUISES_API_PATH
-                logging.debug(url)
-                logging.debug(json.dumps(cruise_record))
-                req = requests.post(url, headers=instance_headers, data = json.dumps(cruise_record))
-                logging.debug(req.text)
-
-            except Exception as error:
-                logging.error('Error inserting new cruise record')
-                logging.debug(str(error))
-                raise error
+            logging.error(f"An unexpected error occurred while syncing with {instance.get('apiServerURL', 'N/A')}: {error}")
 
 
 # -------------------------------------------------------------------------------------
@@ -127,31 +124,49 @@ async def cruise_sync(server_instances):
     update_cruise_record whenever there is a change.
     '''
 
-    try:
-        async with websockets.connect(WS_SERVER_URL) as websocket:
+    # infinite outer loop added to handle reconnect
+    while True:
+        try:
+            async with websockets.connect(WS_SERVER_URL) as websocket:
+                logging.info("Successfully connected to WebSocket server.")
+                await websocket.send(json.dumps(HELLO))
 
-            await websocket.send(json.dumps(HELLO))
+                # Inner loop for receiving messages while connected.
+                while True:
+                    try:
+                        # Set a timeout on receiving messages to detect dead connections
+                        cruise = await asyncio.wait_for(websocket.recv(), timeout=300.0)
+                        cruise_obj = json.loads(cruise)
 
-            while True:
+                        if cruise_obj.get('type') == 'ping':
+                            await websocket.send(json.dumps(PING))
+                        elif cruise_obj.get('type') == 'pub':
+                            logging.debug(json.dumps(cruise_obj, indent=2))
+                            logging.info("Updating cruise record on other sealog instances")
+                            update_cruise_record(cruise_obj['message'], server_instances)
+                        else:
+                            logging.debug(f"Skipping message of type: {cruise_obj.get('type')}")
+                    
+                    except asyncio.TimeoutError:
+                        logging.warning("WebSocket recv timed out. Sending a ping to check connection.")
+                        try:
+                            # If recv times out the connection might be stale
+                            # Send a ping with a short timeout to confirm
+                            await asyncio.wait_for(websocket.ping(), timeout=10)
+                        except asyncio.TimeoutError:
+                            logging.error("WebSocket ping timed out. Connection is likely dead.")
+                            break # Exit inner loop to trigger reconnection
 
-                cruise = await websocket.recv()
-                cruise_obj = json.loads(cruise)
-
-                if cruise_obj['type'] and cruise_obj['type'] == 'ping':
-
-                    await websocket.send(json.dumps(PING))
-
-                elif cruise_obj['type'] and cruise_obj['type'] == 'pub':
-
-                    logging.debug(json.dumps(cruise_obj, indent=2))
-                    logging.info("Updating cruise record on other sealog instances")
-                    update_cruise_record(cruise_obj['message'], server_instances)
-
-                else:
-                    logging.debug("Skipping because cruise value is in the exclude set")
-
-    except Exception as error:
-        logging.error(str(error))
+        # Catch specific websocket connection errors
+        except (websockets.exceptions.ConnectionClosed, websockets.exceptions.InvalidURI, ConnectionRefusedError) as error:
+            logging.error(f"WebSocket connection error: {error}. Retrying in 300 seconds...")
+        
+        # Catch any other unexpected exceptions
+        except Exception as error:
+            logging.error(f"An unexpected error occurred in the main loop: {error}. Retrying in 300 seconds...")
+        
+        # If exception occurs wait before reconnect
+        await asyncio.sleep(300)
 
 # -------------------------------------------------------------------------------------
 # Required python code for running the script as a stand-alone utility
@@ -197,7 +212,7 @@ if __name__ == '__main__':
 
     # Run the main loop
     try:
-        asyncio.get_event_loop().run_until_complete(cruise_sync(server_instances))
+        asyncio.run(cruise_sync(server_instances))
     except KeyboardInterrupt:
         print('Interrupted')
         try:
