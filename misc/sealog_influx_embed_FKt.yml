@@ -1,25 +1,25 @@
 -
     data_source: vesselRealtimeNavData
     query_measurements:
-        - posmv
+        - seapath380
     aux_record_lookup:
-        POSMV_HeadingTrue:
+        Seapath_HeadingTrue:
             name: heading
             uom: deg
             round: 3
-        POSMV_Latitude:
+        Seapath_Latitude:
             name: latitude
             uom: ddeg
             round: 6
-        POSMV_Longitude:
+        Seapath_Longitude:
             name: longitude
             uom: ddeg
             round: 6
-        POSMV_SpeedKt:
+        Seapath_SpeedKt:
             name: speed
             uom: knots
             round: 3
-        POSMV_CourseTrue:
+        Seapath_CourseTrue:
             name: course
             uom: deg
             round: 1
