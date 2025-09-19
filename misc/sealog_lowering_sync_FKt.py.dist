@@ -1,0 +1,165 @@
+#!/usr/bin/env python3
+'''
+FILE:           sealog_lowering_sync_FKt.py
+
+DESCRIPTION:    This service posts lowering milestones from sealog-sub to sealog-fkt.
+                It connects as a client to a source sealog's WebSocket event feed. 
+                When it detects a lowering milestone (e.g., "Off deck" or "On deck"),
+                it posts a new event to sealog-fkt
+
+BUGS:
+NOTES:
+AUTHOR:     Kaarel-SOI
+VERSION:    1.0
+CREATED:    2025-09-15
+REVISION:   2025-09-15
+
+LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for details)
+                Copyright (C) OceanDataTools.org 2025
+'''
+
+import sys
+import asyncio
+import json
+import logging
+import time
+import requests
+import websockets
+import os
+import argparse
+
+SOURCE_SEALOG_WS = os.environ.get('SOURCE_SEALOG_WS', 'ws://10.23.9.25:8100')
+SOURCE_SEALOG_API = os.environ.get('SOURCE_SEALOG_API', 'http://10.23.9.25:8100/')
+SOURCE_API_TOKEN = ('')
+SOURCE_HEADERS = {'authorization': SOURCE_API_TOKEN}
+
+DESTINATION_SEALOG_API = os.environ.get('DESTINATION_SEALOG_API', 'http://10.23.9.25:8000/')
+DESTINATION_API_TOKEN = ('')
+DESTINATION_HEADERS = {'authorization': DESTINATION_API_TOKEN}
+
+API_BASE_PATH = os.environ.get('API_BASE_PATH', 'sealog-server')
+LOWERINGS_API_PATH = f"{API_BASE_PATH}/api/v1/lowerings"
+LOWERING_BY_EVENT_PATH = f"{API_BASE_PATH}/api/v1/lowerings/byevent"
+EVENTS_API_PATH = f"{API_BASE_PATH}/api/v1/events"
+
+DESTINATION_EVENT_VALUE = "ROV"
+MILESTONE_TO_DESTINATION_STATUS = {
+    'off deck': 'Deployed',
+    'on deck': 'Recovered'
+}
+
+# WebSocket client connection details
+CLIENT_WSID = 'sealogMilestoneForwarder'
+HELLO = {
+    'type': 'hello',
+    'id': CLIENT_WSID,
+    'auth': {'headers': {}},
+    'version': '2',
+    'subs': ['/ws/status/newEvents']
+}
+PING = {'type':'ping', 'id':CLIENT_WSID}
+
+
+def get_lowering_from_source(event_id):
+    """Get lowering record from the source server based on an event ID"""
+    try:
+        url = f"{SOURCE_SEALOG_API}{LOWERING_BY_EVENT_PATH}/{event_id}"
+        response = requests.get(url, headers=SOURCE_HEADERS, timeout=10)
+        response.raise_for_status()
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Could not get lowering from source for event {event_id}: {e}")
+        return None
+
+def post_event_to_destination(source_lowering, source_event, milestone):
+    """Constructs and posts a new event to the destination server"""
+    try:
+        dive_number = source_lowering.get('lowering_id', 'UNKNOWN')
+        status = MILESTONE_TO_DESTINATION_STATUS.get(milestone, 'UNKNOWN')
+
+        new_event = {
+            "event_value": DESTINATION_EVENT_VALUE,
+            "event_options": [
+                {
+                    "event_option_name": "status",
+                    "event_option_value": status
+                },
+                {
+                    "event_option_name": "dive_number",
+                    "event_option_value": dive_number
+                }
+            ],
+            "ts": source_event['ts'],
+            "event_author": source_event.get('event_author', 'sync_script')
+        }
+
+        url = f"{DESTINATION_SEALOG_API}{EVENTS_API_PATH}"
+        response = requests.post(url, headers=DESTINATION_HEADERS, json=new_event, timeout=10)
+        response.raise_for_status()
+        logging.info(f"Successfully posted new event for dive '{dive_number}' with status '{status}' to destination")
+
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Failed to post new event to destination: {e}")
+
+
+async def forward_milestones():
+    """Main function to connect to the source and forward milestone events"""
+    async with websockets.connect(SOURCE_SEALOG_WS) as websocket:
+        await websocket.send(json.dumps(HELLO))
+
+        async for msg in websocket:
+            msg_obj = json.loads(msg)
+
+            if msg_obj.get('type') == 'ping':
+                await websocket.send(json.dumps(PING))
+
+            elif msg_obj.get('type') == 'pub':
+                event = msg_obj['message']
+                logging.debug("Event from source: \n%s", json.dumps(event, indent=2))
+
+                milestone_value = None
+                for option in event.get('event_options', []):
+                    value = option.get('event_option_value', '').lower()
+                    if value in MILESTONE_TO_DESTINATION_STATUS:
+                        milestone_value = value
+                        break
+                
+                if not milestone_value:
+                    logging.debug("Event is not a target milestone. Ignoring.")
+                    continue
+
+                logging.info(f"Found milestone event: '{milestone_value}'. Processing...")
+
+                source_lowering = get_lowering_from_source(event['id'])
+                if not source_lowering:
+                    continue
+                
+                post_event_to_destination(source_lowering, event, milestone_value)
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Sealog Milestone Forwarder Service')
+    parser.add_argument('-v', '--verbosity', dest='verbosity',
+                        default=0, action='count',
+                        help='Increase output verbosity')
+    parsed_args = parser.parse_args()
+
+    LOGGING_FORMAT = '%(asctime)-15s %(levelname)s - %(message)s'
+    logging.basicConfig(format=LOGGING_FORMAT)
+    LOG_LEVELS = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+    parsed_args.verbosity = min(parsed_args.verbosity, max(LOG_LEVELS))
+    logging.getLogger().setLevel(LOG_LEVELS[parsed_args.verbosity])
+
+    while True:
+        try:
+            logging.info("Connecting to source Sealog at %s...", SOURCE_SEALOG_WS)
+            asyncio.run(forward_milestones())
+        except (websockets.exceptions.ConnectionClosedError, ConnectionRefusedError) as e:
+            logging.error("Connection to source failed: %s. Retrying in 5 seconds...", e)
+            time.sleep(5)
+        except KeyboardInterrupt:
+            logging.info("Script stopped by user")
+            sys.exit(0)
+        except Exception as e:
+            logging.error("An unexpected error occurred: %s. Retrying in 5 seconds...", e)
+            time.sleep(5)

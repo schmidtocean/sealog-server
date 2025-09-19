@@ -31,6 +31,7 @@ misc/sealog_cruise_responder.py
 misc/sealog_cruise_sync.py
 misc/sealog_influx_embed.yml
 misc/sealog_lowering_responder.py
+misc/sealog_lowering_sync_FKt.py
 misc/sealog_postLowering.sh
 misc/sealog_preLowering.sh
 misc/sealog_restoreDBfromBackup.sh
