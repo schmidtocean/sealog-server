@@ -167,8 +167,8 @@ def combine_files_at_1hz(files, output_file):
     aligned_dfs = []
     for df in dfs:
         df_aligned = timestamps_1hz.join(df, on="Timestamp", how="left")
-        df_filled = df_aligned.fill_null(strategy="forward", limit=30)
-        df_filled = df_filled.fill_null(strategy="backward", limit=30)
+        #df_filled = df_aligned.fill_null(strategy="forward", limit=30)
+        #df_filled = df_filled.fill_null(strategy="backward", limit=30)
         aligned_dfs.append(df_filled)
 
     combined = aligned_dfs[0]
