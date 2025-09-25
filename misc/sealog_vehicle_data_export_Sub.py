@@ -39,6 +39,7 @@ from misc.python_sealog.event_aux_data import get_event_aux_data_by_lowering
 from misc.python_sealog.event_exports import get_event_export, get_event_exports_by_lowering
 from misc.python_sealog.event_templates import get_event_templates
 from misc.filecrop_utility import FileCropUtility
+from misc.combine_csv_files import combine_files_at_1hz
 
 from misc.reporting.sealog_build_cruise_summary_report_Sub import CruiseSummaryReport
 #from misc.reporting.sealog_build_lowering_sample_report_soi import LoweringSampleReport
@@ -451,6 +452,16 @@ def _export_lowering_openrvdas_data_files(cruise, lowering): #pylint: disable=re
             logging.warning("Could not create cropped data file: %s", destination_file)
             logging.debug(str(err))
 
+def _export_combined_csv_file(cruise, lowering):
+
+    logging.info("Building Combined OpenRVDAS csv file")
+    source_dir = os.path.join(CROPPED_DATA_DIR,cruise['cruise_id'],_export_dir_name(cruise['cruise_id'], lowering['lowering_id']))
+    source_files = os.path.join(source_dir, '*.txt')
+    dest_filepath = os.path.join(source_dir, cruise['cruise_id'] + '_combined_1Hz_' + lowering['lowering_id'] + '.csv')
+
+    combine_files_at_1hz(source_files, dest_filepath)
+
+
 def _export_lowering_nav_csv_files(lowering): #pylint: disable=redefined-outer-name
     '''
     Export the csv-formatting file containing the lowering markers
@@ -835,6 +846,9 @@ if __name__ == '__main__':
 
         # export lowering cropped data files
         _export_lowering_openrvdas_data_files(selected_cruise, selected_lowering)
+
+        # export combined csv data file
+        _export_combined_csv_file(selected_cruise, selected_lowering)
 
         # export lowering data files
         _export_lowering_sealog_data_files(selected_cruise, selected_lowering)
