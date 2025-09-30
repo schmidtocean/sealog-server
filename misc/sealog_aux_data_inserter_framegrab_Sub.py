@@ -66,18 +66,18 @@ dest_dir = '/data/sealog-Sub-files/images'
 
 sources = [
     {
-        'source_url': 'http://10.23.46.60/images/',
+       'source_url': 'http://10.23.46.60/images/',
         'source_filename': 'scicam.jpg',
         'source_name': 'SCICAM',
         'filename_prefix': 'SCICAM_',
         'filename_suffix': '.jpg'
     },
-    {
-        'source_url': 'http://10.23.46.61/images/',
-        'source_filename': 'sitcam.jpg',
-        'source_name': 'SITCAM',
-        'filename_prefix': 'SITCAM_',
-        'filename_suffix': '.jpg'
+#    {
+#        'source_url': 'http://10.23.46.61/images/',
+#        'source_filename': 'sitcam.jpg',
+#        'source_name': 'SITCAM',
+#        'filename_prefix': 'SITCAM_',
+#        'filename_suffix': '.jpg'
 #    },
 #    {
 #        'source_url': 'http://10.23.46.62/images/',
@@ -94,18 +94,18 @@ sources = [
 #        'filename_suffix': '.jpg'
 #    },
 #    {
-#        'source_url': 'http://10.23.46.64.images/',
+#        'source_url': 'http://10.23.46.64/images/',
 #        'source_filename': 'scitoo.jpg',
 #        'source_name': 'SCITOO',
 #        'filename_prefix': 'SCITOO_',
 #        'filename_suffix': '.jpg'
 #    },
-#    {
-#        'source_url': 'http://10.23.46.65/images/',
-#        'source_filename': 'sittoo.jpg',
-#        'source_name': 'SITTOO',
-#        'filename_prefix': 'SITTOO_',
-#        'filename_suffix': '.jpg'
+    {
+        'source_url': 'http://10.23.46.65/images/',
+        'source_filename': 'sittoo.jpg',
+        'source_name': 'SITTOO',
+        'filename_prefix': 'SITTOO_',
+        'filename_suffix': '.jpg'
     }
 ]
 
