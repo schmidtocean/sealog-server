@@ -119,6 +119,11 @@ def combine_files_at_1hz(files, output_file):
             pl.col("Timestamp").dt.truncate("1s")
         )
 
+        # This resamples by taking the first entry for each second
+        df = df.group_by("Timestamp").agg(
+            pl.all().exclude("Timestamp").first()
+        )
+
         basename = os.path.splitext(os.path.basename(f))[0]
         parts = basename.split("_")
         prefix = "_".join(parts[1:-1]) + "_"
