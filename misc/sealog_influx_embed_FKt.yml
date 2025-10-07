@@ -107,15 +107,15 @@
         - em712
         - em2040
     aux_record_lookup:
-        EM124_Depth_xducer_m:
+        EM124_Depth_m:
             name: em124_depth
             uom: m
             round: 3 
-        EM712_Depth_xducer_m:
+        EM712_Depth_m:
             name: em712_depth
             uom: m
             round: 3        
-        EM2040_Depth_xducer_m:
+        EM2040_Depth_m:
             name: em2040_depth
             uom: m
             round: 3        
