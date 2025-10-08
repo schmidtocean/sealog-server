@@ -57,11 +57,6 @@ import polars as pl
 import pandas as pd
 
 
-# This can't work - the function only runs if CSV was read successfully, if there was a dtype mismatch the data never gets read therefore calling the function on a df is not possible.
-# If it did work it would only catch precision loss on very large floats
-# 3.14 Will survive the round trip but still produce a type error
-
-
 def combine_files_at_1hz(files, output_file):
     """
     Combine multiple timestamped CSV files into a single file sampled at 1Hz.
@@ -157,9 +152,6 @@ def combine_files_at_1hz(files, output_file):
     aligned_dfs = []
     for df in dfs:
         df_aligned = timestamps_1hz.join(df, on="Timestamp", how="left")
-        #df_filled = df_aligned.fill_null(strategy="forward", limit=30)
-        #df_filled = df_filled.fill_null(strategy="backward", limit=30)
-        #aligned_dfs.append(df_filled)
 
         aligned_dfs.append(df_aligned)
 
