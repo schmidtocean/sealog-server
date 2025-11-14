@@ -97,19 +97,18 @@ POST_CRUISE_REPORT_DIR = 'Vehicles/SuBastian'
 DATA_FILES_DEFS = [
     #{ 'source_regex': '*_pt_uaf_oxygen-*', 'output_prefix': 'pt_uaf_oxygen_'},
     #{ 'source_regex': '*_pt_whoi_mag-*', 'output_prefix': 'pt_whoi_mag_'},
-   # { 'source_regex': '*_pt_pmel_mapr-*', 'output_prefix': 'pt_pmel_mapr_'},
+    # { 'source_regex': '*_pt_pmel_mapr-*', 'output_prefix': 'pt_pmel_mapr_'},
     { 'source_regex': '*sb_ctd_sbe49-*', 'output_prefix': 'sb_ctd_sbe49_'},
     { 'source_regex': '*sb_ctd_sbe49_depth_corr-*', 'output_prefix': 'sb_ctd_sbe49_depth_corr_'},
     { 'source_regex': '*sb_ctd_uvsvx-*', 'output_prefix': 'sb_ctd_uvsvx_'},
     { 'source_regex': '*sb_ctd_uvsvx_depth_corr-*', 'output_prefix': 'sb_ctd_uvsvx_depth_corr_'},
-    { 'source_regex': '*sb_ctd_uvsvx_depth_teos-*', 'output_prefix': 'sb_ctd_uvsvx_depth_teos_'},
     { 'source_regex': '*sb_hightemp_pt100-*', 'output_prefix': 'sb_hightemp_pt100_'},
     { 'source_regex': '*sb_mech_comps-*', 'output_prefix': 'sb_mech_comps_'},
     { 'source_regex': '*sb_mech_valves-*', 'output_prefix': 'sb_mech_valves_'},
     { 'source_regex': '*sb_miniips-*', 'output_prefix': 'sb_miniips_'},
     { 'source_regex': '*sb_miniips_depth_corr-*', 'output_prefix': 'sb_miniips_depth_corr_'},
     { 'source_regex': '*sb_oxygen-*', 'output_prefix': 'sb_oxygen_'},
-    { 'source_regex': '*sb_oxygen_corr-*', 'output_prefix': 'sb_oxygen_corr_'},
+    { 'source_regex': '*sb_oxygen_corr_sbe49-*', 'output_prefix': 'sb_oxygen_corr_sbe49_'},
     { 'source_regex': '*sb_ph-*', 'output_prefix': 'sb_ph_'},
     { 'source_regex': '*sb_ph_corr-*', 'output_prefix': 'sb_ph_corr_'},
     { 'source_regex': '*sb_paro-*', 'output_prefix': 'sb_paro_'},
@@ -118,9 +117,9 @@ DATA_FILES_DEFS = [
     { 'source_regex': '*sb_sprint_depth_corr-*', 'output_prefix': 'sb_sprint_depth_corr_'},
     { 'source_regex': '*sb_sprint_diag-*', 'output_prefix': 'sb_sprint_diag_'},
     { 'source_regex': '*sb_sprint_psonnav-*', 'output_prefix': 'sb_sprint_psonnav_'},
-    { 'source_regex': '*usbl_gga_alpha-*', 'output_prefix': 'usbl_gga_alpha_'},
-    { 'source_regex': '*usbl_gga_bravo-*', 'output_prefix': 'usbl_gga_bravo_'},
-    { 'source_regex': '*usbl_gga_foxtrot-*', 'output_prefix': 'usbl_gga_foxtrot_'}
+    { 'source_regex': '*usbl_alpha_gga-*', 'output_prefix': 'usbl_alpha_gga_'},
+    { 'source_regex': '*usbl_bravo_gga-*', 'output_prefix': 'usbl_bravo_gga_'},
+    { 'source_regex': '*usbl_foxtrot_gga-*', 'output_prefix': 'usbl_foxtrot_gga_'}
 ]
 
 def _export_dir_name(cruise_id, lowering_id):

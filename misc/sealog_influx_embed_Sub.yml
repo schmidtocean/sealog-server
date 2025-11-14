@@ -51,7 +51,7 @@
 -
     data_source: vehicleRealtimeUSBLData
     query_measurements:
-        - usbl_gga
+        - usbl
     aux_record_lookup:
         USBL_Latitude_ALPHA:
             name: latitude
