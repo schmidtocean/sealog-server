@@ -116,7 +116,7 @@ DATA_FILES_DEFS = [
     { 'source_regex': '*sb_sprint-*', 'output_prefix': 'sb_sprint_'},
     { 'source_regex': '*sb_sprint_depth_corr-*', 'output_prefix': 'sb_sprint_depth_corr_'},
     { 'source_regex': '*sb_sprint_diag-*', 'output_prefix': 'sb_sprint_diag_'},
-    { 'source_regex': '*sb_sprint_psonnav-*', 'output_prefix': 'sb_sprint_psonnav_'},
+    # { 'source_regex': '*sb_sprint_psonnav-*', 'output_prefix': 'sb_sprint_psonnav_'},
     { 'source_regex': '*usbl_alpha_gga-*', 'output_prefix': 'usbl_alpha_gga_'},
     { 'source_regex': '*usbl_bravo_gga-*', 'output_prefix': 'usbl_bravo_gga_'},
     { 'source_regex': '*usbl_foxtrot_gga-*', 'output_prefix': 'usbl_foxtrot_gga_'}
