@@ -113,11 +113,11 @@
             name: saturation_raw
             uom: "%"
             round: 3
-        SB_Oxygen_Concentration_Corr:
+        SB_Oxygen_Concentration_Corr_sbe49:
             name: concentration_corr
             uom: "\u03BC mol"
             round: 3
-        SB_Oxygen_Saturation_Corr:
+        SB_Oxygen_Saturation_Corr_sbe49:
             name: saturation_corr
             uom: "%"
             round: 3
@@ -160,7 +160,7 @@
             name: sv
             uom: m/s
             round: 2
-        SB_CTD_UVSVX_Depth_TEOS:
+        SB_CTD_UVSVX_Depth_Corr:
             name: depth_teos
             uom: m
             round: 2
