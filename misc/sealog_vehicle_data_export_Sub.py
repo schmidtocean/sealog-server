@@ -459,7 +459,7 @@ def _export_combined_csv_file(cruise, lowering):
     source_files_pattern = os.path.join(source_dir, OPENRVDAS_DEST_DIR, '*.txt')
     logging.info(f"    -> SEARCHING WITH PATTERN: {source_files_pattern}")
     
-    dest_filepath = os.path.join(source_dir, cruise['cruise_id'] + '_combined_1Hz_' + lowering['lowering_id'] + '.csv')
+    dest_filepath = os.path.join(source_dir, OPENRVDAS_DEST_DIR, cruise['cruise_id'] + '_combined_1Hz_' + lowering['lowering_id'] + '.csv')
 
     # Expand the glob pattern into a list of actual file paths.
     list_of_files = glob.glob(source_files_pattern)
