@@ -52,9 +52,9 @@ LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for det
 import os
 import argparse
 import logging
+import sys
 
 import polars as pl
-import pandas as pd
 
 
 def combine_files_at_1hz(files, output_file):
@@ -134,19 +134,12 @@ def combine_files_at_1hz(files, output_file):
         logging.info("Nothing to combine, quitting.")
         return
 
-    all_timestamps = []
-    for df in dfs:
-        all_timestamps.extend(df["Timestamp"].to_list())
-
-    min_timestamp = min(all_timestamps)
-    max_timestamp = max(all_timestamps)
-
-    pandas_range = pd.date_range(
-        start=min_timestamp, end=max_timestamp, freq="1s"
-    )
+    all_timestamps_df = pl.concat([df.select("Timestamp") for df in dfs])
+    min_timestamp = all_timestamps_df["Timestamp"].min()
+    max_timestamp = all_timestamps_df["Timestamp"].max()
 
     timestamps_1hz = pl.DataFrame({
-        "Timestamp": pl.Series("Timestamp", pandas_range).cast(pl.Datetime)
+        "Timestamp": pl.datetime_range(start=min_timestamp, end=max_timestamp, interval="1s", eager=True)
     })
 
     aligned_dfs = []
