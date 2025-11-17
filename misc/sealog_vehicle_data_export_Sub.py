@@ -689,6 +689,7 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
                     '-trimv',
                     '--min-size=0',
                     '--progress',
+                    '--ignore-errors',
                     '--delete',
                     '-e',
                     'ssh -i ' + OPENVDM_SSH_KEY,
