@@ -455,11 +455,24 @@ def _export_lowering_openrvdas_data_files(cruise, lowering): #pylint: disable=re
 def _export_combined_csv_file(cruise, lowering):
 
     logging.info("Building Combined OpenRVDAS csv file")
-    source_dir = os.path.join(CROPPED_DATA_DIR,cruise['cruise_id'],_export_dir_name(cruise['cruise_id'], lowering['lowering_id']))
-    source_files = os.path.join(source_dir, '*.txt')
+    source_dir = os.path.join(CROPPED_DATA_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']))
+    source_files_pattern = os.path.join(source_dir, OPENRVDAS_DEST_DIR, '*.txt')
+    logging.info(f"    -> SEARCHING WITH PATTERN: {source_files_pattern}")
+    
     dest_filepath = os.path.join(source_dir, cruise['cruise_id'] + '_combined_1Hz_' + lowering['lowering_id'] + '.csv')
 
-    combine_files_at_1hz(source_files, dest_filepath)
+    # Expand the glob pattern into a list of actual file paths.
+    list_of_files = glob.glob(source_files_pattern)
+
+    # Only proceed if the list of files is not empty.
+    if list_of_files:
+        try:
+            # Pass the LIST of files to the function, not the pattern string
+            combine_files_at_1hz(list_of_files, dest_filepath)
+        except Exception as e:
+            logging.error("Combining files failed. Error: %s", e)
+    else:
+        logging.warning("Search found no cropped .txt files to combine. Skipping combination step.")
 
 def _export_lowering_nav_csv_files(lowering): #pylint: disable=redefined-outer-name
     '''
