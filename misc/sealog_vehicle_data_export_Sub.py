@@ -874,7 +874,13 @@ if __name__ == '__main__':
 
     # sync data to data warehouse
     if not parsed_args.no_transfer:
-        _push_2_data_warehouse(selected_cruise, selected_lowerings)
+        success = _push_2_data_warehouse(selected_cruise, selected_lowerings)
+        if success:
+            logging.info(":white_check_mark: Successfully completed export and transfer with no issues")
+        else:
+            logging.error("Export completed but one or more transfers failed, check logs.")
+    else:
+        logging.info("Export completed (data transfer skipped).")
 
-    logging.debug("Done")
+    logging.shutdown()
 
