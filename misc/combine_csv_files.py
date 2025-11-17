@@ -108,7 +108,7 @@ def combine_files_at_1hz(files, output_file):
 
         df = df.with_columns(
             pl.col("Timestamp")
-            .str.to_datetime()
+            .str.to_datetime("%Y-%m-%dT%H:%M:%S%.fZ", strict=False)
             .dt.replace_time_zone(None)
         ).with_columns(
             pl.col("Timestamp").dt.truncate("1s")
