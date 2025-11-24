@@ -120,7 +120,7 @@ DATA_FILES_DEFS = [
     # { 'source_regex': '*sb_sprint_psonnav-*', 'output_prefix': 'sb_sprint_psonnav_'},
     { 'source_regex': '*usbl_alpha_gga-*', 'output_prefix': 'usbl_alpha_gga_'},
     { 'source_regex': '*usbl_bravo_gga-*', 'output_prefix': 'usbl_bravo_gga_'},
-    { 'source_regex': '*usbl_foxtrot_gga-*', 'output_prefix': 'usbl_foxtrot_gga_'}
+    { 'source_regex': '*usbl_hotel_gga-*', 'output_prefix': 'usbl_hotel_gga_'}
 ]
 
 def _export_dir_name(cruise_id, lowering_id):
