@@ -39,6 +39,7 @@ from misc.python_sealog.event_aux_data import get_event_aux_data_by_lowering
 from misc.python_sealog.event_exports import get_event_export, get_event_exports_by_lowering
 from misc.python_sealog.event_templates import get_event_templates
 from misc.filecrop_utility import FileCropUtility
+from misc.combine_csv_files import combine_files_at_1hz
 
 from misc.reporting.sealog_build_cruise_summary_report_Sub import CruiseSummaryReport
 #from misc.reporting.sealog_build_lowering_sample_report_soi import LoweringSampleReport
@@ -451,6 +452,28 @@ def _export_lowering_openrvdas_data_files(cruise, lowering): #pylint: disable=re
             logging.warning("Could not create cropped data file: %s", destination_file)
             logging.debug(str(err))
 
+def _export_combined_csv_file(cruise, lowering):
+
+    logging.info("Building Combined OpenRVDAS csv file")
+    source_dir = os.path.join(CROPPED_DATA_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']))
+    source_files_pattern = os.path.join(source_dir, OPENRVDAS_DEST_DIR, '*.txt')
+    logging.info(f"    -> SEARCHING WITH PATTERN: {source_files_pattern}")
+    
+    dest_filepath = os.path.join(source_dir, OPENRVDAS_DEST_DIR, cruise['cruise_id'] + '_combined_1Hz_' + lowering['lowering_id'] + '.csv')
+
+    # Expand the glob pattern into a list of actual file paths.
+    list_of_files = glob.glob(source_files_pattern)
+
+    # Only proceed if the list of files is not empty.
+    if list_of_files:
+        try:
+            # Pass the LIST of files to the function, not the pattern string
+            combine_files_at_1hz(list_of_files, dest_filepath)
+        except Exception as e:
+            logging.error("Combining files failed. Error: %s", e)
+    else:
+        logging.warning("Search found no cropped .txt files to combine. Skipping combination step.")
+
 def _export_lowering_nav_csv_files(lowering): #pylint: disable=redefined-outer-name
     '''
     Export the csv-formatting file containing the lowering markers
@@ -666,6 +689,7 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
                     '-trimv',
                     '--min-size=0',
                     '--progress',
+                    '--ignore-errors',
                     '--delete',
                     '-e',
                     'ssh -i ' + OPENVDM_SSH_KEY,
@@ -836,6 +860,9 @@ if __name__ == '__main__':
         # export lowering cropped data files
         _export_lowering_openrvdas_data_files(selected_cruise, selected_lowering)
 
+        # export combined csv data file
+        _export_combined_csv_file(selected_cruise, selected_lowering)
+
         # export lowering data files
         _export_lowering_sealog_data_files(selected_cruise, selected_lowering)
 
@@ -847,7 +874,13 @@ if __name__ == '__main__':
 
     # sync data to data warehouse
     if not parsed_args.no_transfer:
-        _push_2_data_warehouse(selected_cruise, selected_lowerings)
+        success = _push_2_data_warehouse(selected_cruise, selected_lowerings)
+        if success:
+            logging.warning(":white_check_mark: Successfully completed export and transfer with no issues")
+        else:
+            logging.error("Export completed but one or more transfers failed, check logs.")
+    else:
+        logging.warning("Export completed (data transfer skipped).")
 
-    logging.debug("Done")
+    logging.shutdown()
 
