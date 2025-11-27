@@ -519,12 +519,16 @@ class CruiseReportCreator: # pylint: disable=too-many-instance-attributes,too-fe
                 # print(sum_df)
                 
                 #add this data to the totals df
-                df_watchstander_tot = pd.concat([
+                concat_list = [
                         df_watchstander_tot,
                         sum_df
-                    ],
-                    ignore_index=True
-                )
+                    ]
+                concat_list = [df for df in concat_list if not df.empty and not df.isna().all(axis=None)]
+                if concat_list:
+                    df_watchstander_tot = pd.concat(
+                        concat_list,
+                        ignore_index=True
+                    )
 
         # Convert duration columns to timedelta if necessary
         duration_columns = ['pilot', 'co-pilot', 'datalogger']
@@ -2005,7 +2009,7 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
                 Paragraph(event[self.lowering_data_headers.index('event_author')], self.sample_table_text),
                 Paragraph('%0.6f %s\n%0.6f %s' % (float(event[self.lowering_data_headers.index(position_data_source + '.latitude_value')]), event[self.lowering_data_headers.index(position_data_source + '.latitude_uom')], float(event[self.lowering_data_headers.index(position_data_source + '.longitude_value')]), event[self.lowering_data_headers.index(position_data_source + '.longitude_uom')]) if position_data_source + '.latitude_value' in self.lowering_data_headers and len(event[self.lowering_data_headers.index(position_data_source + '.latitude_value')]) > 0 else 'No Data', self.sample_table_text),
                 Paragraph(event[self.lowering_data_headers.index(depth_data_source + '.depth_value')] + ' ' + event[self.lowering_data_headers.index(depth_data_source + '.depth_uom')], self.sample_table_text) if depth_data_source + '.depth_value' in self.lowering_data_headers else 'No Data',
-                Paragraph(self._build_text_comment(event_value_data[row]), self.sample_table_text)
+                Paragraph(self._build_text_comment(event), self.sample_table_text)
             ])
 
         event_table = Table(event_table_data, colWidths=[2*cm,2.2*cm,1.8*cm,3*cm,1.5*cm,5.5*cm], style=[
@@ -2134,12 +2138,10 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
             columns=col_names)             # column names
 
         manhours['ts'] = pd.to_datetime(manhours['ts'], utc=True) # transfrom string to datetime
-        manhours['time_diff'] = 0
+        manhours['time_diff'] = (manhours['ts'].shift(-1) - manhours['ts']).dt.total_seconds()
 
-        for i in range(manhours.shape[0]-1):
-            manhours['time_diff'][i] = (manhours['ts'][i+1] - manhours['ts'][i]).total_seconds()
-
-        manhours['time_diff'][-1] = (self.lowering_record['milestones']['stop_dt'] - manhours['ts'][-1]).total_seconds()
+        if manhours.shape[0] > 0:
+            manhours.loc[manhours.index[-1], 'time_diff'] = (self.lowering_record['milestones']['stop_dt'] - manhours['ts'].iloc[-1]).total_seconds()
 
         for row in range(len(seconds)):
 
@@ -2235,12 +2237,10 @@ class LoweringReportCreator: # pylint: disable=too-many-instance-attributes,too-
                                 columns=col_names)                # column names
 
         manhours['ts'] = pd.to_datetime(manhours['ts'], utc=True) # transfrom string to datetime
-        manhours['time_diff'] = 0
+        manhours['time_diff'] = (manhours['ts'].shift(-1) - manhours['ts']).dt.total_seconds()
 
-        for i in range(manhours.shape[0]-1):
-            manhours['time_diff'][i] = (manhours['ts'][i+1] - manhours['ts'][i]).total_seconds()
-
-        manhours['time_diff'][-1] = (self.lowering_record['milestones']['stop_dt'] - manhours['ts'][-1]).total_seconds()
+        if manhours.shape[0] > 0:
+            manhours.loc[manhours.index[-1], 'time_diff'] = (self.lowering_record['milestones']['stop_dt'] - manhours['ts'].iloc[-1]).total_seconds()
 
         for row in range(len(pilot_hours)):
             pilot_hours[row,1] = manhours.loc[manhours['event_option.pilot'] == pilot_hours[row,0], 'time_diff'].sum().astype('datetime64[s]')
