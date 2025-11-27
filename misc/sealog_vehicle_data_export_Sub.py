@@ -652,11 +652,10 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
                 result = subprocess.run(['rsync','-trimv',
                     '--min-size=0',
                     '--progress',
+                    '--whole-file',
                     '--delete',
-                    '-e',
-                    'ssh -i ' + OPENVDM_SSH_KEY,
                     os.path.join(lowering_source_dir, ''),
-                    OPENVDM_USER + '@' + OPENVDM_IP + ':' + os.path.join( CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'], OPENVDM_VEHICLE_DIR, _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), SEALOG_DIR, '')
+                    os.path.join( CRUISEDATA_LOCAL_MOUNT, cruise['cruise_id'], OPENVDM_VEHICLE_DIR, _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), SEALOG_DIR, '')
                 ], check=True, capture_output=True, text=True)
             except subprocess.CalledProcessError as e:
                 logging.error("Failed to sync sealog data for lowering %s: %s", lowering['lowering_id'], e.stderr)
