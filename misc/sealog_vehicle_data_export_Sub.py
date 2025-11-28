@@ -10,9 +10,9 @@ BUGS:
 NOTES:
 AUTHOR:     Webb Pinner
 COMPANY:    OceanDataTools.org
-VERSION:    1.0
+VERSION:    1.1
 CREATED:    2018-11-07
-REVISION:   2022-02-13
+REVISION:   2025-11-28
 
 LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for details)
                 Copyright (C) OceanDataTools.org 2024
@@ -400,22 +400,25 @@ def _export_lowering_sealog_data_files(cruise, lowering): # pylint: disable=too-
             except:
                 pass
 
+    temp_list_path = ""
     with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as file:
         for framegrab in framegrab_list:
             framegrab = os.path.basename(framegrab)
             file.write(str.encode(framegrab + '\n'))
+        temp_list_path = file.name
 
     logging.info("Starting Rclone Transfer (Images)...")
     try:
         subprocess.run([
-            'rclone', 
+            'rclone',
             'copy',
             '--transfers=16',      # Parallel copies
             '--checkers=16',       # Parallel scanning
             '--size-only',         # Speed optimization
             '--progress',
-            '--files-from', file.name,
-            os.path.join(API_SERVER_FILE_PATH, 'images'),
+            '--no-traverse',
+            '--files-from', temp_list_path, 
+            os.path.join(API_SERVER_FILE_PATH, 'images'), 
             os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), IMAGES_DIRNAME)
         ], check=True)
     finally:
@@ -454,7 +457,7 @@ def _export_lowering_openrvdas_data_files(cruise, lowering): #pylint: disable=re
             logging.debug("Culled Files:\n\t%s",'\n\t'.join(culled_files))
 
             if len(culled_files) > 0:
-                with open(destination_file, 'w', encoding='utf-8') as file:
+                with open(destination_file, 'w', encoding='utf-8', buffering=1048576) as file:
                     for line in fcu.crop_file_data(culled_files):
                         file.write(line)
                 logging.info(f"Data exported for instrument: {data_file_def['output_prefix']}")
@@ -623,7 +626,7 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
         logging.info("Pushing Cruise Reports to Warehouse...")
         result = subprocess.run([
             'rclone',
-            'sync',
+            'copy',
             '--transfers=16',
             '--checkers=16',
             '--size-only',
