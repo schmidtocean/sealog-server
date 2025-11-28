@@ -875,7 +875,7 @@ if __name__ == '__main__':
     if not parsed_args.no_transfer:
         success = _push_2_data_warehouse(selected_cruise, selected_lowerings)
         if success:
-            logging.warning(":white_check_mark: Successfully completed export and transfer with no issues")
+            logging.warning(":white_check_mark: Completed export and transfer")
         else:
             logging.error("Export completed but one or more transfers failed, check logs.")
     else:
