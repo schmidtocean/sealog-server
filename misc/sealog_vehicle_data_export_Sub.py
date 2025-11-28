@@ -402,13 +402,11 @@ def _export_lowering_sealog_data_files(cruise, lowering): # pylint: disable=too-
 
     with tempfile.NamedTemporaryFile(mode='w+b', delete=False) as file:
         for framegrab in framegrab_list:
-
             framegrab = os.path.basename(framegrab)
             file.write(str.encode(framegrab + '\n'))
 
-        file.seek(0,0)
-
-        logging.info("Starting Rclone Transfer (Images)...")
+    logging.info("Starting Rclone Transfer (Images)...")
+    try:
         subprocess.run([
             'rclone', 
             'copy',
@@ -420,8 +418,10 @@ def _export_lowering_sealog_data_files(cruise, lowering): # pylint: disable=too-
             os.path.join(API_SERVER_FILE_PATH, 'images'),
             os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), IMAGES_DIRNAME)
         ], check=True)
-
-        # subprocess.run(['rsync','-avi','--progress', '--files-from=' + file.name , os.path.join(API_SERVER_FILE_PATH, 'images', ''), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), IMAGES_DIRNAME)])
+    finally:
+        # Cleanup: Delete the temp list file
+        if os.path.exists(file.name):
+            os.remove(file.name)
 
     # logging.info("Export Reports")
     # subprocess.run(['rsync','-avi','--progress', '--delete', '--include=*.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), REPORTS_DIRNAME)])
