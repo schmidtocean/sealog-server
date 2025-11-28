@@ -408,7 +408,20 @@ def _export_lowering_sealog_data_files(cruise, lowering): # pylint: disable=too-
 
         file.seek(0,0)
 
-        subprocess.run(['rsync','-avi','--progress', '--files-from=' + file.name , os.path.join(API_SERVER_FILE_PATH, 'images', ''), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), IMAGES_DIRNAME)])
+        logging.info("Starting Rclone Transfer (Images)...")
+        subprocess.run([
+            'rclone', 
+            'copy',
+            '--transfers=16',      # Parallel copies
+            '--checkers=16',       # Parallel scanning
+            '--size-only',         # Speed optimization
+            '--progress',
+            '--files-from', file.name,
+            os.path.join(API_SERVER_FILE_PATH, 'images'),
+            os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), IMAGES_DIRNAME)
+        ], check=True)
+
+        # subprocess.run(['rsync','-avi','--progress', '--files-from=' + file.name , os.path.join(API_SERVER_FILE_PATH, 'images', ''), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), IMAGES_DIRNAME)])
 
     # logging.info("Export Reports")
     # subprocess.run(['rsync','-avi','--progress', '--delete', '--include=*.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), REPORTS_DIRNAME)])
@@ -583,7 +596,10 @@ def _build_lowering_reports(cruise, lowering): #pylint: disable=redefined-outer-
 
 def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-name
     '''
-    Push the exported files to the Cruise Data Warehouse
+    Push the exported files to CruiseData
+    
+    UPDATED: Uses RCLONE SYNC instead of RSYNC for multi-threading and latency handling
+    Uses local nfs mount paths instead of SSH
     '''
 
     cruise_source_dir = os.path.join(EXPORT_ROOT_DIR, cruise['cruise_id'])
@@ -594,24 +610,29 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
     logging.info("Export Reports")
     
     try:
-        result = subprocess.run(['rsync','-avi','--progress', '--delete', '--include=*.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'cruises', cruise['id'], ''), os.path.join(cruise_source_dir, REPORTS_DIRNAME)], check=True, capture_output=True, text=True)
+        # Syncing Reports to Staging
+        subprocess.run(['rclone','sync','--transfers=16','--checkers=16','--size-only', 
+                        os.path.join(API_SERVER_FILE_PATH, 'cruises', cruise['id'], ''), 
+                        os.path.join(cruise_source_dir, REPORTS_DIRNAME)], check=True)
     except subprocess.CalledProcessError as e:
         logging.error("Failed to sync cruise reports: %s", e.stderr)
         return False
 
     try:
-        # rsync cruise-level report from sealog-subastion to cruise data directory
+        # Syncing Cruise Report to CruiseData
+        logging.info("Pushing Cruise Reports to Warehouse...")
         result = subprocess.run([
-            'rsync',
-            '-trimv',
+            'rclone',
+            'sync',
+            '--transfers=16',
+            '--checkers=16',
+            '--size-only',
             '--progress',
-            '-e',
-            'ssh -i ' + OPENVDM_SSH_KEY,
-            os.path.join(cruise_source_dir, REPORTS_DIRNAME, ''),
-            OPENVDM_USER + '@' + OPENVDM_IP + ':' + os.path.join(CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'], POST_CRUISE_REPORT_DIR, '')
-        ], check=True, capture_output=True, text=True)
+            os.path.join(cruise_source_dir, REPORTS_DIRNAME),
+            os.path.join(CRUISEDATA_LOCAL_MOUNT, cruise['cruise_id'], POST_CRUISE_REPORT_DIR)
+        ], check=True, capture_output=False, text=True)
     except subprocess.CalledProcessError as e:
-        logging.error("Failed to sync cruise reports to warehouse: %s", e.stderr)
+        logging.error("Failed to sync cruise reports to CruiseData: %s", e.stderr)
         return False
 
     for lowering in lowerings: # pylint: disable=redefined-outer-name
@@ -620,7 +641,9 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
 
         logging.info("Export Reports")
         try:
-            result = subprocess.run(['rsync','-avi','--progress', '--delete', '--include=*_Report.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(lowering_source_dir, REPORTS_DIRNAME)], check=True, capture_output=True, text=True)
+            # Using rsync here locally as it's just filtering PDF files to staging, rclone filter syntax is complex for this specific include/exclude
+            # Keeping rsync for local-to-local staging build is fine and fast
+            result = subprocess.run(['rsync','-avi','--delete', '--include=*_Report.pdf', '--exclude=*', os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''), os.path.join(lowering_source_dir, REPORTS_DIRNAME)], check=True, capture_output=True, text=True)
         except subprocess.CalledProcessError as e:
             logging.error("Failed to sync reports for lowering %s: %s", lowering['lowering_id'], e.stderr)
             continue
@@ -632,31 +655,29 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
             logging.error("Failed to sync user files for lowering %s: %s", lowering['lowering_id'], e.stderr)
             continue
 
+        # --- RCLONE SYNC TO CruiseData---
         if os.path.isdir(lowering_source_dir):
             if CREATE_DEST_DIR:
                 try:
-                    # creates sealog directory within lowering folder
-                    result = subprocess.run([
-                        'ssh',
-                        '-i',
-                        OPENVDM_SSH_KEY,
-                        OPENVDM_USER + '@' + OPENVDM_IP,
-                        'cd ' + os.path.join(CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'], OPENVDM_VEHICLE_DIR ) + '; test -d ' + os.path.join(_export_dir_name(cruise['cruise_id'], lowering['lowering_id']), SEALOG_DIR) + ' || mkdir -p ' + os.path.join(_export_dir_name(cruise['cruise_id'], lowering['lowering_id']), SEALOG_DIR) + ''
-                    ], check=True, capture_output=True, text=True)
-                except subprocess.CalledProcessError as e:
-                    logging.error("Failed to create sealog directory for lowering %s: %s", lowering['lowering_id'], e.stderr)
+                    os.makedirs(os.path.join(CRUISEDATA_LOCAL_MOUNT, cruise['cruise_id'], OPENVDM_VEHICLE_DIR, _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), SEALOG_DIR), exist_ok=True)
+                except Exception as e:
+                    logging.error("Failed to create sealog directory")
                     continue
 
             try:
-                # rsyncs sealog data to destination folder
-                result = subprocess.run(['rsync','-trimv',
-                    '--min-size=0',
+                logging.info(f"Rclone Syncing Sealog Data for {lowering['lowering_id']}...")
+                result = subprocess.run([
+                    'rclone',
+                    'sync',
+                    '--transfers=16',
+                    '--checkers=16',
+                    '--size-only',
                     '--progress',
-                    '--whole-file',
-                    '--delete',
-                    os.path.join(lowering_source_dir, ''),
-                    os.path.join( CRUISEDATA_LOCAL_MOUNT, cruise['cruise_id'], OPENVDM_VEHICLE_DIR, _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), SEALOG_DIR, '')
-                ], check=True, capture_output=True, text=True)
+                    # Source (Staging)
+                    os.path.join(lowering_source_dir),
+                    # Destination (Local Mount)
+                    os.path.join(CRUISEDATA_LOCAL_MOUNT, cruise['cruise_id'], OPENVDM_VEHICLE_DIR, _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), SEALOG_DIR)
+                ], check=True, capture_output=False, text=True)
             except subprocess.CalledProcessError as e:
                 logging.error("Failed to sync sealog data for lowering %s: %s", lowering['lowering_id'], e.stderr)
                 continue
@@ -665,36 +686,30 @@ def _push_2_data_warehouse(cruise, lowerings): #pylint: disable=redefined-outer-
             logging.error('Exported directory for lowering data not found')
             continue
 
+        # --- RCLONE SYNC OPENRVDAS TO CruiseData ---
         cropped_source_dir = os.path.join(CROPPED_DATA_DIR, cruise['cruise_id'], _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), OPENRVDAS_DEST_DIR)
         if os.path.isdir(cropped_source_dir):
             if CREATE_DEST_DIR:
                 try:
-                    # creates openrvdas directory within lowering folder
-                    result = subprocess.run([
-                        'ssh',
-                        '-i',
-                        OPENVDM_SSH_KEY,
-                        OPENVDM_USER + '@' + OPENVDM_IP,
-                        'cd ' + os.path.join(CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'], OPENVDM_VEHICLE_DIR ) + '; test -d ' + os.path.join(_export_dir_name(cruise['cruise_id'], lowering['lowering_id']), OPENRVDAS_DEST_DIR) + ' || mkdir -p ' + os.path.join(_export_dir_name(cruise['cruise_id'], lowering['lowering_id']), OPENRVDAS_DEST_DIR) + ''
-                    ], check=True, capture_output=True, text=True)
-                except subprocess.CalledProcessError as e:
-                    logging.error("Failed to create OpenRVDAS directory for lowering %s: %s", lowering['lowering_id'], e.stderr)
+                    os.makedirs(os.path.join(CRUISEDATA_LOCAL_MOUNT, cruise['cruise_id'], OPENVDM_VEHICLE_DIR, _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), OPENRVDAS_DEST_DIR), exist_ok=True)
+                except Exception as e:
+                    logging.error("Failed to create OpenRVDAS directory")
                     continue
 
             try:
-                # rsyncs openrvdas data to destination folder
+                logging.info(f"Rclone Syncing OpenRVDAS Data for {lowering['lowering_id']}...")
                 result = subprocess.run([
-                    'rsync',
-                    '-trimv',
-                    '--min-size=0',
+                    'rclone',
+                    'sync',
+                    '--transfers=16',
+                    '--checkers=16',
+                    '--size-only',
                     '--progress',
-                    '--ignore-errors',
-                    '--delete',
-                    '-e',
-                    'ssh -i ' + OPENVDM_SSH_KEY,
-                    os.path.join(cropped_source_dir, ''),
-                    OPENVDM_USER + '@' + OPENVDM_IP + ':' + os.path.join(CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'], OPENVDM_VEHICLE_DIR, _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), OPENRVDAS_DEST_DIR, '')
-                ], check=True, capture_output=True, text=True)
+                    # Source
+                    os.path.join(cropped_source_dir),
+                    # Destination
+                    os.path.join(CRUISEDATA_LOCAL_MOUNT, cruise['cruise_id'], OPENVDM_VEHICLE_DIR, _export_dir_name(cruise['cruise_id'], lowering['lowering_id']), OPENRVDAS_DEST_DIR)
+                ], check=True, capture_output=False, text=True)
             except subprocess.CalledProcessError as e:
                 logging.error("Failed to sync OpenRVDAS data for lowering %s: %s", lowering['lowering_id'], e.stderr)
                 continue
