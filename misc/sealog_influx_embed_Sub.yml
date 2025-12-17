@@ -164,3 +164,13 @@
             name: depth_teos
             uom: m
             round: 2
+
+-
+    data_source: vehicleRealtimePHData
+    query_measurements:
+        - sb_ph
+    aux_record_lookup:
+        SB_ph_Corr:
+            name: pH_corr
+            uom: pH
+            round: 2
