@@ -436,13 +436,16 @@ exports.plugin = {
         }
 
         const resetLink = resetPasswordURL + token;
+        const resetLinkPub = resetPasswordURLPub + token;
         // const resetLink = request.connection.info.protocol + '://' + request.info.host + '/resetPassword/' + token;
         const mailOptions = {
           from: senderAddress, // sender address
           to: request.payload.email, // list of receivers
           subject: 'Sealog Password Reset Request', // Subject line
           html: `<p>Sealog has recieved a request to reset the Sealog account associated with this email address. If you did not request this then please just ignore this message. If you would like to change your password please click on the link below.  This link will expire in ${resetPasswordTokenExpires.toString()} minutes:</p>
-          <p><a href='${resetLink}'>${resetLink}</a></p>`
+          <p><a href='${resetLink}'>${resetLink}</a></p>
+          <p>If you are on the Telepresence Sealog instance, please use the following link instead:</p>
+          <p><a href="${resetLinkPub}">${resetLinkPub}</a></p>`,
         };
 
         if (emailTransporter !== null) {
