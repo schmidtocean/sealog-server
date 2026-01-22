@@ -18,6 +18,7 @@ const {
   emailTransporter,
   reCaptchaSecret,
   resetPasswordURL,
+  resetPasswordURLPub,
   registeringUserRoles,
   disableRegisteringUsers,
   notificationEmailAddresses
