@@ -170,7 +170,7 @@
     query_measurements:
         - sb_ph
     aux_record_lookup:
-        SB_ph_Corr:
-            name: pH_corr
+        SB_ph_Corr_sbe49:
+            name: pH_corr_sbe49
             uom: pH
             round: 2
