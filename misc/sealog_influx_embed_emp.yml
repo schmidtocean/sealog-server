@@ -1,0 +1,62 @@
+-
+    data_source: vesselRealtimeNavData
+    query_measurements:
+        - seapath380
+    aux_record_lookup:
+        Seapath_HeadingTrue:
+            name: heading
+            uom: deg
+            round: 3
+        Seapath_Latitude:
+            name: latitude
+            uom: ddeg
+            round: 6
+        Seapath_Longitude:
+            name: longitude
+            uom: ddeg
+            round: 6
+-
+    data_source: vehicleRealtimeNavData
+    query_measurements:
+        - emp_hugin_rt
+    aux_record_lookup:
+        Course:
+            name: course
+            uom: deg
+            round: 3
+        Heading:
+            name: heading
+            uom: deg
+            round: 3
+        Latitude:
+            name: latitude
+            uom: ddeg
+            round: 6
+        Longitude:
+            name: longitude
+            uom: ddeg
+            round: 6
+        Depth_m:
+            name: depth
+            uom: m
+            round: 2
+        Altitude_m:
+            name: altitude
+            uom: m
+            round: 2
+        Roll:
+            name: roll
+            uom: deg
+            round: 2
+        Pitch:
+            name: pitch
+            uom: deg
+            round: 2
+        FwdVel:
+            name: fwd_velocity
+            uom: deg
+            round: 2
+        StbVel:
+            name: stb_velocity
+            uom: deg
+            round: 2
