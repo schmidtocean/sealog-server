@@ -36,11 +36,11 @@
             name: longitude
             uom: ddeg
             round: 6
-        Depth_m:
+        Depth:
             name: depth
             uom: m
             round: 2
-        Altitude_m:
+        Altitude:
             name: altitude
             uom: m
             round: 2
