@@ -62,15 +62,13 @@ PING = {
 }
 
 START_STOP_LOOKUP = {
-    'In water': 'start_ts',
-    'Out of water': 'stop_ts'
+    'Pre-dive': 'start_ts',
+    'Mission Key Inserted': 'stop_ts'
 }
 
 MILESTONE_LOOKUP = {
     'Descent Initiated': ['lowering_descending'],
-    'Initial Descent': ['lowering_descending'],
     'Reached Survey Depth': ['lowering_on_bottom'],
-    'At Depth': ['lowering_on_bottom'],
     'Leaving Survey Depth': ['lowering_off_bottom'],
     'Vehicle on Surface': ['lowering_on_surface'],
     'Aborted': ['lowering_aborted']
