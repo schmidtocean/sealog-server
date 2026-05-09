@@ -35,12 +35,26 @@ from misc.python_sealog.event_templates import get_event_templates
 from misc.python_sealog.events import get_events_by_lowering
 from misc.python_sealog.lowerings import get_lowering_by_id, get_lowerings, get_lowerings_by_cruise
 from misc.python_sealog.misc import get_framegrab_list_by_lowering
-from misc.python_sealog.settings import API_SERVER_FILE_PATH, SLACK_WEBHOOK_URL
+from misc.python_sealog.settings import (
+    API_SERVER_FILE_PATH,
+    API_SERVER_URL,
+    HEADERS,
+    SLACK_WEBHOOK_URL,
+)
 from misc.python_sealog.slack import PooledSlackHandler
+from misc.reporting.sealog_build_cruise_summary_report_emp import (
+    write_cruise_metrics_report,
+)
+from misc.reporting.sealog_build_lowering_summary_report_emp import (
+    write_lowering_summary_report,
+)
 
 SLACK_LOG_LEVEL = 'INFO'
 
 EXPORT_ROOT_DIR = '/data/sealog-emp-export'
+REPORT_ONLY_OUTPUT_DIR = "./tmp/sealog-emp-reports"
+EMP_REPORT_API_SERVER_URL = "http://10.23.9.25:8200/sealog-server"
+SEALOG_API_TOKEN_ENV = "SEALOG_API_TOKEN"
 VEHICLE_NAME = 'Empress'
 
 CRUISEDATA_LOCAL_MOUNT = '/mnt/CruiseData'
@@ -55,9 +69,24 @@ LOWERINGS_FILE_PATH = os.path.join(API_SERVER_FILE_PATH, 'lowerings')
 
 IMAGES_DIRNAME = 'Images'
 FILES_DIRNAME = 'Files'
+REPORTS_DIRNAME = "Reports"
 
 SealogRecord = dict[str, Any]
 SealogRecords = list[SealogRecord]
+
+
+def _api_headers(api_token: str | None = None) -> dict[str, str]:
+    """
+    Build API headers
+    """
+
+    headers = HEADERS.copy()
+    token = api_token or os.environ.get(SEALOG_API_TOKEN_ENV)
+
+    if token:
+        headers["authorization"] = token
+
+    return headers
 
 
 def _export_dir_name(cruise_id, lowering_id):
@@ -289,6 +318,49 @@ def _push_2_data_warehouse(cruise, lowerings): # pylint: disable=redefined-outer
         return False
 
     transfer_success = True
+    cruise_reports_dir = os.path.join(cruise_source_dir, REPORTS_DIRNAME)
+
+    if os.path.isdir(cruise_reports_dir):
+        warehouse_cruise_reports_dir = os.path.join(
+            CRUISEDATA_LOCAL_MOUNT,
+            cruise["cruise_id"],
+            OPENVDM_VEHICLE_DIR,
+            REPORTS_DIRNAME,
+        )
+
+        try:
+            os.makedirs(warehouse_cruise_reports_dir, exist_ok=True)
+            logging.info("Rclone syncing cruise reports for %s", cruise["cruise_id"])
+            subprocess.run(
+                [
+                    "rclone",
+                    "sync",
+                    "--transfers=16",
+                    "--checkers=16",
+                    "--size-only",
+                    "--progress",
+                    cruise_reports_dir,
+                    warehouse_cruise_reports_dir,
+                ],
+                check=True,
+                capture_output=False,
+                text=True,
+            )
+        except subprocess.CalledProcessError as err:
+            logging.error(
+                "Failed to sync cruise reports for %s: %s",
+                cruise["cruise_id"],
+                err.stderr,
+            )
+            logging.debug(str(err))
+            transfer_success = False
+        except OSError as err:
+            logging.error(
+                "Failed to create cruise reports directory: %s",
+                warehouse_cruise_reports_dir,
+            )
+            logging.debug(str(err))
+            transfer_success = False
 
     for lowering in lowerings:
         lowering_dir_name = _export_dir_name(cruise['cruise_id'], lowering['lowering_id'])
@@ -340,54 +412,118 @@ def _push_2_data_warehouse(cruise, lowerings): # pylint: disable=redefined-outer
     return transfer_success
 
 
-def _select_export_scope(parsed_args: Any) -> tuple[SealogRecord, SealogRecords]:
+def _build_reports(
+    cruise: SealogRecord, lowerings: SealogRecords, output_dir: str
+) -> list[str]:
+    """
+    Build PDF reports without exporting Sealog data or transferring files
+    """
+
+    report_dir = os.path.join(output_dir, str(cruise["cruise_id"]))
+    os.makedirs(report_dir, exist_ok=True)
+
+    built_reports = []
+
+    logging.info("Building cruise metrics report")
+    for report_path in write_cruise_metrics_report(cruise, lowerings, report_dir):
+        built_reports.append(str(report_path))
+        logging.info("Built report: %s", report_path)
+
+    for lowering in lowerings:
+        logging.info("Building lowering summary report: %s", lowering["lowering_id"])
+        report_path = write_lowering_summary_report(cruise, lowering, report_dir)
+        built_reports.append(str(report_path))
+        logging.info("Built report: %s", report_path)
+
+    return built_reports
+
+
+def _select_export_scope(
+    parsed_args: Any,
+    api_server_url: str = API_SERVER_URL,
+    headers: dict[str, str] = HEADERS,
+) -> tuple[SealogRecord, SealogRecords]:
     '''
     Select the cruise and lowerings requested by the command-line arguments.
     '''
 
     if parsed_args.current_cruise:
-        cruises = cast(SealogRecords, get_cruises())
+        cruises = cast(
+            SealogRecords, get_cruises(api_server_url=api_server_url, headers=headers)
+        )
         selected_cruise = cruises[0] if cruises else None
 
         if selected_cruise is None:
             logging.error("There are no cruises available for export")
             sys.exit(0)
 
-        selected_lowerings = cast(SealogRecords, get_lowerings_by_cruise(selected_cruise['id']))
+        selected_lowerings = cast(
+            SealogRecords,
+            get_lowerings_by_cruise(
+                selected_cruise["id"], api_server_url=api_server_url, headers=headers
+            ),
+        )
         return selected_cruise, selected_lowerings
 
     if parsed_args.cruise_id:
-        selected_cruise = cast(SealogRecord | None, get_cruise_by_id(parsed_args.cruise_id))
+        selected_cruise = cast(
+            SealogRecord | None,
+            get_cruise_by_id(
+                parsed_args.cruise_id, api_server_url=api_server_url, headers=headers
+            ),
+        )
 
         if selected_cruise is None:
             logging.error("Cruise %s not found", parsed_args.cruise_id)
             sys.exit(0)
 
-        selected_lowerings = cast(SealogRecords, get_lowerings_by_cruise(selected_cruise['id']))
+        selected_lowerings = cast(
+            SealogRecords,
+            get_lowerings_by_cruise(
+                selected_cruise["id"], api_server_url=api_server_url, headers=headers
+            ),
+        )
         return selected_cruise, selected_lowerings
 
     if parsed_args.lowering_id:
-        selected_lowering = cast(SealogRecord | None, get_lowering_by_id(parsed_args.lowering_id))
+        selected_lowering = cast(
+            SealogRecord | None,
+            get_lowering_by_id(
+                parsed_args.lowering_id, api_server_url=api_server_url, headers=headers
+            ),
+        )
 
         if selected_lowering is None:
             logging.error("Lowering %s not found", parsed_args.lowering_id)
             sys.exit(0)
 
-        selected_cruise = cast(SealogRecord | None, get_cruise_by_lowering(selected_lowering['id']))
+        selected_cruise = cast(
+            SealogRecord | None,
+            get_cruise_by_lowering(
+                selected_lowering["id"], api_server_url=api_server_url, headers=headers
+            ),
+        )
         if selected_cruise is None:
             logging.error("No cruise found for lowering %s", parsed_args.lowering_id)
             sys.exit(0)
 
         return selected_cruise, [selected_lowering]
 
-    lowerings = cast(SealogRecords, get_lowerings())
+    lowerings = cast(
+        SealogRecords, get_lowerings(api_server_url=api_server_url, headers=headers)
+    )
     selected_lowering = lowerings[0] if lowerings else None
 
     if selected_lowering is None:
         logging.error("There are no lowerings available for export")
         sys.exit(0)
 
-    selected_cruise = cast(SealogRecord | None, get_cruise_by_lowering(selected_lowering['id']))
+    selected_cruise = cast(
+        SealogRecord | None,
+        get_cruise_by_lowering(
+            selected_lowering["id"], api_server_url=api_server_url, headers=headers
+        ),
+    )
     if selected_cruise is None:
         logging.error("No cruise found for lowering %s", selected_lowering['lowering_id'])
         sys.exit(0)
@@ -399,7 +535,9 @@ if __name__ == '__main__':
 
     import argparse
 
-    parser = argparse.ArgumentParser(description='Sealog ' + VEHICLE_NAME + ' Data export')
+    parser = argparse.ArgumentParser(
+        description="Sealog " + VEHICLE_NAME + " data export and reports"
+    )
     parser.add_argument('-v', '--verbosity', dest='verbosity',
                         default=0, action='count',
                         help='Increase output verbosity')
@@ -407,12 +545,39 @@ if __name__ == '__main__':
                         help='build the export but do not push to the data warehouse')
     parser.add_argument('-t', '--transfer_only', action='store_true', default=False,
                         help='only push the previously exported data to the data warehouse')
-    parser.add_argument('-c', '--current_cruise', action='store_true', default=False,
-                        help='export the data for the most recent cruise')
-    parser.add_argument('-L', '--lowering_id',
-                        help='export data for the specified lowering (i.e. S0314)')
-    parser.add_argument('-C', '--cruise_id',
-                        help='export all cruise and lowering data for the specified cruise (i.e. FK200126)')
+    parser.add_argument(
+        "-r",
+        "--reports_only",
+        action="store_true",
+        default=False,
+        help="only build PDF reports; do not export data or transfer files",
+    )
+    parser.add_argument(
+        "--reports_output_dir",
+        default=REPORT_ONLY_OUTPUT_DIR,
+        help="output directory for --reports_only PDFs",
+    )
+    parser.add_argument(
+        "--api_server_url",
+        help="Sealog API server URL; defaults to the EMP server in --reports_only mode",
+    )
+    parser.add_argument(
+        "--api_token",
+        help="Sealog API token; prefer SEALOG_API_TOKEN to avoid shell history",
+    )
+    parser.add_argument(
+        "-c",
+        "--current_cruise",
+        action="store_true",
+        default=False,
+        help="select the most recent cruise",
+    )
+    parser.add_argument(
+        "-L", "--lowering_id", help="select the specified lowering (i.e. E0007)"
+    )
+    parser.add_argument(
+        "-C", "--cruise_id", help="select the specified cruise (i.e. FKt260503)"
+    )
 
     parsed_args = parser.parse_args()
     logging.basicConfig(format='%(asctime)-15s %(levelname)s - %(message)s')
@@ -428,18 +593,43 @@ if __name__ == '__main__':
         logging.error("Can not specify both a lowering and cruise")
         sys.exit(0)
 
-    selected_cruise, selected_lowerings = _select_export_scope(parsed_args)
+    api_server_url = parsed_args.api_server_url
+    if api_server_url is None:
+        api_server_url = (
+            EMP_REPORT_API_SERVER_URL if parsed_args.reports_only else API_SERVER_URL
+        )
+
+    logging.info("Using API server: %s", api_server_url)
+    headers = _api_headers(parsed_args.api_token)
+
+    selected_cruise, selected_lowerings = _select_export_scope(
+        parsed_args,
+        api_server_url=api_server_url,
+        headers=headers,
+    )
 
     if len(selected_lowerings) == 0:
         logging.warning("There are no lowerings for the specified cruise")
 
-    logging.info("Exporting the following data:")
+    logging.info("Selected the following data:")
     logging.info("\tCruise: %s", selected_cruise['cruise_id'])
     logging.info(
         "\tLowering(s): %s",
         ', '.join([lowering['lowering_id'] for lowering in selected_lowerings])
         if selected_lowerings else "NONE",
     )
+
+    if parsed_args.reports_only:
+        built_reports = _build_reports(
+            selected_cruise, selected_lowerings, parsed_args.reports_output_dir
+        )
+        logging.warning(
+            "Built %s report(s) in %s",
+            len(built_reports),
+            parsed_args.reports_output_dir,
+        )
+        logging.debug("Done")
+        sys.exit(0)
 
     if parsed_args.transfer_only:
         _push_2_data_warehouse(selected_cruise, selected_lowerings)
@@ -475,12 +665,32 @@ if __name__ == '__main__':
     try:
         logging.info("Building cruise-level export directory")
         os.makedirs(os.path.join(EXPORT_ROOT_DIR, selected_cruise['cruise_id']), exist_ok=True)
+        os.makedirs(
+            os.path.join(
+                EXPORT_ROOT_DIR, selected_cruise["cruise_id"], REPORTS_DIRNAME
+            ),
+            exist_ok=True,
+        )
     except Exception as err:
         logging.error("Could not create cruise export directory")
         logging.debug(str(err))
         sys.exit(1)
 
     _export_cruise_sealog_data_files(selected_cruise)
+
+    logging.info("Building cruise metrics report")
+    try:
+        for report_path in write_cruise_metrics_report(
+            selected_cruise,
+            selected_lowerings,
+            os.path.join(
+                EXPORT_ROOT_DIR, selected_cruise["cruise_id"], REPORTS_DIRNAME
+            ),
+        ):
+            logging.info("Built report: %s", report_path)
+    except Exception as err:
+        logging.error("Unable to build cruise metrics report")
+        logging.debug(str(err))
 
     for selected_lowering in selected_lowerings:
         logging.info("Exporting data for lowering: %s", selected_lowering['lowering_id'])
@@ -502,12 +712,32 @@ if __name__ == '__main__':
             os.makedirs(lowering_export_dir, exist_ok=True)
             os.makedirs(os.path.join(lowering_export_dir, IMAGES_DIRNAME), exist_ok=True)
             os.makedirs(os.path.join(lowering_export_dir, FILES_DIRNAME), exist_ok=True)
+            os.makedirs(
+                os.path.join(lowering_export_dir, REPORTS_DIRNAME), exist_ok=True
+            )
         except Exception as err:
             logging.error("Could not create lowering export directories")
             logging.debug(str(err))
             sys.exit(1)
 
         _export_lowering_sealog_data_files(selected_cruise, selected_lowering)
+
+        logging.info(
+            "Building lowering summary report: %s", selected_lowering["lowering_id"]
+        )
+        try:
+            report_path = write_lowering_summary_report(
+                selected_cruise,
+                selected_lowering,
+                os.path.join(lowering_export_dir, REPORTS_DIRNAME),
+            )
+            logging.info("Built report: %s", report_path)
+        except Exception as err:
+            logging.error(
+                "Unable to build lowering summary report: %s",
+                selected_lowering["lowering_id"],
+            )
+            logging.debug(str(err))
 
     if not parsed_args.no_transfer:
         success = _push_2_data_warehouse(selected_cruise, selected_lowerings)
