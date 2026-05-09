@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ metrics.lowering_id }} {{ vehicle_name }} Lowering Summary</title>
+  <style>
+    :root {
+      --accent: #d66b00;
+      --border: #c9ced6;
+      --text: #1f252d;
+      --muted: #5a6472;
+      --surface: #f7f8fa;
+    }
+    @page { margin: 18mm 16mm; size: Letter; }
+    body {
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.45;
+      margin: 0;
+    }
+    h1, h2 { margin: 0 0 12px; }
+    h1 { color: var(--accent); }
+    .meta { color: var(--muted); margin-bottom: 24px; }
+    table { border-collapse: collapse; margin: 16px 0 28px; max-width: 980px; width: 100%; }
+    th, td { border: 1px solid var(--border); padding: 6px 8px; text-align: left; vertical-align: top; }
+    th { background: var(--surface); }
+    .numeric { text-align: right; }
+  </style>
+</head>
+<body>
+  <h1>{{ metrics.lowering_id }} {{ vehicle_name }} Lowering Summary</h1>
+  <div class="meta">
+    <div><strong>Cruise:</strong> {{ cruise.cruise_id }}</div>
+    <div><strong>Location:</strong> {{ metrics.location }}</div>
+    <div><strong>Start:</strong> {{ metrics.start_ts|timestamp }}</div>
+    <div><strong>Stop:</strong> {{ metrics.stop_ts|timestamp }}</div>
+    <div><strong>Generated:</strong> {{ generated_ts|timestamp }}</div>
+  </div>
+
+  <h2>Metrics</h2>
+  <table>
+    <tbody>
+      {% for stage in stage_definitions %}
+      <tr>
+        <th>{{ stage.label }}</th>
+        <td class="numeric">{{ metrics.stage_durations.get(stage.label)|duration }}</td>
+      </tr>
+      {% endfor %}
+      <tr><th>Max Depth</th><td class="numeric">{{ max_depth }}</td></tr>
+      <tr><th>Bounding Box</th><td>{{ bounding_box }}</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Milestones</h2>
+  <table>
+    <thead><tr><th>Stage</th><th>Start</th><th>Stop</th></tr></thead>
+    <tbody>
+      {% for boundary in stage_boundaries %}
+      <tr>
+        <th>{{ boundary.stage.label }}</th>
+        <td>{{ boundary.start|timestamp }}</td>
+        <td>{{ boundary.stop|timestamp }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <h2>Description</h2>
+  <p>{{ lowering_meta.lowering_description }}</p>
+</body>
+</html>
