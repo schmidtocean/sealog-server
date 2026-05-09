@@ -63,12 +63,16 @@ PING = {
 
 START_STOP_LOOKUP = {
     'In water': 'start_ts',
-    'On deck': 'stop_ts'
+    'Out of water': 'stop_ts'
 }
 
 MILESTONE_LOOKUP = {
-    'In water': ['lowering_descending'],
-    'Out of water': ['lowering_on_surface'],
+    'Descent Initiated': ['lowering_descending'],
+    'Initial Descent': ['lowering_descending'],
+    'Reached Survey Depth': ['lowering_on_bottom'],
+    'At Depth': ['lowering_on_bottom'],
+    'Leaving Survey Depth': ['lowering_off_bottom'],
+    'Vehicle on Surface': ['lowering_on_surface'],
     'Aborted': ['lowering_aborted']
 }
 
@@ -107,7 +111,7 @@ def _set_milestones(event, evt_milestone): # pylint: disable=too-many-branches,t
     These behaviors will only happen if there is an active lowering for the event.
     '''
 
-    if evt_milestone not in START_STOP_LOOKUP and evt_milestone not in MILESTONE_LOOKUP:
+    if not evt_milestone:
         return
 
     # get lowering record corresponding to the event_uid
@@ -127,17 +131,16 @@ def _set_milestones(event, evt_milestone): # pylint: disable=too-many-branches,t
         logging.info("Setting lowering %s: to %s", START_STOP_LOOKUP[evt_milestone], event['ts'])
         payload[START_STOP_LOOKUP[evt_milestone]] = event['ts']
 
-    # if evt_milestone in MILESTONE_LOOKUP, set one or more milestones.
-    if evt_milestone in MILESTONE_LOOKUP:
+    # Store the milestone option value itself, plus any legacy compatibility milestones.
+    milestones_to_set = [evt_milestone] + MILESTONE_LOOKUP.get(evt_milestone, [])
+    if milestones_to_set:
 
         payload['lowering_additional_meta'] = lowering['lowering_additional_meta']
-
-
 
         if 'milestones' not in payload['lowering_additional_meta']:
             payload['lowering_additional_meta']['milestones'] = {}
 
-        for milestone in MILESTONE_LOOKUP[evt_milestone]:
+        for milestone in milestones_to_set:
 
             milestone_name = milestone['name'] if isinstance(milestone, dict) else milestone
             milestone_reset = milestone['reset'] if isinstance(milestone, dict) and 'reset' in milestone else False
