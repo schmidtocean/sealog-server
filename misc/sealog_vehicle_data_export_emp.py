@@ -413,7 +413,11 @@ def _push_2_data_warehouse(cruise, lowerings): # pylint: disable=redefined-outer
 
 
 def _build_reports(
-    cruise: SealogRecord, lowerings: SealogRecords, output_dir: str
+    cruise: SealogRecord,
+    lowerings: SealogRecords,
+    output_dir: str,
+    api_server_url: str = API_SERVER_URL,
+    headers: dict[str, str] = HEADERS,
 ) -> list[str]:
     """
     Build PDF reports without exporting Sealog data or transferring files
@@ -423,19 +427,106 @@ def _build_reports(
     os.makedirs(report_dir, exist_ok=True)
 
     built_reports = []
+    report_lowerings = _get_cruise_lowerings_for_reports(
+        cruise,
+        lowerings,
+        api_server_url,
+        headers,
+    )
+    event_exports_by_lowering = _get_event_exports_by_lowering_for_reports(
+        report_lowerings,
+        api_server_url,
+        headers,
+    )
 
-    logging.info("Building cruise metrics report")
-    for report_path in write_cruise_metrics_report(cruise, lowerings, report_dir):
+    logging.info(
+        "Building cruise metrics report from %s lowering(s)",
+        len(report_lowerings),
+    )
+
+    for report_path in write_cruise_metrics_report(
+        cruise,
+        report_lowerings,
+        report_dir,
+        event_exports_by_lowering=event_exports_by_lowering,
+    ):
         built_reports.append(str(report_path))
         logging.info("Built report: %s", report_path)
 
     for lowering in lowerings:
         logging.info("Building lowering summary report: %s", lowering["lowering_id"])
-        report_path = write_lowering_summary_report(cruise, lowering, report_dir)
+        report_path = write_lowering_summary_report(
+            cruise,
+            lowering,
+            report_dir,
+            event_exports=event_exports_by_lowering.get(str(lowering["lowering_id"]), []),
+        )
         built_reports.append(str(report_path))
         logging.info("Built report: %s", report_path)
 
     return built_reports
+
+
+def _get_cruise_lowerings_for_reports(
+    cruise: SealogRecord,
+    selected_lowerings: SealogRecords,
+    api_server_url: str = API_SERVER_URL,
+    headers: dict[str, str] = HEADERS,
+) -> SealogRecords:
+    '''
+    Fetch all lowerings in the cruise for cruise-level reports
+    '''
+
+    cruise_lowerings = cast(
+        SealogRecords,
+        get_lowerings_by_cruise(
+            cruise["id"],
+            api_server_url=api_server_url,
+            headers=headers,
+        ) or [],
+    )
+
+    return cruise_lowerings or selected_lowerings
+
+
+def _get_event_exports_by_lowering_for_reports(
+    lowerings: SealogRecords,
+    api_server_url: str = API_SERVER_URL,
+    headers: dict[str, str] = HEADERS,
+) -> dict[str, SealogRecords]:
+    '''
+    Fetch joined event and aux records keyed by lowering id
+    '''
+
+    event_exports_by_lowering = {}
+
+    for lowering in lowerings:
+        logging.info("Fetching report events for lowering: %s", lowering["lowering_id"])
+        event_exports_by_lowering[str(lowering["lowering_id"])] = (
+            _get_event_exports_for_report(lowering, api_server_url, headers)
+        )
+
+    return event_exports_by_lowering
+
+
+def _get_event_exports_for_report(
+    lowering: SealogRecord,
+    api_server_url: str = API_SERVER_URL,
+    headers: dict[str, str] = HEADERS,
+) -> SealogRecords:
+    """
+    Fetch joined event and aux records for report plots
+    """
+
+    return cast(
+        SealogRecords,
+        get_event_exports_by_lowering(
+            lowering["id"],
+            add_record_ids=True,
+            api_server_url=api_server_url,
+            headers=headers,
+        ) or [],
+    )
 
 
 def _select_export_scope(
@@ -621,7 +712,11 @@ if __name__ == '__main__':
 
     if parsed_args.reports_only:
         built_reports = _build_reports(
-            selected_cruise, selected_lowerings, parsed_args.reports_output_dir
+            selected_cruise,
+            selected_lowerings,
+            parsed_args.reports_output_dir,
+            api_server_url=api_server_url,
+            headers=headers,
         )
         logging.warning(
             "Built %s report(s) in %s",
@@ -678,14 +773,30 @@ if __name__ == '__main__':
 
     _export_cruise_sealog_data_files(selected_cruise)
 
-    logging.info("Building cruise metrics report")
+    report_lowerings = _get_cruise_lowerings_for_reports(
+        selected_cruise,
+        selected_lowerings,
+        api_server_url,
+        headers,
+    )
+    event_exports_by_lowering = _get_event_exports_by_lowering_for_reports(
+        report_lowerings,
+        api_server_url,
+        headers,
+    )
+
+    logging.info(
+        "Building cruise metrics report from %s lowering(s)",
+        len(report_lowerings),
+    )
     try:
         for report_path in write_cruise_metrics_report(
             selected_cruise,
-            selected_lowerings,
+            report_lowerings,
             os.path.join(
                 EXPORT_ROOT_DIR, selected_cruise["cruise_id"], REPORTS_DIRNAME
             ),
+            event_exports_by_lowering=event_exports_by_lowering,
         ):
             logging.info("Built report: %s", report_path)
     except Exception as err:
@@ -730,6 +841,10 @@ if __name__ == '__main__':
                 selected_cruise,
                 selected_lowering,
                 os.path.join(lowering_export_dir, REPORTS_DIRNAME),
+                event_exports=event_exports_by_lowering.get(
+                    str(selected_lowering["lowering_id"]),
+                    [],
+                ),
             )
             logging.info("Built report: %s", report_path)
         except Exception as err:
