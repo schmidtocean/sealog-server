@@ -44,6 +44,9 @@
     <div><strong>Generated:</strong> {{ generated_ts|timestamp }}</div>
   </div>
 
+  <h2>Description</h2>
+  <p>{{ lowering_meta.lowering_description }}</p>
+
   <h2>Metrics</h2>
   <table>
     <tbody>
@@ -54,21 +57,33 @@
       </tr>
       {% endfor %}
       <tr><th>Max Depth</th><td class="numeric">{{ max_depth }}</td></tr>
+      <tr><th>Minimum Distance to Seabed</th><td class="numeric">{{ minimum_distance_to_seabed }}</td></tr>
       <tr><th>Bounding Box</th><td>{{ bounding_box }}</td></tr>
     </tbody>
   </table>
 
   <h2>Milestones</h2>
   <table>
-    <thead><tr><th>Milestone</th><th>Timestamp</th></tr></thead>
+    <thead>
+      <tr>
+        <th>Milestone</th>
+        <th>Timestamp</th>
+        <th>Lat</th>
+        <th>Lon</th>
+        <th>Depth (m)</th>
+      </tr>
+    </thead>
     <tbody>
       {% for milestone in milestones %}
       <tr>
         <th>{{ milestone.name }}</th>
         <td>{{ milestone.ts|timestamp }}</td>
+        <td class="numeric">{{ milestone.latitude|optional_float }}</td>
+        <td class="numeric">{{ milestone.longitude|optional_float }}</td>
+        <td class="numeric">{{ milestone.depth|optional_float }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="2">No milestones logged</td></tr>
+      <tr><td colspan="5">No milestones logged</td></tr>
       {% endfor %}
     </tbody>
   </table>
@@ -90,9 +105,6 @@
     {% endif %}
   </div>
   {% endif %}
-
-  <h2>Description</h2>
-  <p>{{ lowering_meta.lowering_description }}</p>
 
   <h2>Events</h2>
   {% for group in event_groups %}
