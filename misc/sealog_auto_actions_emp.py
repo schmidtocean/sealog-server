@@ -38,9 +38,12 @@ import websockets
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
 
+from misc.python_sealog.custom_vars import get_custom_var_uid_by_name, set_custom_var
 from misc.python_sealog.events import get_events_by_lowering
 from misc.python_sealog.lowerings import get_lowering_by_event
 from misc.python_sealog.settings import API_SERVER_URL, WS_SERVER_URL, HEADERS, EVENTS_API_PATH, LOWERINGS_API_PATH
+
+ASNAP_STATUS_VAR_NAME = 'asnapStatus'
 
 INCLUDE_SET = ('VEHICLE',)
 
@@ -59,6 +62,11 @@ HELLO = {
 PING = {
     'type':'ping',
     'id':CLIENT_WSID
+}
+
+ASNAP_LOOKUP = {
+    'In water': 'On',
+    'Out of water': 'Off'
 }
 
 START_STOP_LOOKUP = {
@@ -92,10 +100,29 @@ def _handle_vehicle_event(event):
             break
 
     if milestone is not None:
+        _set_asnap(milestone)
+
         if milestone == WATCH_CHANGE_START_MILESTONE:
             _update_first_watch_change(event)
 
         _set_milestones(event, milestone)
+
+
+def _set_asnap(evt_milestone):
+    '''
+    Sets the ASNAP status variable based on the evt_milestone
+    '''
+
+    if evt_milestone not in ASNAP_LOOKUP:
+        return
+
+    try:
+        asnap_status_var_uid = get_custom_var_uid_by_name(ASNAP_STATUS_VAR_NAME)
+        logging.info("Setting ASNAP to %s", ASNAP_LOOKUP[evt_milestone])
+        set_custom_var(asnap_status_var_uid, ASNAP_LOOKUP[evt_milestone])
+    except Exception as err:
+        logging.error("Could not update ASNAP status")
+        logging.debug(str(err))
 
 
 def _set_milestones(event, evt_milestone): # pylint: disable=too-many-branches,too-many-statements
