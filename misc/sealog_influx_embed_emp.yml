@@ -60,3 +60,15 @@
             name: stb_velocity
             uom: deg
             round: 2
+        MissionLine:
+            name: mission_line
+            uom: ''
+            round: 0
+        TriggerRateDist:
+            name: HiSAS_trigger_rate
+            uom: Hz
+            round: 3
+        SecondaryTriggerRate:
+            name: EM_trigger_rate
+            uom: Hz
+            round: 1
