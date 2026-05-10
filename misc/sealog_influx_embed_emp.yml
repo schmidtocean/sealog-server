@@ -63,7 +63,6 @@
         MissionLine:
             name: mission_line
             uom: ' '
-            round: 0
         MasterTriggerMode:
             name: HiSAS_trigger_mode
             uom: ' '
