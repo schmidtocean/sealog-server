@@ -54,19 +54,22 @@
             round: 2
         FwdVel:
             name: fwd_velocity
-            uom: deg
+            uom: m/s
             round: 2
         StbVel:
             name: stb_velocity
-            uom: deg
+            uom: m/s
             round: 2
         MissionLine:
             name: mission_line
-            uom: ''
+            uom: ' '
             round: 0
+        MasterTriggerMode:
+            name: HiSAS_trigger_mode
+            uom: ' '
         TriggerRateDist:
             name: HiSAS_trigger_rate
-            uom: Hz
+            uom: Hz/m
             round: 3
         SecondaryTriggerRate:
             name: EM_trigger_rate
