@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{{ metrics.lowering_id }} {{ vehicle_name }} Lowering Summary</title>
+  <title>{{ metrics.lowering_id }} {{ vehicle_name }} Deployment Summary</title>
   <style>
     :root {
       --accent: #d66b00;
@@ -35,7 +35,7 @@
   </style>
 </head>
 <body>
-  <h1>{{ metrics.lowering_id }} {{ vehicle_name }} Lowering Summary</h1>
+  <h1>{{ metrics.lowering_id }} {{ vehicle_name }} Deployment Summary</h1>
   <div class="meta">
     <div><strong>Cruise:</strong> {{ cruise.cruise_id }}</div>
     <div><strong>Location:</strong> {{ metrics.location }}</div>
@@ -110,17 +110,18 @@
   {% for group in event_groups %}
   <h3>{{ group.label }} ({{ group.count }})</h3>
   <table>
-    <thead><tr><th>Timestamp</th><th>Event</th><th>Author</th><th>Details</th></tr></thead>
+    <thead><tr><th>Timestamp</th><th>Event</th><th>Author</th><th>Mission Line</th><th>Details</th></tr></thead>
     <tbody>
       {% for event in group.events %}
       <tr>
         <td>{{ event.ts|timestamp }}</td>
         <th>{{ event.event_value }}</th>
         <td>{{ event.author }}</td>
+        <td class="numeric">{{ event.mission_line }}</td>
         <td>{{ event.details }}</td>
       </tr>
       {% else %}
-      <tr><td colspan="4">No events</td></tr>
+      <tr><td colspan="5">No events</td></tr>
       {% endfor %}
     </tbody>
   </table>

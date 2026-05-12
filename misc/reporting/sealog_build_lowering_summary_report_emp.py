@@ -16,8 +16,10 @@ from misc.reporting.sealog_build_cruise_summary_report_emp import (
     VEHICLE_NAME,
     SealogRecord,
     build_lowering_metrics,
+    event_milestone_records,
     format_float_list,
     format_optional_float,
+    lowering_with_event_milestones,
     parse_timestamp,
     render_template,
     write_pdf_report,
@@ -25,6 +27,13 @@ from misc.reporting.sealog_build_cruise_summary_report_emp import (
 
 EVENT_EXCLUDE_VALUES = {'ASNAP', 'FRAME GRAB', 'FRAME_GRAB', 'FRAMEGRAB', 'WATCH CHANGE', 'WATCH_CHANGE'}
 EVENT_GROUP_ORDER = ('Vehicle', 'Problem', 'Other')
+HIDDEN_MILESTONE_ALIASES = {
+    'lowering_descending',
+    'lowering_on_bottom',
+    'lowering_off_bottom',
+    'lowering_on_surface',
+    'lowering_aborted',
+}
 
 
 @dataclass(frozen=True)
@@ -81,8 +90,9 @@ def _render_lowering_summary_html(
     plots: PlotAssets,
     event_exports: list[SealogRecord],
 ) -> str:
-    metrics = build_lowering_metrics(lowering)
-    meta = lowering.get('lowering_additional_meta', {})
+    report_lowering = lowering_with_event_milestones(lowering, event_exports)
+    metrics = build_lowering_metrics(report_lowering)
+    meta = report_lowering.get('lowering_additional_meta', {})
     meta = meta if isinstance(meta, dict) else {}
     track_points = _track_points(event_exports)
     altimeter_readings = [point.altitude for point in track_points if point.altitude is not None]
@@ -95,7 +105,7 @@ def _render_lowering_summary_html(
         metrics=metrics,
         generated_ts=datetime.now(timezone.utc),
         stage_definitions=STAGE_DEFINITIONS,
-        milestones=_actual_milestones(meta, track_points),
+        milestones=_actual_milestones(meta, track_points, event_exports),
         vehicle_name=VEHICLE_NAME,
         max_depth=format_optional_float(metrics.max_depth),
         minimum_distance_to_seabed=format_optional_float(
@@ -147,7 +157,19 @@ def _build_plot_assets(
     )
 
 
-def _actual_milestones(meta: SealogRecord, track_points: list[TrackPoint]) -> list[SealogRecord]:
+def _actual_milestones(
+    meta: SealogRecord,
+    track_points: list[TrackPoint],
+    event_exports: list[SealogRecord] | None = None,
+) -> list[SealogRecord]:
+    event_records = [
+        record
+        for record in event_milestone_records(event_exports or [])
+        if record.get('name') not in HIDDEN_MILESTONE_ALIASES
+    ]
+    if event_records:
+        return _milestone_rows_with_nav(event_records, track_points)
+
     milestones = meta.get('milestones', {})
     if not isinstance(milestones, dict):
         return []
@@ -155,18 +177,36 @@ def _actual_milestones(meta: SealogRecord, track_points: list[TrackPoint]) -> li
     output = []
 
     for name, value in milestones.items():
-        timestamp = parse_timestamp(value)
-        point = _nearest_track_point(timestamp, track_points)
+        if name in HIDDEN_MILESTONE_ALIASES:
+            continue
+
         output.append({
             'name': name,
-            'ts': timestamp,
+            'ts': parse_timestamp(value),
             'raw_value': value,
+        })
+
+    return _milestone_rows_with_nav(sorted(output, key=_milestone_sort_key), track_points)
+
+
+def _milestone_rows_with_nav(
+    milestones: list[SealogRecord],
+    track_points: list[TrackPoint],
+) -> list[SealogRecord]:
+    output = []
+
+    for milestone in milestones:
+        timestamp = milestone.get('ts')
+        timestamp = timestamp if isinstance(timestamp, datetime) else None
+        point = _nearest_track_point(timestamp, track_points)
+        output.append({
+            **milestone,
             'latitude': point.latitude if point else None,
             'longitude': point.longitude if point else None,
             'depth': point.depth if point else None,
         })
 
-    return sorted(output, key=_milestone_sort_key)
+    return output
 
 
 def _milestone_sort_key(milestone: SealogRecord) -> tuple[int, datetime, str]:
@@ -215,8 +255,16 @@ def _report_event(event: SealogRecord) -> SealogRecord | None:
         'ts': timestamp,
         'event_value': event_value,
         'author': str(event.get('event_author', '')).strip(),
+        'mission_line': _event_mission_line(event),
         'details': _event_details(event),
     }
+
+
+def _event_mission_line(event: SealogRecord) -> str:
+    values = _preferred_aux_values(event.get('aux_data'), ('mission_line',))
+    mission_line = _aux_value(values, 'mission_line')
+
+    return '' if mission_line in (None, '') else str(mission_line).strip()
 
 
 def _event_group(event: SealogRecord) -> str:

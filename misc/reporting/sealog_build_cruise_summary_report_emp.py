@@ -26,6 +26,8 @@ TEMPLATE_DIR = Path(__file__).parent / 'templates'
 SealogRecord = dict[str, Any]
 Seconds = int | None
 
+MILESTONE_OPTION_NAME = 'milestone'
+
 
 @dataclass(frozen=True)
 class StageDefinition:
@@ -78,8 +80,8 @@ class CruiseMapAssets:
 STAGE_DEFINITIONS = (
     StageDefinition(
         'Deck to Deck',
-        ('In water',),
-        ('Out of water',),
+        ('Deployment',),
+        ('Mission Key Inserted',),
         start_fallback='start_ts',
         stop_fallback='stop_ts',
     ),
@@ -94,6 +96,86 @@ STAGE_DEFINITIONS = (
         stop_fallback='stop_ts',
     ),
 )
+
+
+def lowering_with_event_milestones(
+    lowering: SealogRecord,
+    event_exports: list[SealogRecord] | None,
+) -> SealogRecord:
+    '''
+    Return a lowering record with event milestones filling missing record milestones
+    '''
+
+    event_milestones = event_milestones_dict(event_exports or [])
+    if not event_milestones:
+        return lowering
+
+    output = dict(lowering)
+    meta = output.get('lowering_additional_meta', {})
+    meta = dict(meta) if isinstance(meta, dict) else {}
+    milestones = meta.get('milestones', {})
+    milestones = dict(milestones) if isinstance(milestones, dict) else {}
+    meta['milestones'] = {**event_milestones, **milestones}
+    output['lowering_additional_meta'] = meta
+
+    return output
+
+
+def event_milestone_records(event_exports: list[SealogRecord]) -> list[SealogRecord]:
+    '''
+    Extract milestone rows from exported Sealog events
+    '''
+
+    records = []
+
+    for event in event_exports:
+        milestone = event_milestone_value(event)
+        timestamp = parse_timestamp(event.get('ts'))
+        if milestone is None or timestamp is None:
+            continue
+
+        records.append({
+            'name': milestone,
+            'ts': timestamp,
+            'raw_value': event.get('ts'),
+        })
+
+    return sorted(records, key=_milestone_event_sort_key)
+
+
+def event_milestones_dict(event_exports: list[SealogRecord]) -> dict[str, Any]:
+    '''
+    Extract first-seen milestone timestamps from exported Sealog events
+    '''
+
+    milestones = {}
+
+    for record in event_milestone_records(event_exports):
+        milestones.setdefault(str(record['name']), record['raw_value'])
+
+    return milestones
+
+
+def event_milestone_value(event: SealogRecord) -> str | None:
+    for option in event.get('event_options', []):
+        if not isinstance(option, dict):
+            continue
+
+        if option.get('event_option_name') != MILESTONE_OPTION_NAME:
+            continue
+
+        value = str(option.get('event_option_value', '')).strip()
+        return value or None
+
+    return None
+
+
+def _milestone_event_sort_key(record: SealogRecord) -> tuple[datetime, str]:
+    timestamp = record.get('ts')
+    if isinstance(timestamp, datetime):
+        return (timestamp, str(record.get('name', '')).lower())
+
+    return (datetime.max.replace(tzinfo=timezone.utc), str(record.get('name', '')).lower())
 
 
 def parse_timestamp(value: Any) -> datetime | None:
@@ -191,8 +273,8 @@ def build_lowering_metrics(lowering: SealogRecord) -> LoweringMetrics:
     return LoweringMetrics(
         lowering_id=str(lowering.get('lowering_id', '')),
         location=str(lowering.get('lowering_location', '')),
-        start_ts=get_stage_boundary(lowering, ('In water',), 'start_ts'),
-        stop_ts=get_stage_boundary(lowering, ('Out of water',), 'stop_ts'),
+        start_ts=get_stage_boundary(lowering, ('Deployment',), 'start_ts'),
+        stop_ts=get_stage_boundary(lowering, ('Mission Key Inserted',), 'stop_ts'),
         stage_durations=stage_durations,
         max_depth=_optional_float(stats.get('max_depth')),
         bounding_box=_float_list(stats.get('bounding_box')),
@@ -213,11 +295,19 @@ def write_cruise_metrics_report(
     output_path.mkdir(parents=True, exist_ok=True)
 
     cruise_id = str(cruise.get('cruise_id', 'cruise'))
-    metrics = [build_lowering_metrics(lowering) for lowering in lowerings]
+    event_exports_by_lowering = event_exports_by_lowering or {}
+    report_lowerings = [
+        lowering_with_event_milestones(
+            lowering,
+            _event_exports_for_lowering(lowering, event_exports_by_lowering),
+        )
+        for lowering in lowerings
+    ]
+    metrics = [build_lowering_metrics(lowering) for lowering in report_lowerings]
     map_assets = _build_cruise_map_assets(
         cruise_id,
         lowerings,
-        event_exports_by_lowering or {},
+        event_exports_by_lowering,
         output_path / 'assets',
     )
 
@@ -465,15 +555,7 @@ def _write_dive_locations_map(tracks: list[DiveTrack], output_path: Path) -> Non
             alpha=0.92,
             label=track.lowering_id,
         )
-        axis.scatter(
-            longitudes_for_track[0],
-            latitudes_for_track[0],
-            color=color,
-            edgecolor='#151a17',
-            linewidth=0.5,
-            s=18,
-            zorder=3,
-        )
+        _draw_track_start_arrow(axis, longitudes_for_track, latitudes_for_track, color)
         axis.annotate(
             track.lowering_id,
             (longitudes_for_track[-1], latitudes_for_track[-1]),
@@ -495,6 +577,57 @@ def _write_dive_locations_map(tracks: list[DiveTrack], output_path: Path) -> Non
     figure.tight_layout()
     figure.savefig(output_path, bbox_inches='tight')
     pyplot.close(figure)
+
+
+def _draw_track_start_arrow(axis: Any, longitudes: list[float], latitudes: list[float], color: Any) -> None:
+    if len(longitudes) < 2:
+        axis.scatter(
+            longitudes[0],
+            latitudes[0],
+            color=color,
+            edgecolor='#151a17',
+            linewidth=0.5,
+            s=18,
+            zorder=3,
+        )
+        return
+
+    start_index = 0
+    next_index = next(
+        (
+            index
+            for index in range(1, len(longitudes))
+            if longitudes[index] != longitudes[start_index] or latitudes[index] != latitudes[start_index]
+        ),
+        None,
+    )
+    if next_index is None:
+        axis.scatter(
+            longitudes[start_index],
+            latitudes[start_index],
+            color=color,
+            edgecolor='#151a17',
+            linewidth=0.5,
+            s=18,
+            zorder=3,
+        )
+        return
+
+    axis.annotate(
+        '',
+        xy=(longitudes[next_index], latitudes[next_index]),
+        xytext=(longitudes[start_index], latitudes[start_index]),
+        arrowprops={
+            'arrowstyle': '-|>',
+            'color': color,
+            'edgecolor': '#151a17',
+            'linewidth': 1.5,
+            'mutation_scale': 10,
+            'shrinkA': 0,
+            'shrinkB': 0,
+        },
+        zorder=4,
+    )
 
 
 def _max_depth(metrics: list[LoweringMetrics]) -> float | None:
