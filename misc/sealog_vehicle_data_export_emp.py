@@ -20,6 +20,7 @@ LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for det
 import json
 import logging
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -52,13 +53,14 @@ from misc.reporting.sealog_build_lowering_summary_report_emp import (
 SLACK_LOG_LEVEL = 'INFO'
 
 EXPORT_ROOT_DIR = '/data/sealog-emp-export'
-REPORT_ONLY_OUTPUT_DIR = "./tmp/sealog-emp-reports"
+REPORT_ONLY_OUTPUT_DIR = "/data/sealog-emp-export"
 EMP_REPORT_API_SERVER_URL = "http://10.23.9.25:8200/sealog-server"
 SEALOG_API_TOKEN_ENV = "SEALOG_API_TOKEN"
 VEHICLE_NAME = 'Empress'
 
 CRUISEDATA_LOCAL_MOUNT = '/mnt/CruiseData'
 OPENVDM_VEHICLE_DIR = 'Vehicles/' + VEHICLE_NAME
+POST_CRUISE_REPORT_DIR = OPENVDM_VEHICLE_DIR
 SEALOG_DIR = 'Sealog'
 
 CREATE_DEST_DIR = True
@@ -70,6 +72,7 @@ LOWERINGS_FILE_PATH = os.path.join(API_SERVER_FILE_PATH, 'lowerings')
 IMAGES_DIRNAME = 'Images'
 FILES_DIRNAME = 'Files'
 REPORTS_DIRNAME = "Reports"
+REPORT_FILE_PATTERNS = ("*.pdf",)
 
 SealogRecord = dict[str, Any]
 SealogRecords = list[SealogRecord]
@@ -280,6 +283,64 @@ def _export_cruise_sealog_data_files(cruise):
             logging.debug(str(err))
 
 
+def _copy_report_to_sealog_file_store(report_path, destination_dir):
+    """
+    Copy a generated report into the Sealog file store
+    """
+
+    try:
+        os.makedirs(destination_dir, exist_ok=True)
+        shutil.copy2(
+            report_path, os.path.join(destination_dir, os.path.basename(report_path))
+        )
+    except Exception as err:
+        logging.error("Could not copy report to Sealog file store: %s", report_path)
+        logging.debug(str(err))
+        return False
+
+    return True
+
+
+def _stage_report_files(source_dir, destination_dir):
+    """
+    Copy report PDFs from the Sealog file store into the export staging area
+    """
+
+    if not os.path.isdir(source_dir):
+        logging.error("Cannot find Sealog report source directory: %s", source_dir)
+        return False
+
+    os.makedirs(destination_dir, exist_ok=True)
+    rsync_args = [
+        "rsync",
+        "-avi",
+        "--delete",
+    ]
+
+    for pattern in REPORT_FILE_PATTERNS:
+        rsync_args.extend(["--include", pattern])
+
+    rsync_args.extend(
+        [
+            "--exclude",
+            "*",
+            os.path.join(source_dir, ""),
+            destination_dir,
+        ]
+    )
+
+    try:
+        subprocess.run(rsync_args, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as err:
+        logging.error(
+            "Failed to stage report files from %s: %s", source_dir, err.stderr
+        )
+        logging.debug(str(err))
+        return False
+
+    return True
+
+
 def _stage_lowering_files(lowering, lowering_source_dir):
     '''
     Copy non-report files uploaded to the lowering into the export staging area.
@@ -291,15 +352,21 @@ def _stage_lowering_files(lowering, lowering_source_dir):
     os.makedirs(files_dest_dir, exist_ok=True)
 
     try:
-        subprocess.run([
-            'rsync',
-            '-avi',
-            '--progress',
-            '--delete',
-            '--exclude=*_Report.pdf',
-            os.path.join(API_SERVER_FILE_PATH, 'lowerings', lowering['id'], ''),
-            files_dest_dir,
-        ], check=True, capture_output=True, text=True)
+        subprocess.run(
+            [
+                "rsync",
+                "-avi",
+                "--progress",
+                "--delete",
+                "--exclude=*_Report.pdf",
+                "--exclude=*_Summary.pdf",
+                os.path.join(API_SERVER_FILE_PATH, "lowerings", lowering["id"], ""),
+                files_dest_dir,
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
     except subprocess.CalledProcessError as err:
         logging.error("Failed to sync user files for lowering %s: %s", lowering['lowering_id'], err.stderr)
         return False
@@ -319,26 +386,35 @@ def _push_2_data_warehouse(cruise, lowerings): # pylint: disable=redefined-outer
 
     transfer_success = True
     cruise_reports_dir = os.path.join(cruise_source_dir, REPORTS_DIRNAME)
+    cruise_report_source_dir = os.path.join(
+        API_SERVER_FILE_PATH, "cruises", cruise["id"]
+    )
+
+    if not _stage_report_files(cruise_report_source_dir, cruise_reports_dir):
+        transfer_success = False
 
     if os.path.isdir(cruise_reports_dir):
         warehouse_cruise_reports_dir = os.path.join(
             CRUISEDATA_LOCAL_MOUNT,
             cruise["cruise_id"],
-            OPENVDM_VEHICLE_DIR,
-            REPORTS_DIRNAME,
+            POST_CRUISE_REPORT_DIR,
         )
 
         try:
             os.makedirs(warehouse_cruise_reports_dir, exist_ok=True)
-            logging.info("Rclone syncing cruise reports for %s", cruise["cruise_id"])
+            logging.info("Rclone copying cruise reports for %s", cruise["cruise_id"])
             subprocess.run(
                 [
                     "rclone",
-                    "sync",
+                    "copy",
                     "--transfers=16",
                     "--checkers=16",
                     "--size-only",
                     "--progress",
+                    "--include",
+                    "*.pdf",
+                    "--exclude",
+                    "*",
                     cruise_reports_dir,
                     warehouse_cruise_reports_dir,
                 ],
@@ -365,11 +441,18 @@ def _push_2_data_warehouse(cruise, lowerings): # pylint: disable=redefined-outer
     for lowering in lowerings:
         lowering_dir_name = _export_dir_name(cruise['cruise_id'], lowering['lowering_id'])
         lowering_source_dir = os.path.join(cruise_source_dir, lowering_dir_name)
+        lowering_reports_dir = os.path.join(lowering_source_dir, REPORTS_DIRNAME)
+        lowering_report_source_dir = os.path.join(
+            API_SERVER_FILE_PATH, "lowerings", lowering["id"]
+        )
 
         if not os.path.isdir(lowering_source_dir):
             logging.error('Exported directory for lowering data not found: %s', lowering_source_dir)
             transfer_success = False
             continue
+
+        if not _stage_report_files(lowering_report_source_dir, lowering_reports_dir):
+            transfer_success = False
 
         if not _stage_lowering_files(lowering, lowering_source_dir):
             transfer_success = False
@@ -772,6 +855,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     _export_cruise_sealog_data_files(selected_cruise)
+    sealog_report_store_success = True
 
     report_lowerings = _get_cruise_lowerings_for_reports(
         selected_cruise,
@@ -798,6 +882,13 @@ if __name__ == '__main__':
             ),
             event_exports_by_lowering=event_exports_by_lowering,
         ):
+            sealog_report_store_success = (
+                _copy_report_to_sealog_file_store(
+                    report_path,
+                    os.path.join(CRUISES_FILE_PATH, selected_cruise["id"]),
+                )
+                and sealog_report_store_success
+            )
             logging.info("Built report: %s", report_path)
     except Exception as err:
         logging.error("Unable to build cruise metrics report")
@@ -846,6 +937,13 @@ if __name__ == '__main__':
                     [],
                 ),
             )
+            sealog_report_store_success = (
+                _copy_report_to_sealog_file_store(
+                    report_path,
+                    os.path.join(LOWERINGS_FILE_PATH, selected_lowering["id"]),
+                )
+                and sealog_report_store_success
+            )
             logging.info("Built report: %s", report_path)
         except Exception as err:
             logging.error(
@@ -856,11 +954,17 @@ if __name__ == '__main__':
 
     if not parsed_args.no_transfer:
         success = _push_2_data_warehouse(selected_cruise, selected_lowerings)
+        success = success and sealog_report_store_success
         if success:
             logging.warning(":white_check_mark: Completed export and transfer")
         else:
             logging.error("Export completed but one or more transfers failed, check logs.")
     else:
-        logging.warning("Export completed (data transfer skipped).")
+        if sealog_report_store_success:
+            logging.warning("Export completed (data transfer skipped).")
+        else:
+            logging.error(
+                "Export completed but one or more reports failed to copy to Sealog."
+            )
 
     logging.shutdown()
