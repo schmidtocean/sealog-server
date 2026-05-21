@@ -411,10 +411,10 @@ def _push_2_data_warehouse(cruise, lowerings): # pylint: disable=redefined-outer
                     "--checkers=16",
                     "--size-only",
                     "--progress",
-                    "--include",
-                    "*.pdf",
-                    "--exclude",
-                    "*",
+                    "--filter",
+                    "+ *.pdf",
+                    "--filter",
+                    "- *",
                     cruise_reports_dir,
                     warehouse_cruise_reports_dir,
                 ],
@@ -890,9 +890,9 @@ if __name__ == '__main__':
                 and sealog_report_store_success
             )
             logging.info("Built report: %s", report_path)
-    except Exception as err:
-        logging.error("Unable to build cruise metrics report")
-        logging.debug(str(err))
+    except Exception:
+        sealog_report_store_success = False
+        logging.exception("Unable to build cruise metrics report")
 
     for selected_lowering in selected_lowerings:
         logging.info("Exporting data for lowering: %s", selected_lowering['lowering_id'])
@@ -945,12 +945,12 @@ if __name__ == '__main__':
                 and sealog_report_store_success
             )
             logging.info("Built report: %s", report_path)
-        except Exception as err:
-            logging.error(
+        except Exception:
+            sealog_report_store_success = False
+            logging.exception(
                 "Unable to build lowering summary report: %s",
                 selected_lowering["lowering_id"],
             )
-            logging.debug(str(err))
 
     if not parsed_args.no_transfer:
         success = _push_2_data_warehouse(selected_cruise, selected_lowerings)

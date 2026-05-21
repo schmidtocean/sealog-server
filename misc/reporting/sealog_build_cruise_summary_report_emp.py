@@ -620,7 +620,6 @@ def _draw_track_start_arrow(axis: Any, longitudes: list[float], latitudes: list[
         arrowprops={
             'arrowstyle': '-|>',
             'color': color,
-            'edgecolor': '#151a17',
             'linewidth': 1.5,
             'mutation_scale': 10,
             'shrinkA': 0,

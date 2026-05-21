@@ -76,7 +76,9 @@ def write_lowering_summary_report(
 
     cruise_id = str(cruise.get('cruise_id', 'cruise'))
     lowering_id = str(lowering.get('lowering_id', 'lowering'))
-    report_path = output_path / f'{cruise_id}_{lowering_id}_{VEHICLE_NAME}_Lowering_Summary.pdf'
+    report_path = (
+        output_path / f"{cruise_id}_{lowering_id}_{VEHICLE_NAME}_Deployment_Summary.pdf"
+    )
     plots = _build_plot_assets(cruise_id, lowering_id, event_exports or [], output_path / 'assets')
 
     write_pdf_report(_render_lowering_summary_html(cruise, lowering, plots, event_exports or []), report_path)
