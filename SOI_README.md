@@ -105,9 +105,32 @@ In `development` and `test` modes the database is populated from SOI-specific se
 
 ## Docker development environment
 
-The Docker setup runs a single instance against a MongoDB container. Copy and edit the dist files, then build and start.
+The Docker setup runs all three server variants simultaneously against a shared MongoDB container, each on its own port and database.
+
+| Instance | URL |
+|---|---|
+| FKt (R/V Falkor(too)) | `http://localhost:8000/sealog-server` |
+| Sub (ROV Subastian) | `http://localhost:8100/sealog-server` |
+| emp (AUV Empress) | `http://localhost:8200/sealog-server` |
 
 ### 1. Set up config files
+
+`Dockerfile` and `docker-compose.yml` are gitignored. Copy the templates:
+
+```bash
+cp Dockerfile.dist Dockerfile
+cp docker-compose.yml.dist docker-compose.yml
+```
+
+Copy the per-instance env templates:
+
+```bash
+cp .env.FKt.dist .env.FKt
+cp .env.Sub.dist .env.Sub
+cp .env.emp.dist .env.emp
+```
+
+Copy the server config templates (defaults work without modification for Docker):
 
 ```bash
 cp config/db_constants.js.dist    config/db_constants.js
@@ -117,43 +140,23 @@ cp config/server_settings.js.dist config/server_settings.js
 cp config/secret.js.dist          config/secret.js
 ```
 
-The defaults work without modification for a Docker dev environment.
+### 2. Set secrets
 
-### 2. Create the Dockerfile
-
-`Dockerfile` is gitignored. Copy the provided template:
+Each `.env.*` file needs a `SEALOG_SERVER_SECRET`. Generate one and paste it into each file:
 
 ```bash
-cp Dockerfile.dist Dockerfile
+node -e "console.log(require('crypto').randomBytes(256).toString('base64'));"
 ```
 
-### 3. Configure the compose file
+You can use the same secret in all three files for local development.
 
-Copy and edit the compose file:
-
-```bash
-cp docker-compose.yml.dist docker-compose.yml
-```
-
-Set `SEALOG_INSTANCE_TYPE` and `SEALOG_SERVER_SECRET` in the `environment` section. For development also set `NODE_ENV=development`. Example:
-
-```yaml
-environment:
-  - SEALOG_INSTANCE_TYPE=FKt
-  - SEALOG_SERVER_SECRET=<generated secret>
-  - NODE_ENV=development
-  - MONGO_URL=mongodb://mongo:27017/sealogDB_devel
-```
-
-### 4. Start the stack
+### 3. Start the stack
 
 ```bash
 docker compose up --build
 ```
 
-The API will be available at `http://localhost:8000/sealog-server` and Swagger UI at `http://localhost:8000/sealog-server/documentation`.
-
-Because `NODE_ENV=development`, the database is dropped and reseeded on every container start. To persist data between restarts, set `NODE_ENV=debug`.
+Because `NODE_ENV=development`, each instance drops and reseeds its database on every container start using SOI seed data for that instance type. To persist data between restarts, change `NODE_ENV=debug` in the relevant `.env.*` file.
 
 ---
 

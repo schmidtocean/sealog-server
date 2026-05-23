@@ -60,6 +60,12 @@ config/secret.js
 Dockerfile
 docker-compose.yml
 
+# per-instance docker env files (copied from .env.*.dist)
+.env
+.env.FKt
+.env.Sub
+.env.emp
+
 # python generated files
 *.pyc
 __pycache__
