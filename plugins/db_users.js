@@ -1,8 +1,8 @@
-const { randomAsciiString, hashedPassword } = require('../lib/utils');
-
 const {
   usersTable
 } = require('../config/db_constants');
+
+const { filePreProcessor } = require('../lib/utils');
 
 exports.plugin = {
   name: 'db_populate_users',
@@ -10,47 +10,7 @@ exports.plugin = {
   register: async (server, options) => {
 
     const db = server.mongo.db;
-    const ObjectID = server.mongo.ObjectID;
     const resetDB = ['development', 'test'].includes(process.env.NODE_ENV);
-
-    const init_data = [
-      {
-        _id: new ObjectID('5981f167212b348aed7fa9f5'),
-        username: 'admin',
-        fullname: 'Admin',
-        email: 'admin@notarealserver.com',
-        password: await hashedPassword('demo'),
-        last_login: new Date(),
-        roles: ['admin', 'cruise_manager', 'event_logger', 'event_manager', 'event_watcher', 'template_manager'],
-        system_user: true,
-        disabled: false,
-        loginToken: randomAsciiString(20)
-      },
-      {
-        _id: new ObjectID('5981f167212b348aed7fb9f5'),
-        username: 'guest',
-        fullname: 'Guest',
-        email: 'guest@notarealserver.com',
-        password: await hashedPassword(''),
-        last_login: new Date(),
-        roles: ['event_manager', 'event_logger', 'event_watcher'],
-        system_user: true,
-        disabled: false,
-        loginToken: randomAsciiString(20)
-      },
-      {
-        _id: new ObjectID('5981f167212b348aed7fc9f5'),
-        username: 'pi',
-        fullname: 'Primary Investigator',
-        email: 'pi@notarealserver.com',
-        password: await hashedPassword('demo'),
-        last_login: new Date(),
-        roles: ['cruise_manager', 'event_logger', 'event_manager', 'event_watcher', 'template_manager'],
-        system_user: true,
-        disabled: true,
-        loginToken: randomAsciiString(20)
-      }
-    ];
 
     console.log('Searching for Users Collection');
     const result = await db.listCollections({ name: usersTable }).toArray();
@@ -74,6 +34,7 @@ exports.plugin = {
     console.log('Creating Users Collection');
     try {
       const collection = await db.createCollection(usersTable);
+      const init_data = await filePreProcessor('./init_data/system_users_soi.json', 'users');
       console.log('Populating Users Collection');
       await collection.insertMany(init_data);
     }

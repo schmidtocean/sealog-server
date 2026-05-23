@@ -2,205 +2,15 @@ const {
   eventTemplatesTable
 } = require('../config/db_constants');
 
+const { filePreProcessor } = require('../lib/utils');
+
 exports.plugin = {
   name: 'db_populate_event_templates',
   dependencies: ['hapi-mongodb'],
   register: async (server, options) => {
 
     const db = server.mongo.db;
-    const ObjectID = server.mongo.ObjectID;
     const resetDB = ['development', 'test'].includes(process.env.NODE_ENV);
-
-    const init_data = [
-      {
-        _id: new ObjectID('5a71c3d7fa96aa1977822b2c'),
-        event_name: 'FISH',
-        event_value: 'FISH',
-        event_free_text_required: false,
-        system_template: false,
-        template_categories: ['biology'],
-        disabled: false,
-        admin_only: false,
-        event_options: [{
-          event_option_name: 'Status',
-          event_option_type: 'dropdown',
-          event_option_default_value: '',
-          event_option_values: ['alive','dead','undead'],
-          event_option_allow_freeform: false,
-          event_option_required: false
-        }]
-      },
-      {
-        _id: new ObjectID('5a71c3d7fa96aa1977822b2d'),
-        event_name: 'ROCK',
-        event_value: 'ROCK',
-        event_free_text_required: false,
-        system_template: false,
-        template_categories: ['geology'],
-        disabled: false,
-        admin_only: false,
-        event_options: [{
-          event_option_name: 'Color',
-          event_option_type: 'dropdown',
-          event_option_default_value: '',
-          event_option_values: ['black','red','green'],
-          event_option_allow_freeform: false,
-          event_option_required: false
-        }]
-      },
-      {
-        _id: new ObjectID('5a71c3d7fa96aa1977822b2e'),
-        event_name: 'CORAL',
-        event_value: 'CORAL',
-        event_free_text_required: false,
-        system_template: false,
-        template_categories: ['biology'],
-        disabled: false,
-        admin_only: false,
-        event_options: [{
-          event_option_name: 'Color',
-          event_option_type: 'dropdown',
-          event_option_default_value: '',
-          event_option_values: ['black','red','purple'],
-          event_option_allow_freeform: false,
-          event_option_required: false
-        }]
-      },
-      {
-        _id: new ObjectID('5a71c3d7fa96aa1977822b2f'),
-        event_name: 'CRAB',
-        event_value: 'CRAB',
-        event_free_text_required: false,
-        system_template: false,
-        template_categories: ['biology'],
-        disabled: false,
-        admin_only: false,
-        event_options: [{
-          event_option_name: 'Color',
-          event_option_type: 'dropdown',
-          event_option_default_value: '',
-          event_option_values: ['blue','red','green'],
-          event_option_allow_freeform: false,
-          event_option_required: false
-        }]
-      },
-      {
-        _id: new ObjectID('5a71c3d7fa96aa1977822b30'),
-        event_name: 'SQUID',
-        event_value: 'SQUID',
-        event_free_text_required: false,
-        system_template: false,
-        template_categories: ['biology'],
-        disabled: false,
-        admin_only: false,
-        event_options: [{
-          event_option_name: 'Color',
-          event_option_type: 'dropdown',
-          event_option_default_value: '',
-          event_option_values: ['purple','red','pink'],
-          event_option_allow_freeform: false,
-          event_option_required: false
-        }]
-      },
-      {
-        _id: new ObjectID('5a71c3d7fa96aa1977822b31'),
-        event_name: 'SAMPLE',
-        event_value: 'SAMPLE',
-        event_free_text_required: false,
-        system_template: true,
-        template_categories: ['operations'],
-        disabled: false,
-        admin_only: false,
-        event_options: [
-          {
-            event_option_allow_freeform: false,
-            event_option_name: 'Sample ID',
-            event_option_required: true,
-            event_option_type: 'text',
-            event_option_values: []
-          },
-          {
-            event_option_allow_freeform: false,
-            event_option_name: 'Sample Type',
-            event_option_required: true,
-            event_option_type: 'dropdown',
-            event_option_values: ['push core','physical sample','fluid sample','slurp','majors','gas tight','hog bio', 'hog chem']
-          }
-        ]
-      },
-      {
-        _id: new ObjectID('5a71c3d7fa96aa1977822b32'),
-        event_name: 'PROBLEM',
-        event_value: 'PROBLEM',
-        event_free_text_required: false,
-        system_template: true,
-        template_categories: ['operations'],
-        disabled: false,
-        event_options: []
-      },
-      {
-        _id: new ObjectID('5a71c3d7fa96aa1977822b33'),
-        event_name: 'SUPER_EVENT',
-        event_value: 'SUPER_EVENT',
-        event_free_text_required: false,
-        system_template: false,
-        template_categories: ['biology','geology','operations'],
-        disabled: false,
-        event_options: [
-          {
-            event_option_allow_freeform: false,
-            event_option_name: 'first text option',
-            event_option_required: false,
-            event_option_type: 'text',
-            event_option_values: []
-          },
-          {
-            event_option_allow_freeform: false,
-            event_option_name: 'second text option',
-            event_option_required: true,
-            event_option_type: 'text',
-            event_option_values: []
-          },
-          {
-            event_option_allow_freeform: false,
-            event_option_name: 'first checkbox option',
-            event_option_required: false,
-            event_option_type: 'checkboxes',
-            event_option_values: ['1','2','3','4']
-          },
-          {
-            event_option_allow_freeform: false,
-            event_option_name: 'first select option',
-            event_option_required: false,
-            event_option_type: 'dropdown',
-            event_option_values: ['1','2','3','4']
-          },
-          {
-            event_option_allow_freeform: false,
-            event_option_default_value: '1',
-            event_option_name: 'second select option',
-            event_option_required: false,
-            event_option_type: 'dropdown',
-            event_option_values: ['1','2','3','4']
-          },
-          {
-            event_option_allow_freeform: false,
-            event_option_name: 'third select option',
-            event_option_required: true,
-            event_option_type: 'dropdown',
-            event_option_values: ['1','2','3','4']
-          },
-          {
-            event_option_allow_freeform: false,
-            event_option_default_value: '1',
-            event_option_name: 'fourth select option',
-            event_option_required: true,
-            event_option_type: 'dropdown',
-            event_option_values: ['1','2','3','4']
-          }
-        ]
-      }
-    ];
 
     console.log('Searching for Event Templates Collection');
     const result = await db.listCollections({ name: eventTemplatesTable }).toArray();
@@ -219,6 +29,13 @@ exports.plugin = {
           if (migrationResult.modifiedCount > 0) {
             console.log(`Migrated ${migrationResult.modifiedCount} event template(s): removed null event_option_visibility fields.`);
           }
+
+          // migrationResult = await db.collection(eventTemplatesTable).updateMany(
+          //   { $rename: { 'is_power_logger': 'admin_only' } }
+          // );
+          // if (migrationResult.modifiedCount > 0) {
+          //   console.log(`Migrated ${migrationResult.modifiedCount} event template(s): updated field names.`);
+          // }
         }
         catch (err) {
           console.error('MIGRATION ERROR:', err);
@@ -245,6 +62,18 @@ exports.plugin = {
 
       if (resetDB) {
         console.log('Populating Event Templates Collection');
+        let init_data = [];
+
+        if (process.env.SEALOG_INSTANCE_TYPE === 'Sub') {
+          init_data = filePreProcessor('./init_data/system_templates_Sub.json', 'event_templates');
+        }
+        else if (process.env.SEALOG_INSTANCE_TYPE === 'emp') {
+          init_data = filePreProcessor('./init_data/system_templates_emp.json', 'event_templates');
+        }
+        else {
+          init_data = filePreProcessor('./init_data/system_templates_FKt.json', 'event_templates');
+        }
+
         await collection.insertMany(init_data);
       }
     }
