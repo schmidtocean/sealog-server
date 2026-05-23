@@ -34,7 +34,7 @@ exports.plugin = {
     console.log('Creating Users Collection');
     try {
       const collection = await db.createCollection(usersTable);
-      const init_data = await filePreProcessor('./init_data/system_users_soi.json', 'users');
+      const init_data = filePreProcessor('./init_data/system_users_soi.json', 'users');
       console.log('Populating Users Collection');
       await collection.insertMany(init_data);
     }

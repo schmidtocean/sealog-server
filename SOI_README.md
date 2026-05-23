@@ -1,6 +1,6 @@
 # Sealog Server — SOI Deployment Guide
 
-This is the Schmidt Ocean Institute fork of [sealog-server](https://github.com/OceanDataTools/sealog-server) (v2.4.3). It extends the upstream server with SOI-specific seed data and instance-type-aware database initialisation.
+This is the Schmidt Ocean Institute fork of [sealog-server](https://github.com/OceanDataTools/sealog-server). It extends the upstream server with SOI-specific seed data and instance-type-aware database initialisation.
 
 Three named instance types are supported, controlled by the `SEALOG_INSTANCE_TYPE` environment variable:
 
@@ -263,7 +263,7 @@ npm run start-debug
 npm run start-test
 
 # Run a single test file
-NODE_ENV=test node --env-file=.env node_modules/.bin/lab test/events.test.js
+NODE_ENV=test node_modules/.bin/lab test/events.test.js
 
 # Lint
 npm run lint
@@ -274,11 +274,11 @@ npm run lint-fix
 
 ## Making the API available over port 80
 
-See [INSTALL.md](INSTALL.md#need-to-make-everything-available-over-port-80) for Apache reverse proxy configuration.
+See [INSTALL.md](INSTALL.md#making-the-api-available-over-port-80) for Apache reverse proxy configuration.
 
 ## Enabling HTTPS
 
-Set `SEALOG_SERVER_TLS_PRIVKEY` and `SEALOG_SERVER_TLS_FULLCHAIN` to the paths of your certificate files. See [INSTALL.md](INSTALL.md#need-to-make-everything-available-over-port-https) for details.
+Set `SEALOG_SERVER_TLS_PRIVKEY` and `SEALOG_SERVER_TLS_FULLCHAIN` to the paths of your certificate files. See [INSTALL.md](INSTALL.md#enabling-https) for details.
 
 ## Python ancillary services
 

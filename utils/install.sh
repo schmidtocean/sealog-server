@@ -117,16 +117,20 @@ cp "$install_dir/config/db_constants.js"    "$install_dir/config/db_constants_${
 cp "$install_dir/config/email_settings.js"  "$install_dir/config/email_settings_${INSTANCE}.js"
 cp "$install_dir/config/manifest.js"        "$install_dir/config/manifest_${INSTANCE}.js"
 cp "$install_dir/config/server_settings.js" "$install_dir/config/server_settings_${INSTANCE}.js"
-cp "$install_dir/misc/influx_sealog/settings.py"  "$install_dir/misc/influx_sealog/settings_${INSTANCE}.py"
-cp "$install_dir/misc/python_sealog/settings.py"  "$install_dir/misc/python_sealog/settings_${INSTANCE}.py"
 
 # Stage the changes
 git add "$install_dir/config/db_constants_${INSTANCE}.js"
 git add "$install_dir/config/email_settings_${INSTANCE}.js"
 git add "$install_dir/config/manifest_${INSTANCE}.js"
 git add "$install_dir/config/server_settings_${INSTANCE}.js"
-git add "$install_dir/misc/influx_sealog/settings_${INSTANCE}.py"
-git add "$install_dir/misc/python_sealog/settings_${INSTANCE}.py"
+
+[ -f "$install_dir/misc/influx_sealog/settings.py" ] && \
+  cp "$install_dir/misc/influx_sealog/settings.py" "$install_dir/misc/influx_sealog/settings_${INSTANCE}.py" && \
+  git add "$install_dir/misc/influx_sealog/settings_${INSTANCE}.py"
+
+[ -f "$install_dir/misc/python_sealog/settings.py" ] && \
+  cp "$install_dir/misc/python_sealog/settings.py" "$install_dir/misc/python_sealog/settings_${INSTANCE}.py" && \
+  git add "$install_dir/misc/python_sealog/settings_${INSTANCE}.py"
 
 exit 0
 HOOK
@@ -145,8 +149,12 @@ cp "$install_dir/config/db_constants_${INSTANCE}.js"    "$install_dir/config/db_
 cp "$install_dir/config/email_settings_${INSTANCE}.js"  "$install_dir/config/email_settings.js"
 cp "$install_dir/config/manifest_${INSTANCE}.js"        "$install_dir/config/manifest.js"
 cp "$install_dir/config/server_settings_${INSTANCE}.js" "$install_dir/config/server_settings.js"
-cp "$install_dir/misc/influx_sealog/settings_${INSTANCE}.py"  "$install_dir/misc/influx_sealog/settings.py"
-cp "$install_dir/misc/python_sealog/settings_${INSTANCE}.py"  "$install_dir/misc/python_sealog/settings.py"
+
+[ -f "$install_dir/misc/influx_sealog/settings_${INSTANCE}.py" ] && \
+  cp "$install_dir/misc/influx_sealog/settings_${INSTANCE}.py" "$install_dir/misc/influx_sealog/settings.py"
+
+[ -f "$install_dir/misc/python_sealog/settings_${INSTANCE}.py" ] && \
+  cp "$install_dir/misc/python_sealog/settings_${INSTANCE}.py" "$install_dir/misc/python_sealog/settings.py"
 
 exit 0
 HOOK
