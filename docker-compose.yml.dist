@@ -3,7 +3,7 @@ services:
   # -------------------------------------------------------------------------
   # R/V Falkor(too) vessel server — http://localhost:8000/sealog-server
   # -------------------------------------------------------------------------
-  sealog-server-FKt:
+  sealog-server-fkt:
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,17 +11,17 @@ services:
       - mongo
     env_file:
       - .env.FKt
-    image: sealog-server-FKt
+    image: sealog-server-fkt
     ports:
       - "8000:8000"
     restart: unless-stopped
     volumes:
-      - sealog-files-FKt:/data/sealog-files
+      - sealog-files-fkt:/data/sealog-files
 
   # -------------------------------------------------------------------------
   # ROV Subastian vehicle server — http://localhost:8100/sealog-server
   # -------------------------------------------------------------------------
-  sealog-server-Sub:
+  sealog-server-sub:
     build:
       context: .
       dockerfile: Dockerfile
@@ -29,12 +29,12 @@ services:
       - mongo
     env_file:
       - .env.Sub
-    image: sealog-server-Sub
+    image: sealog-server-sub
     ports:
       - "8100:8000"
     restart: unless-stopped
     volumes:
-      - sealog-files-Sub:/data/sealog-files
+      - sealog-files-sub:/data/sealog-files
 
   # -------------------------------------------------------------------------
   # AUV Empress — http://localhost:8200/sealog-server
@@ -66,6 +66,6 @@ services:
 
 volumes:
   db_data:
-  sealog-files-FKt:
-  sealog-files-Sub:
+  sealog-files-fkt:
+  sealog-files-sub:
   sealog-files-emp:
