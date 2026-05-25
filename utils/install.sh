@@ -132,6 +132,10 @@ git add "$install_dir/config/server_settings_${INSTANCE}.js"
   cp "$install_dir/misc/python_sealog/settings.py" "$install_dir/misc/python_sealog/settings_${INSTANCE}.py" && \
   git add "$install_dir/misc/python_sealog/settings_${INSTANCE}.py"
 
+[ -f "$install_dir/misc/slack_sealog/settings.py" ] && \
+  cp "$install_dir/misc/slack_sealog/settings.py" "$install_dir/misc/slack_sealog/settings_${INSTANCE}.py" && \
+  git add "$install_dir/misc/slack_sealog/settings_${INSTANCE}.py"
+
 exit 0
 HOOK
 
@@ -155,6 +159,9 @@ cp "$install_dir/config/server_settings_${INSTANCE}.js" "$install_dir/config/ser
 
 [ -f "$install_dir/misc/python_sealog/settings_${INSTANCE}.py" ] && \
   cp "$install_dir/misc/python_sealog/settings_${INSTANCE}.py" "$install_dir/misc/python_sealog/settings.py"
+
+[ -f "$install_dir/misc/slack_sealog/settings_${INSTANCE}.py" ] && \
+  cp "$install_dir/misc/slack_sealog/settings_${INSTANCE}.py" "$install_dir/misc/slack_sealog/settings.py"
 
 exit 0
 HOOK
