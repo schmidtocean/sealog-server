@@ -334,8 +334,18 @@ autostart=true
 autorestart=true
 stopsignal=QUIT
 
+[program:sealog-aux-data-influx-emp]
+directory=/opt/sealog-server
+command=/opt/sealog-server/venv/bin/python ./misc/sealog_aux_data_inserter_influx.py -f ./misc/sealog_influx_embed_emp.yml
+redirect_stderr=true
+stdout_logfile=/var/log/sealog-aux-data-inserter-influx-emp_STDOUT.log
+user=mt
+autostart=true
+autorestart=true
+stopsignal=QUIT
+
 [group:sealog-emp]
-programs=sealog-server-emp,sealog-asnap-emp,sealog-auto-actions-emp
+programs=sealog-server-emp,sealog-asnap-emp,sealog-auto-actions-emp,sealog-aux-data-influx-emp
 EOF
 
     sudo mv "$install_dir/sealog-server-emp.conf" /etc/supervisor/conf.d/
