@@ -82,8 +82,9 @@ echo ""
 echo "Choose an instance type:"
 echo "  1. Sealog-FKt  (R/V Falkor(too) vessel server)"
 echo "  2. Sealog-Sub  (ROV Subastian vehicle server)"
+echo "  3. Sealog-emp  (AUV Empress vehicle server)"
 echo ""
-read -rp "Enter your choice (1 or 2): " instance_choice
+read -rp "Enter your choice (1, 2, or 3): " instance_choice
 
 case $instance_choice in
     1)
@@ -91,6 +92,9 @@ case $instance_choice in
         ;;
     2)
         INSTANCE="Sub"
+        ;;
+    3)
+        INSTANCE="emp"
         ;;
     *)
         echo "Invalid choice. Exiting."
@@ -298,6 +302,43 @@ programs=sealog-server-Sub,sealog-asnap-Sub,sealog-auto-actions-Sub,sealog-aux-d
 EOF
 
     sudo mv "$install_dir/sealog-server-Sub.conf" /etc/supervisor/conf.d/
+
+else  # emp
+    cat > "$install_dir/sealog-server-emp.conf" << 'EOF'
+[program:sealog-server-emp]
+directory=/opt/sealog-server
+command=node --env-file=.env server.js
+redirect_stderr=true
+stdout_logfile=/var/log/sealog-server-emp_STDOUT.log
+user=mt
+autostart=true
+autorestart=true
+
+[program:sealog-asnap-emp]
+directory=/opt/sealog-server
+command=/opt/sealog-server/venv/bin/python ./misc/sealog_asnap.py -i 10
+redirect_stderr=true
+stdout_logfile=/var/log/sealog-asnap-emp_STDOUT.log
+user=mt
+autostart=true
+autorestart=true
+stopsignal=QUIT
+
+[program:sealog-auto-actions-emp]
+directory=/opt/sealog-server
+command=/opt/sealog-server/venv/bin/python ./misc/sealog_auto_actions_emp.py
+redirect_stderr=true
+stdout_logfile=/var/log/sealog-auto-actions-emp_STDOUT.log
+user=mt
+autostart=true
+autorestart=true
+stopsignal=QUIT
+
+[group:sealog-emp]
+programs=sealog-server-emp,sealog-asnap-emp,sealog-auto-actions-emp
+EOF
+
+    sudo mv "$install_dir/sealog-server-emp.conf" /etc/supervisor/conf.d/
 fi
 
 # ---------------------------------------------------------------------------
@@ -350,6 +391,8 @@ if [ "$INSTANCE" = "Sub" ]; then
     ln -sf sealog_vehicle_data_export_Sub.py "$install_dir/misc/sealog_data_export.py"
 elif [ "$INSTANCE" = "FKt" ]; then
     ln -sf sealog_vessel_data_export_FKt.py "$install_dir/misc/sealog_data_export.py"
+elif [ "$INSTANCE" = "emp" ]; then
+    ln -sf sealog_vehicle_data_export_emp.py "$install_dir/misc/sealog_data_export.py"
 fi
 
 # ---------------------------------------------------------------------------

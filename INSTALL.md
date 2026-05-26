@@ -85,7 +85,7 @@ The install script handles prerequisites, git hooks, supervisor config, and the 
 bash utils/install.sh
 ```
 
-The script will prompt for instance type (`FKt` or `Sub`) and then:
+The script will prompt for instance type (`FKt`, `Sub`, or `emp`) and then:
 - Install system prerequisites (MongoDB, Node.js, supervisor, Python venv)
 - Set up git **pre-commit** and **post-merge** hooks for automatic config file rotation (see [Config file rotation](#config-file-rotation))
 - Generate and install a `supervisord` config for the chosen instance
@@ -154,7 +154,7 @@ The server creates `images/`, `cruises/`, and `lowerings/` subdirectories automa
 ```bash
 sudo supervisorctl reread
 sudo supervisorctl update
-sudo supervisorctl start sealog-FKt:   # or sealog-Sub:
+sudo supervisorctl start sealog-FKt:   # or sealog-Sub:, sealog-emp:
 ```
 
 ---

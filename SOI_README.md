@@ -302,6 +302,7 @@ Both routes always call `misc/sealog_data_export.py` by that exact name. The SOI
 |---|---|
 | Sub (ROV SuBastian) | `misc/sealog_vehicle_data_export_Sub.py` |
 | FKt (R/V Falkor(too)) | `misc/sealog_vessel_data_export_FKt.py` |
+| emp (AUV Empress) | `misc/sealog_vehicle_data_export_emp.py` |
 
 `misc/sealog_data_export.py` is gitignored. Each installation must have a symlink at that path pointing to the appropriate platform script. `utils/install.sh` creates this symlink automatically:
 
@@ -311,6 +312,9 @@ ln -sf sealog_vehicle_data_export_Sub.py misc/sealog_data_export.py
 
 # FKt
 ln -sf sealog_vessel_data_export_FKt.py misc/sealog_data_export.py
+
+# emp
+ln -sf sealog_vehicle_data_export_emp.py misc/sealog_data_export.py
 ```
 
 If you set up the server manually (without `utils/install.sh`), create the symlink yourself before starting the server.

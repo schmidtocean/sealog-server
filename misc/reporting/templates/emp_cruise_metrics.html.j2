@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ cruise.cruise_id }} {{ vehicle_name }} Cruise Metrics</title>
+  <style>
+    :root {
+      --accent: #d66b00;
+      --border: #c9ced6;
+      --text: #1f252d;
+      --muted: #5a6472;
+      --surface: #f7f8fa;
+      --total: #fff4e8;
+    }
+    @page { margin: 18mm 14mm; size: Letter landscape; }
+    body {
+      color: var(--text);
+      font-size: 0.82rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.28;
+      margin: 0;
+    }
+    h1, h2 { margin: 0 0 8px; }
+    h1 { color: var(--accent); font-size: 1.55rem; }
+    h2 { font-size: 1rem; }
+    .meta { color: var(--muted); font-size: 0.78rem; margin-bottom: 14px; }
+    table { border-collapse: collapse; font-size: 0.74rem; margin: 8px 0 16px; width: 100%; }
+    th, td { border: 1px solid var(--border); padding: 3px 5px; text-align: left; vertical-align: top; }
+    th { background: var(--surface); }
+    tfoot th { background: var(--total); }
+    .numeric { text-align: right; }
+    .small { font-size: 0.74rem; }
+    figure { margin: 0 0 18px; }
+    figcaption { color: var(--muted); font-size: 0.72rem; margin-top: 3px; }
+    img { display: block; height: auto; max-width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>{{ cruise.cruise_id }} {{ vehicle_name }} Cruise Metrics</h1>
+  <div class="meta">
+    <div><strong>Location:</strong> {{ cruise.cruise_location }}</div>
+    <div><strong>Chief Scientist:</strong> {{ cruise_meta.cruise_pi }}</div>
+    <div><strong>Generated:</strong> {{ generated_ts|timestamp }}</div>
+  </div>
+
+  {% if map_assets.dive_locations_uri %}
+  <h2>Dive Map</h2>
+  <figure>
+    <img src="{{ map_assets.dive_locations_uri }}" alt="{{ cruise.cruise_id }} dive locations">
+    <figcaption>{{ map_assets.dive_count }} dives plotted from event navigation tracklines</figcaption>
+  </figure>
+  {% endif %}
+
+  <h2>Metrics</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Dive ID</th>
+        <th>Location</th>
+        <th>Start</th>
+        <th>Stop</th>
+        {% for stage in stage_definitions %}
+        <th>{{ stage.label }}</th>
+        {% endfor %}
+        <th>Max Depth</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for metric in metrics %}
+      <tr>
+        <td>{{ metric.lowering_id }}</td>
+        <td>{{ metric.location }}</td>
+        <td>{{ metric.start_ts|timestamp }}</td>
+        <td>{{ metric.stop_ts|timestamp }}</td>
+        {% for stage in stage_definitions %}
+        <td class="numeric">{{ metric.stage_durations.get(stage.label)|duration }}</td>
+        {% endfor %}
+        <td class="numeric">{{ metric.max_depth|optional_float }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <th>{{ metrics|length }} dives</th>
+        <th>Totals</th>
+        <th></th>
+        <th></th>
+        {% for stage in stage_definitions %}
+        <th class="numeric">{{ stage_totals.get(stage.label)|duration }}</th>
+        {% endfor %}
+        <th class="numeric">{{ max_depth|optional_float }}</th>
+      </tr>
+    </tfoot>
+  </table>
+
+  <h2>Stage Definitions</h2>
+  <table class="small">
+    <thead>
+      <tr><th>Stage</th><th>Start Milestone</th><th>Stop Milestone</th></tr>
+    </thead>
+    <tbody>
+      {% for stage in stage_definitions %}
+      <tr>
+        <td>{{ stage.label }}</td>
+        <td>{{ stage.start[0] }}</td>
+        <td>{{ stage.stop[0] }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</body>
+</html>

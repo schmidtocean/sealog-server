@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{{ metrics.lowering_id }} {{ vehicle_name }} Deployment Summary</title>
+  <style>
+    :root {
+      --accent: #d66b00;
+      --border: #c9ced6;
+      --text: #1f252d;
+      --muted: #5a6472;
+      --surface: #f7f8fa;
+    }
+    @page { margin: 18mm 16mm; size: Letter; }
+    body {
+      color: var(--text);
+      font-size: 0.82rem;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.28;
+      margin: 0;
+    }
+    h1, h2, h3 { margin: 0 0 8px; }
+    h1 { color: var(--accent); font-size: 1.55rem; }
+    h2 { font-size: 1rem; }
+    h3 { font-size: 0.85rem; margin-top: 12px; }
+    .meta { color: var(--muted); font-size: 0.78rem; margin-bottom: 14px; }
+    table { border-collapse: collapse; font-size: 0.74rem; margin: 8px 0 16px; max-width: 980px; width: 100%; }
+    th, td { border: 1px solid var(--border); padding: 3px 5px; text-align: left; vertical-align: top; }
+    th { background: var(--surface); }
+    .numeric { text-align: right; }
+    .plots { display: grid; gap: 18px; grid-template-columns: 1fr; margin: 12px 0 18px; }
+    figure { margin: 0; }
+    figcaption { color: var(--muted); font-size: 0.72rem; margin-top: 3px; }
+    img { display: block; height: auto; max-width: 100%; }
+  </style>
+</head>
+<body>
+  <h1>{{ metrics.lowering_id }} {{ vehicle_name }} Deployment Summary</h1>
+  <div class="meta">
+    <div><strong>Cruise:</strong> {{ cruise.cruise_id }}</div>
+    <div><strong>Location:</strong> {{ metrics.location }}</div>
+    <div><strong>Start:</strong> {{ metrics.start_ts|timestamp }}</div>
+    <div><strong>Stop:</strong> {{ metrics.stop_ts|timestamp }}</div>
+    <div><strong>Generated:</strong> {{ generated_ts|timestamp }}</div>
+  </div>
+
+  <h2>Description</h2>
+  <p>{{ lowering_meta.lowering_description }}</p>
+
+  <h2>Metrics</h2>
+  <table>
+    <tbody>
+      {% for stage in stage_definitions %}
+      <tr>
+        <th>{{ stage.label }}</th>
+        <td class="numeric">{{ metrics.stage_durations.get(stage.label)|duration }}</td>
+      </tr>
+      {% endfor %}
+      <tr><th>Max Depth</th><td class="numeric">{{ max_depth }}</td></tr>
+      <tr><th>Minimum Distance to Seabed</th><td class="numeric">{{ minimum_distance_to_seabed }}</td></tr>
+      <tr><th>Bounding Box</th><td>{{ bounding_box }}</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Milestones</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Milestone</th>
+        <th>Timestamp</th>
+        <th>Lat</th>
+        <th>Lon</th>
+        <th>Depth (m)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for milestone in milestones %}
+      <tr>
+        <th>{{ milestone.name }}</th>
+        <td>{{ milestone.ts|timestamp }}</td>
+        <td class="numeric">{{ milestone.latitude|optional_float }}</td>
+        <td class="numeric">{{ milestone.longitude|optional_float }}</td>
+        <td class="numeric">{{ milestone.depth|optional_float }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">No milestones logged</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if plots.route_uri or plots.depth_uri %}
+  <h2>Route and Depth</h2>
+  <div class="plots">
+    {% if plots.route_uri %}
+    <figure>
+      <img src="{{ plots.route_uri }}" alt="{{ metrics.lowering_id }} AUV route">
+      <figcaption>{{ plots.route_points }} vehicle navigation points</figcaption>
+    </figure>
+    {% endif %}
+    {% if plots.depth_uri %}
+    <figure>
+      <img src="{{ plots.depth_uri }}" alt="{{ metrics.lowering_id }} depth profile">
+      <figcaption>{{ plots.depth_points }} depth samples</figcaption>
+    </figure>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <h2>Events</h2>
+  {% for group in event_groups %}
+  <h3>{{ group.label }} ({{ group.count }})</h3>
+  <table>
+    <thead><tr><th>Timestamp</th><th>Event</th><th>Author</th><th>Mission Line</th><th>Details</th></tr></thead>
+    <tbody>
+      {% for event in group.events %}
+      <tr>
+        <td>{{ event.ts|timestamp }}</td>
+        <th>{{ event.event_value }}</th>
+        <td>{{ event.author }}</td>
+        <td class="numeric">{{ event.mission_line }}</td>
+        <td>{{ event.details }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5">No events</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endfor %}
+</body>
+</html>
