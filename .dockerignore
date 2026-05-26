@@ -1,0 +1,31 @@
+# Version control
+.git/
+.github/
+
+# Node.js
+node_modules/
+
+# Python
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Local environment files (may contain secrets)
+.env
+.env.FKt
+.env.Sub
+.env.emp
+
+# Docker files (not needed inside the image)
+Dockerfile
+docker-compose.yml
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+
+# Local sealog file storage
+sealog-files/
