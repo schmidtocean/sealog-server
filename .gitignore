@@ -46,8 +46,7 @@ misc/sealog-udp2MongoDB*
 # files related to reporting
 misc/reporting*
 
-# files (i.e. images) specific to a single deployment
-misc/assets
+# misc/sealog_data_export.py is a legacy script, not tracked
 misc/sealog_data_export.py
 
 # customized versions of the dist configuration files
