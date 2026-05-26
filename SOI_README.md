@@ -285,4 +285,32 @@ Set `SEALOG_SERVER_TLS_PRIVKEY` and `SEALOG_SERVER_TLS_FULLCHAIN` to the paths o
 
 ## Python ancillary services
 
-See [INSTALL.md](INSTALL.md#enabling-additional-functionality) for setup instructions for ASNAP, Auto-Actions, and data export scripts.
+See [INSTALL.md](INSTALL.md#enabling-additional-functionality) for setup instructions for the Python virtual environment, ASNAP, and Auto-Actions.
+
+### Data export scripts and the `external_calls` route
+
+The server exposes two API routes that trigger a data export script directly from the UI:
+
+| Route | What it does |
+|---|---|
+| `GET /external_calls/export_lowering/{id}` | Runs `misc/sealog_data_export.py -v -L <lowering_id>` |
+| `GET /external_calls/export_cruise/{id}` | Runs `misc/sealog_data_export.py -v -C <cruise_id>` |
+
+Both routes always call `misc/sealog_data_export.py` by that exact name. The SOI fork ships platform-specific scripts under different names:
+
+| Instance | Committed script |
+|---|---|
+| Sub (ROV SuBastian) | `misc/sealog_vehicle_data_export_Sub.py` |
+| FKt (R/V Falkor(too)) | `misc/sealog_vessel_data_export_FKt.py` |
+
+`misc/sealog_data_export.py` is gitignored. Each installation must have a symlink at that path pointing to the appropriate platform script. `utils/install.sh` creates this symlink automatically:
+
+```bash
+# Sub
+ln -sf sealog_vehicle_data_export_Sub.py misc/sealog_data_export.py
+
+# FKt
+ln -sf sealog_vessel_data_export_FKt.py misc/sealog_data_export.py
+```
+
+If you set up the server manually (without `utils/install.sh`), create the symlink yourself before starting the server.

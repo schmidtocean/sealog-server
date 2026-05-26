@@ -283,4 +283,4 @@ cp /opt/sealog-server/misc/sealog_vessel_data_export.py.dist \
    /opt/sealog-server/misc/sealog_vessel_data_export.py
 ```
 
-Edit the copied file and set `EXPORT_ROOT_DIR` and `VEHICLE_NAME` / `VESSEL_NAME` to match the deployment. The supervisor config installed by `utils/install.sh` includes a data-export entry (set to `autostart=false` — trigger manually via `supervisorctl`).
+Edit the copied file and set `EXPORT_ROOT_DIR` and `VEHICLE_NAME` / `VESSEL_NAME` to match the deployment. Data exports are triggered via the web UI (through the `external_calls` API route) rather than through supervisor.

@@ -226,16 +226,6 @@ autostart=true
 autorestart=true
 stopsignal=QUIT
 
-[program:sealog-post-cruise-data-export-FKt]
-directory=/opt/sealog-server
-command=/opt/sealog-server/venv/bin/python ./misc/sealog_vessel_data_export.py
-redirect_stderr=true
-stdout_logfile=/var/log/sealog-data-export-FKt_STDOUT.log
-user=mt
-autostart=false
-autorestart=false
-stopsignal=QUIT
-
 [group:sealog-FKt]
 programs=sealog-server-FKt,sealog-asnap-FKt,sealog-aux-data-influx-FKt,sealog-aux-data-framegrab-vnc-FKt,sealog-cruise-sync-FKt
 EOF
@@ -303,26 +293,6 @@ autostart=true
 autorestart=true
 stopsignal=QUIT
 
-[program:sealog-post-dive-data-export-Sub]
-directory=/opt/sealog-server
-command=/opt/sealog-server/venv/bin/python ./misc/sealog_vehicle_data_export.py
-redirect_stderr=true
-stdout_logfile=/var/log/sealog-data-export-Sub_STDOUT.log
-user=mt
-autostart=false
-autorestart=false
-stopsignal=QUIT
-
-[program:sealog-post-cruise-data-export-Sub]
-directory=/opt/sealog-server
-command=/opt/sealog-server/venv/bin/python ./misc/sealog_vehicle_data_export.py -c
-redirect_stderr=true
-stdout_logfile=/var/log/sealog-data-export-cruise-Sub_STDOUT.log
-user=mt
-autostart=false
-autorestart=false
-stopsignal=QUIT
-
 [group:sealog-Sub]
 programs=sealog-server-Sub,sealog-asnap-Sub,sealog-auto-actions-Sub,sealog-aux-data-influx-Sub,sealog-aux-data-framegrab-Sub
 EOF
@@ -371,6 +341,15 @@ fi
 if [ ! -f "$install_dir/misc/sealog_asnap.py" ]; then
     echo "Setting up ASNAP script..."
     cp "$install_dir/misc/sealog_asnap.py.dist" "$install_dir/misc/sealog_asnap.py"
+fi
+
+# The external_calls API route always invokes misc/sealog_data_export.py.
+# Create a symlink pointing to the instance-specific script so the route works.
+echo "Setting up sealog_data_export.py symlink..."
+if [ "$INSTANCE" = "Sub" ]; then
+    ln -sf sealog_vehicle_data_export_Sub.py "$install_dir/misc/sealog_data_export.py"
+elif [ "$INSTANCE" = "FKt" ]; then
+    ln -sf sealog_vessel_data_export_FKt.py "$install_dir/misc/sealog_data_export.py"
 fi
 
 # ---------------------------------------------------------------------------
