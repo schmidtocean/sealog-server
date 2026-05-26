@@ -29,17 +29,16 @@ import shutil
 import logging
 from datetime import datetime, timedelta
 from os import environ
-import requests
+from os.path import dirname, realpath
+
 import yaml
 import websockets
 from vncdotool import api
 
-from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
 
-from misc.python_sealog.settings import (
-    API_SERVER_URL, WS_SERVER_URL, EVENT_AUX_DATA_API_PATH, HEADERS
-)
+from misc.python_sealog.settings import WS_SERVER_URL, HEADERS
+from misc.python_sealog.event_aux_data import create_event_aux_data
 
 # VNC server details
 VNC_PORT = 5900
@@ -50,7 +49,7 @@ AUX_DATA_DATASOURCE = 'vesselRealtimeFramegrabberData'
 # Set of events to ignore
 EXCLUDE_SET = ('ASNAP',)
 
-CLIENT_WSID = 'aux_data_inserter_' + AUX_DATA_DATASOURCE
+CLIENT_WSID = f'aux_data_inserter_{AUX_DATA_DATASOURCE}'
 
 THRESHOLD = 20  # seconds
 DEST_DIR = '/data/sealog-FKt-files/images/'
@@ -140,33 +139,30 @@ async def aux_data_inserter():
                             logging.debug("Sonar quality but not multibeam, skipping")
                             continue
 
-                        filename_date = datetime.date(
-                            datetime.strptime(
-                                event_obj['message']['ts'],
-                                '%Y-%m-%dT%H:%M:%S.%fZ'))
+                        filename_date = datetime.date(datetime.strptime(
+                            event_obj['message']['ts'],
+                            '%Y-%m-%dT%H:%M:%S.%fZ')
+                        )
                         filename_time = datetime.time(
                             datetime.strptime(
                                 event_obj['message']['ts'],
-                                '%Y-%m-%dT%H:%M:%S.%fZ'))
+                                '%Y-%m-%dT%H:%M:%S.%fZ'
+                            )
+                        )
                         filename_middle = datetime.combine(
-                            filename_date, filename_time).strftime("%Y%m%d_%H%M%S%f")[:-3]
+                            filename_date, filename_time
+                        ).strftime("%Y%m%d_%H%M%S%f")[:-3]
 
-                        dst = os.path.join(
-                            DEST_DIR, f"{
-                                source['filename_prefix']}_{filename_middle}_{
-                                event_obj['message']['event_value'].upper().replace(
-                                    ' ', '_')}{
-                                source['filename_suffix']}")
+                        event_slug = event_obj['message']['event_value'].upper().replace(' ', '_')
+                        screenshot_file = (
+                            f"{source['filename_prefix']}_{filename_middle}"
+                            f"_{event_slug}{source['filename_suffix']}"
+                        )
+                        dst = os.path.join(DEST_DIR, screenshot_file)
 
                         logging.debug("dst: %s", dst)
 
                         try:
-                            screenshot_file = f"{
-                                source['filename_prefix']}_{filename_middle}_{
-                                event_obj['message']['event_value'].upper().replace(
-                                    ' ',
-                                    '_')}{
-                                source['filename_suffix']}"
                             await asyncio.to_thread(
                                 capture_screenshot,
                                 f"{source['source_address']}::{VNC_PORT}",
@@ -177,20 +173,18 @@ async def aux_data_inserter():
                                 shutil.move(screenshot_file, dst)
                                 aux_data_record['data_array'].append(
                                     {'data_name': "camera_name",
-                                     'data_value': source['source_name']})
+                                     'data_value': source['source_name']}
+                                )
                                 aux_data_record['data_array'].append(
-                                    {'data_name': "filename", 'data_value': dst})
+                                    {'data_name': "filename", 'data_value': dst}
+                                )
 
                         except Exception as error:  # pylint: disable=broad-except
                             logging.error("Unable to save screenshot")
                             logging.error(error)
 
                     if len(aux_data_record['data_array']) > 0:
-                        req = requests.post(
-                            API_SERVER_URL + EVENT_AUX_DATA_API_PATH,
-                            headers=HEADERS,
-                            data=json.dumps(aux_data_record))
-                        logging.debug(req.text)
+                        create_event_aux_data(aux_data_record)
 
     except Exception as error:  # pylint: disable=broad-except
         logging.error(str(error))
