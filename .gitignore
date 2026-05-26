@@ -16,8 +16,6 @@ misc/coriolix_sealog/settings*.py
 misc/influx_sealog/settings*.py
 misc/python_sealog/settings*.py
 misc/slack_sealog/settings*.py
-misc/reporting/sealog_doc_template*.py
-misc/reporting/sealog_report_builder*.py
 misc/sealog_*_data_export.py
 misc/sealog_*_data_export_full.py*
 misc/sealog_asnap.py
@@ -42,9 +40,6 @@ misc/sealog_repeater.py
 misc/merge_*
 misc/sealog-auxDataInserter*
 misc/sealog-udp2MongoDB*
-
-# files related to reporting
-misc/reporting*
 
 # misc/sealog_data_export.py is a legacy script, not tracked
 misc/sealog_data_export.py
