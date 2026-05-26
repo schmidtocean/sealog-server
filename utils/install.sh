@@ -394,6 +394,13 @@ if [ ! -f "$install_dir/misc/sealog_asnap.py" ]; then
     cp "$install_dir/misc/sealog_asnap.py.dist" "$install_dir/misc/sealog_asnap.py"
 fi
 
+if [ "$INSTANCE" != "FKt" ] && \
+   [ ! -f "$install_dir/misc/sealog_auto_actions_${INSTANCE}.py" ]; then
+    echo "Setting up auto-actions script..."
+    cp "$install_dir/misc/sealog_auto_actions_${INSTANCE}.py.dist" \
+       "$install_dir/misc/sealog_auto_actions_${INSTANCE}.py"
+fi
+
 # The external_calls API route always invokes misc/sealog_data_export.py.
 # Create a symlink pointing to the instance-specific script so the route works.
 echo "Setting up sealog_data_export.py symlink..."

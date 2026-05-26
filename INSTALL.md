@@ -265,11 +265,19 @@ command=/opt/sealog-server/venv/bin/python ./misc/sealog_asnap.py --interval 60
 
 ### Auto-Actions
 
-Auto-Actions triggers additional logic (lowering milestone updates, ASNAP toggling, etc.) in response to submitted events. A Sub-specific script is included.
+Auto-Actions triggers additional logic (lowering milestone updates, ASNAP toggling, etc.) in response to submitted events. Instance-specific scripts are included for Sub and emp.
 
 ```bash
-cp /opt/sealog-server/misc/sealog_auto_actions.py.dist /opt/sealog-server/misc/sealog_auto_actions.py
+# For Sub installations:
+cp /opt/sealog-server/misc/sealog_auto_actions_Sub.py.dist \
+   /opt/sealog-server/misc/sealog_auto_actions_Sub.py
+
+# For emp installations:
+cp /opt/sealog-server/misc/sealog_auto_actions_emp.py.dist \
+   /opt/sealog-server/misc/sealog_auto_actions_emp.py
 ```
+
+`utils/install.sh` performs this copy automatically for Sub and emp installations.
 
 ### Post-lowering and post-cruise data exports
 
