@@ -202,6 +202,7 @@ async def aux_data_inserter():
                         except requests.exceptions.RequestException as exc:
                             logging.error("Unable to retrieve image from remote server")
                             logging.error(exc)
+                            continue
 
                         try:
                             with open(dst, 'wb') as f:
