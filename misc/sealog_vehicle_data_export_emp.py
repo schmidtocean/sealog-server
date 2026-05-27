@@ -1,9 +1,28 @@
 #!/usr/bin/env python3
-'''
+"""
 FILE:           sealog_vehicle_data_export_emp.py
 
 DESCRIPTION:    Export Empress Sealog records, images, and user-uploaded files
                 to the CruiseData vehicle directory.
+
+HOW TO RUN:
+                Full cruise export and transfer:
+                    ./venv/bin/python misc/sealog_vehicle_data_export_emp.py -C FKt260503
+
+                Single deployment export and transfer:
+                    ./venv/bin/python misc/sealog_vehicle_data_export_emp.py -L E0010
+
+                Build export without transfer:
+                    ./venv/bin/python misc/sealog_vehicle_data_export_emp.py -C FKt260503 -n
+
+                Build local PDF reports only:
+                    ./venv/bin/python misc/sealog_vehicle_data_export_emp.py \
+                        --reports_only \
+                        -C FKt260503 \
+                        --api_server_url http://10.23.9.25:8200/sealog-server
+
+                If the API token is not configured in settings.py:
+                    export SEALOG_API_TOKEN='<token>'
 
 BUGS:
 NOTES:
@@ -15,7 +34,7 @@ REVISION:   2026-05-09
 
 LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for details)
                 Copyright (C) OceanDataTools.org 2024
-'''
+"""
 
 import json
 import logging
@@ -73,9 +92,32 @@ IMAGES_DIRNAME = 'Images'
 FILES_DIRNAME = 'Files'
 REPORTS_DIRNAME = "Reports"
 REPORT_FILE_PATTERNS = ("*.pdf",)
+LOGGING_FORMAT = "%(asctime)-15s %(levelname)s - %(message)s"
+NOISY_REPORT_LOGGERS = (
+    "fontTools",
+    "fontTools.subset",
+    "fontTools.ttLib",
+    "matplotlib",
+    "PIL",
+    "weasyprint",
+)
 
 SealogRecord = dict[str, Any]
 SealogRecords = list[SealogRecord]
+
+
+def _configure_logging(verbosity: int) -> None:
+    """
+    Configure CLI logging and silence noisy report-rendering dependencies
+    """
+
+    log_levels = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
+    selected_level = log_levels[min(verbosity, max(log_levels))]
+    logging.basicConfig(format=LOGGING_FORMAT, force=True)
+    logging.getLogger().setLevel(selected_level)
+
+    for logger_name in NOISY_REPORT_LOGGERS:
+        logging.getLogger(logger_name).setLevel(logging.WARNING)
 
 
 def _api_headers(api_token: str | None = None) -> dict[str, str]:
@@ -754,10 +796,7 @@ if __name__ == '__main__':
     )
 
     parsed_args = parser.parse_args()
-    logging.basicConfig(format='%(asctime)-15s %(levelname)s - %(message)s')
-    log_levels = {0: logging.WARNING, 1: logging.INFO, 2: logging.DEBUG}
-    parsed_args.verbosity = min(parsed_args.verbosity, max(log_levels))
-    logging.getLogger().setLevel(log_levels[parsed_args.verbosity])
+    _configure_logging(parsed_args.verbosity)
 
     if parsed_args.current_cruise and (parsed_args.lowering_id or parsed_args.cruise_id):
         logging.error("Can not specify current_cruise with a lowering or cruise")
