@@ -5,6 +5,64 @@ FILE:           sealog_vehicle_data_export_emp.py
 DESCRIPTION:    Export Empress Sealog records, images, and user-uploaded files
                 to the CruiseData vehicle directory.
 
+HOW TO RUN:
+                Full cruise export and transfer:
+                    ./venv/bin/python misc/sealog_vehicle_data_export_emp.py -C FKt260503
+
+                Full cruise export and transfer without Slack alert:
+                    ./venv/bin/python misc/sealog_vehicle_data_export_emp.py -C FKt260503 --silent
+
+                Single deployment export and transfer:
+                    ./venv/bin/python misc/sealog_vehicle_data_export_emp.py -L E0010
+
+                Build export without transfer:
+                    ./venv/bin/python misc/sealog_vehicle_data_export_emp.py -C FKt260503 -n
+
+                Build local PDF reports only:
+                    ./venv/bin/python misc/sealog_vehicle_data_export_emp.py \
+                        --reports_only \
+                        -C FKt260503 \
+                        --api_server_url http://10.23.9.25:8200/sealog-server
+
+                If the API token is not configured in settings.py:
+                    export SEALOG_API_TOKEN='<token>'
+
+CLI FLAGS:
+                -v, --verbosity
+                    Increase console logging verbosity. Use once for INFO, twice for DEBUG
+
+                -n, --no_transfer
+                    Build export files and reports, but do not push to CruiseData
+
+                -t, --transfer_only
+                    Push previously staged export files to CruiseData without rebuilding
+
+                -r, --reports_only
+                    Build local PDF reports only, with no export and no transfer
+
+                --reports_output_dir DIR
+                    Set the output directory used with --reports_only
+
+                --api_server_url URL
+                    Override the Sealog API URL. Without this, normal export uses settings.py
+                    and --reports_only defaults to the EMP server
+
+                --api_token TOKEN
+                    Override the configured API token. Prefer SEALOG_API_TOKEN to keep tokens
+                    out of shell history
+
+                -s, --silent
+                    Do not send the Slack summary alert. Console logging is unchanged
+
+                -c, --current_cruise
+                    Select the most recent cruise
+
+                -L ID, --lowering_id ID
+                    Select one deployment/lowering, for example E0010
+
+                -C ID, --cruise_id ID
+                    Select one cruise, for example FKt260503
+
 BUGS:
 NOTES:
 AUTHOR:     Kaarel-SOI
@@ -751,6 +809,13 @@ if __name__ == '__main__':
         help="Sealog API token; prefer SEALOG_API_TOKEN to avoid shell history",
     )
     parser.add_argument(
+        "-s",
+        "--silent",
+        action="store_true",
+        default=False,
+        help="do not send the Slack summary alert",
+    )
+    parser.add_argument(
         "-c",
         "--current_cruise",
         action="store_true",
@@ -825,17 +890,18 @@ if __name__ == '__main__':
         logging.debug("Done")
         sys.exit(0)
 
-    report_title = f"Sealog Export Summary Report - {selected_cruise['cruise_id']}"
-    if len(selected_lowerings) == 1:
-        report_title += f" - {selected_lowerings[0]['lowering_id']}"
+    if not parsed_args.silent:
+        report_title = f"Sealog Export Summary Report - {selected_cruise['cruise_id']}"
+        if len(selected_lowerings) == 1:
+            report_title += f" - {selected_lowerings[0]['lowering_id']}"
 
-    slack_handler = PooledSlackHandler(
-        SLACK_WEBHOOK_URL,
-        minimum_level=SLACK_LOG_LEVEL,
-        report_title=report_title,
-    )
-    slack_handler.setFormatter(logging.Formatter('%(message)s'))
-    logging.getLogger().addHandler(slack_handler)
+        slack_handler = PooledSlackHandler(
+            SLACK_WEBHOOK_URL,
+            minimum_level=SLACK_LOG_LEVEL,
+            report_title=report_title,
+        )
+        slack_handler.setFormatter(logging.Formatter('%(message)s'))
+        logging.getLogger().addHandler(slack_handler)
 
     success, msg = _verify_source_directories()
     if not success:
