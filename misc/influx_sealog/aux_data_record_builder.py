@@ -172,7 +172,7 @@ class SealogInfluxAuxDataRecordBuilder():
 
                 aux_data_record['data_array'].append({
                     'data_name': value['name'],
-                    'data_value': str(round(output_value, value['round'])) if 'round' in value else str(output_value),
+                    'data_value': self._format_data_value(output_value, value),
                     'data_uom': value['uom'] if 'uom' in value else ''
                 })
             except Exception as err:
@@ -184,6 +184,17 @@ class SealogInfluxAuxDataRecordBuilder():
             return aux_data_record
 
         return None
+
+    @staticmethod
+    def _format_data_value(output_value, config):
+        '''
+        Format an aux data value, optionally rounding numeric values
+        '''
+
+        if config.get('round') is None:
+            return str(output_value)
+
+        return str(round(output_value, config['round']))
 
     def build_aux_data_record(self, event):
         '''
