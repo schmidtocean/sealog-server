@@ -26,6 +26,16 @@ exports.plugin = {
         _id: new ObjectID('59810167212b348aed7fa9f7'),
         custom_var_name: 'freeSpacePercentage',
         custom_var_value: '0'
+      },
+      {
+        _id: new ObjectID('59810167212b348aed7fa9f8'),
+        custom_var_name: 'scicamRecState',
+        custom_var_value: 'unavailable'
+      },
+      {
+        _id: new ObjectID('59810167212b348aed7fa9f9'),
+        custom_var_name: 'sitcamRecState',
+        custom_var_value: 'unavailable'
       }
 
     ];

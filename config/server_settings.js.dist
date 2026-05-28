@@ -4,6 +4,13 @@ const imagePath = `${FILEPATH_ROOT}/images`;
 const cruisePath = `${FILEPATH_ROOT}/cruises`;
 const loweringPath = `${FILEPATH_ROOT}/lowerings`;
 
+// Camera status polling URLs — set via env vars or override directly.
+// Keys must match the prefix used in custom_var_names (e.g. 'scicam' → 'scicamRecState').
+const cameraStatusUrls = {
+  scicam: process.env.SEALOG_SERVER_SCICAM_STATUS_URL || null,
+  sitcam: process.env.SEALOG_SERVER_SITCAM_STATUS_URL || null
+};
+
 // Server-side reCaptcha key, set to null if not using reCaptcha bot protection
 const reCaptchaSecret = null;
 
@@ -19,6 +26,7 @@ const useAccessControl = process.env.SEALOG_SERVER_USE_ACCESS_CONTROL || false;
 module.exports = {
   imagePath,
   cruisePath,
+  cameraStatusUrls,
   disableRegisteringUsers,
   loweringPath,
   reCaptchaSecret,

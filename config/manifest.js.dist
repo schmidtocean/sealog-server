@@ -139,6 +139,7 @@ const manifest = {
       { plugin: './plugins/auth' },
       { plugin: './plugins/filesystem_init' },
       { plugin: './plugins/free_space' },
+      { plugin: './plugins/camera_status' },
       { plugin: '@hapi/inert' },
       { plugin: '@hapi/vision' },
       { plugin: '@hapi/nes' },
