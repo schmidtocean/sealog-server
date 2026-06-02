@@ -164,29 +164,32 @@ def _actual_milestones(
     track_points: list[TrackPoint],
     event_exports: list[SealogRecord] | None = None,
 ) -> list[SealogRecord]:
-    event_records = [
-        record
-        for record in event_milestone_records(event_exports or [])
-        if record.get('name') not in HIDDEN_MILESTONE_ALIASES
-    ]
-    if event_records:
-        return _milestone_rows_with_nav(event_records, track_points)
+    output = []
+    saved_names = set()
 
     milestones = meta.get('milestones', {})
-    if not isinstance(milestones, dict):
-        return []
+    if isinstance(milestones, dict):
+        for name, value in milestones.items():
+            if name in HIDDEN_MILESTONE_ALIASES:
+                continue
 
-    output = []
+            timestamp = parse_timestamp(value)
+            if timestamp is None:
+                continue
 
-    for name, value in milestones.items():
-        if name in HIDDEN_MILESTONE_ALIASES:
+            output.append({
+                'name': name,
+                'ts': timestamp,
+                'raw_value': value,
+            })
+            saved_names.add(name)
+
+    for record in event_milestone_records(event_exports or []):
+        name = record.get('name')
+        if name in HIDDEN_MILESTONE_ALIASES or name in saved_names:
             continue
 
-        output.append({
-            'name': name,
-            'ts': parse_timestamp(value),
-            'raw_value': value,
-        })
+        output.append(record)
 
     return _milestone_rows_with_nav(sorted(output, key=_milestone_sort_key), track_points)
 
