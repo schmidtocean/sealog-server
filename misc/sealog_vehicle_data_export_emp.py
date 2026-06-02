@@ -101,6 +101,7 @@ from misc.python_sealog.settings import (
     SLACK_WEBHOOK_URL,
 )
 from misc.python_sealog.slack import PooledSlackHandler
+from misc.sealog_backfill_lowering_stats_emp import backfill_lowering_stats
 from misc.reporting.sealog_build_cruise_summary_report_emp import (
     write_cruise_metrics_report,
 )
@@ -693,6 +694,55 @@ def _get_event_exports_for_report(
     )
 
 
+def _merge_payload(record: SealogRecord, payload: SealogRecord) -> SealogRecord:
+    '''
+    Return a local copy of a record with a PATCH payload applied
+    '''
+
+    if not payload:
+        return record
+
+    output = dict(record)
+    for key, value in payload.items():
+        if isinstance(value, dict) and isinstance(output.get(key), dict):
+            output[key] = {**output[key], **value}
+        else:
+            output[key] = value
+
+    return output
+
+
+def _backfill_lowering_stats_for_export(
+    lowerings: SealogRecords,
+    api_server_url: str = API_SERVER_URL,
+    headers: dict[str, str] = HEADERS,
+) -> SealogRecords:
+    '''
+    Recompute lowering stats before report and JSON export
+    '''
+
+    output = []
+
+    for lowering in lowerings:
+        try:
+            payload = backfill_lowering_stats(
+                lowering,
+                api_server_url=api_server_url,
+                headers=headers,
+                overwrite=True,
+                dry_run=False,
+            )
+            output.append(_merge_payload(lowering, payload))
+        except Exception:
+            logging.exception(
+                "Unable to backfill lowering stats for %s",
+                lowering.get("lowering_id", lowering.get("id")),
+            )
+            output.append(lowering)
+
+    return output
+
+
 def _select_export_scope(
     parsed_args: Any,
     api_server_url: str = API_SERVER_URL,
@@ -878,6 +928,17 @@ if __name__ == '__main__':
         if selected_lowerings else "NONE",
     )
 
+    if parsed_args.transfer_only:
+        _push_2_data_warehouse(selected_cruise, selected_lowerings)
+        logging.debug("Done")
+        sys.exit(0)
+
+    selected_lowerings = _backfill_lowering_stats_for_export(
+        selected_lowerings,
+        api_server_url=api_server_url,
+        headers=headers,
+    )
+
     if parsed_args.reports_only:
         built_reports = _build_reports(
             selected_cruise,
@@ -891,11 +952,6 @@ if __name__ == '__main__':
             len(built_reports),
             parsed_args.reports_output_dir,
         )
-        logging.debug("Done")
-        sys.exit(0)
-
-    if parsed_args.transfer_only:
-        _push_2_data_warehouse(selected_cruise, selected_lowerings)
         logging.debug("Done")
         sys.exit(0)
 

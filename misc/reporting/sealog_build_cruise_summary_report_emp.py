@@ -27,6 +27,7 @@ SealogRecord = dict[str, Any]
 Seconds = int | None
 
 MILESTONE_OPTION_NAME = 'milestone'
+STATS_AUX_DATA_SOURCES = ('vehicleRealtimeNavData', 'vehicleRealtimeUSBLData')
 
 
 @dataclass(frozen=True)
@@ -119,6 +120,66 @@ def lowering_with_event_milestones(
     output['lowering_additional_meta'] = meta
 
     return output
+
+
+def event_stats_dict(event_exports: list[SealogRecord]) -> dict[str, Any]:
+    '''
+    Compute client-compatible lowering stats from event export aux data
+    '''
+
+    source_tracks = _event_stats_tracks(event_exports)
+
+    for data_source in STATS_AUX_DATA_SOURCES:
+        track = source_tracks.get(data_source)
+        if not track or not track['depths']:
+            continue
+
+        stats: dict[str, Any] = {'max_depth': max(track['depths'])}
+        if track['latitudes'] and track['longitudes']:
+            stats['bounding_box'] = [
+                max(track['latitudes']),
+                max(track['longitudes']),
+                min(track['latitudes']),
+                min(track['longitudes']),
+            ]
+
+        return stats
+
+    return {}
+
+
+def _event_stats_tracks(event_exports: list[SealogRecord]) -> dict[str, dict[str, list[float]]]:
+    source_tracks = {
+        data_source: {'depths': [], 'latitudes': [], 'longitudes': []}
+        for data_source in STATS_AUX_DATA_SOURCES
+    }
+
+    for event in event_exports:
+        for aux_record in event.get('aux_data', []):
+            if not isinstance(aux_record, dict):
+                continue
+
+            data_source = aux_record.get('data_source')
+            if data_source not in source_tracks:
+                continue
+
+            values = _aux_values(aux_record)
+            depth = _optional_float(values.get('depth'))
+            latitude = _optional_float(values.get('latitude'))
+            longitude = _optional_float(values.get('longitude'))
+
+            if depth is not None:
+                source_tracks[data_source]['depths'].append(depth)
+
+            if (
+                latitude is not None and longitude is not None
+                and -90 <= latitude <= 90 and -180 <= longitude <= 180
+                and latitude != 0 and longitude != 0
+            ):
+                source_tracks[data_source]['latitudes'].append(latitude)
+                source_tracks[data_source]['longitudes'].append(longitude)
+
+    return source_tracks
 
 
 def event_milestone_records(event_exports: list[SealogRecord]) -> list[SealogRecord]:
@@ -256,7 +317,10 @@ def get_stage_boundary(lowering: SealogRecord, names: tuple[str, ...], fallback_
     return None
 
 
-def build_lowering_metrics(lowering: SealogRecord) -> LoweringMetrics:
+def build_lowering_metrics(
+    lowering: SealogRecord,
+    event_exports: list[SealogRecord] | None = None,
+) -> LoweringMetrics:
     '''
     Build Empress stage metrics for one lowering
     '''
@@ -269,6 +333,9 @@ def build_lowering_metrics(lowering: SealogRecord) -> LoweringMetrics:
         stage_durations[stage.label] = _duration_seconds(start, stop)
 
     stats = _get_meta_dict(lowering, 'stats')
+    event_stats = event_stats_dict(event_exports or [])
+    max_depth = _optional_float(stats.get('max_depth'))
+    bounding_box = _float_list(stats.get('bounding_box'))
 
     return LoweringMetrics(
         lowering_id=str(lowering.get('lowering_id', '')),
@@ -276,8 +343,8 @@ def build_lowering_metrics(lowering: SealogRecord) -> LoweringMetrics:
         start_ts=get_stage_boundary(lowering, ('Deployment',), 'start_ts'),
         stop_ts=get_stage_boundary(lowering, ('Mission Key Inserted',), 'stop_ts'),
         stage_durations=stage_durations,
-        max_depth=_optional_float(stats.get('max_depth')),
-        bounding_box=_float_list(stats.get('bounding_box')),
+        max_depth=max_depth if max_depth is not None else _optional_float(event_stats.get('max_depth')),
+        bounding_box=bounding_box or _float_list(event_stats.get('bounding_box')),
     )
 
 
@@ -303,7 +370,13 @@ def write_cruise_metrics_report(
         )
         for lowering in lowerings
     ]
-    metrics = [build_lowering_metrics(lowering) for lowering in report_lowerings]
+    metrics = [
+        build_lowering_metrics(
+            lowering,
+            _event_exports_for_lowering(lowering, event_exports_by_lowering),
+        )
+        for lowering in report_lowerings
+    ]
     map_assets = _build_cruise_map_assets(
         cruise_id,
         lowerings,

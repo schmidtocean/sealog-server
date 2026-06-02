@@ -93,7 +93,7 @@ def _render_lowering_summary_html(
     event_exports: list[SealogRecord],
 ) -> str:
     report_lowering = lowering_with_event_milestones(lowering, event_exports)
-    metrics = build_lowering_metrics(report_lowering)
+    metrics = build_lowering_metrics(report_lowering, event_exports)
     meta = report_lowering.get('lowering_additional_meta', {})
     meta = meta if isinstance(meta, dict) else {}
     track_points = _track_points(event_exports)
