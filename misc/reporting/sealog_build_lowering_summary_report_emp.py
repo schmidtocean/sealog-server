@@ -472,6 +472,24 @@ def _write_depth_plot(points: list[TrackPoint], output_path: Path) -> None:
         for point in points
         if point.depth is not None and point.altitude is not None
     ]
+    near_bottom_timestamps = [
+        point.ts
+        for point in points
+        if (
+            point.depth is not None
+            and point.altitude is not None
+            and point.altitude < 1
+        )
+    ]
+    near_bottom_depths = [
+        point.depth
+        for point in points
+        if (
+            point.depth is not None
+            and point.altitude is not None
+            and point.altitude < 1
+        )
+    ]
 
     figure, axis = pyplot.subplots(figsize=(6.8, 3.2), dpi=160)
     axis.plot(timestamps, depths, color='#7746a3', linewidth=1.6, label='Depth')
@@ -490,6 +508,15 @@ def _write_depth_plot(points: list[TrackPoint], output_path: Path) -> None:
             color='#151a17',
             linewidth=1.2,
             label='Altimeter',
+        )
+    if near_bottom_timestamps:
+        axis.scatter(
+            near_bottom_timestamps,
+            near_bottom_depths,
+            color='#c24132',
+            s=14,
+            zorder=5,
+            label='Altimeter < 1 m',
         )
     axis.fill_between(timestamps, depths, color='#7746a3', alpha=0.12)
     axis.set_title('Depth Profile')
