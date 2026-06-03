@@ -75,6 +75,7 @@ LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for det
                 Copyright (C) OceanDataTools.org 2024
 '''
 
+import fnmatch
 import json
 import logging
 import os
@@ -164,6 +165,26 @@ def _export_dir_name(cruise_id, lowering_id):
     return lowering_id
 
 
+def _file_count(directory: str, patterns: tuple[str, ...] | None = None) -> int:
+    '''
+    Count regular files under a directory
+    '''
+
+    if not os.path.isdir(directory):
+        return 0
+
+    count = 0
+    for root, _, filenames in os.walk(directory):
+        for filename in filenames:
+            if patterns and not any(fnmatch.fnmatch(filename, pattern) for pattern in patterns):
+                continue
+
+            if os.path.isfile(os.path.join(root, filename)):
+                count += 1
+
+    return count
+
+
 def _verify_source_directories():
     '''
     Verify all required source directories exist.
@@ -197,10 +218,14 @@ def _export_lowering_images(cruise, lowering):  # pylint: disable=redefined-oute
     )
     images_export_dir = os.path.join(lowering_export_dir, IMAGES_DIRNAME)
     framegrab_list = get_framegrab_list_by_lowering(lowering['id'])
+    logging.info("Found %s framegrab image(s) for %s", len(framegrab_list), lowering['lowering_id'])
 
     existing_framegrab_list = os.listdir(images_export_dir)
     exported_framegrab_names = {os.path.basename(filepath) for filepath in framegrab_list}
     delete_framegrab_list = set(existing_framegrab_list) - exported_framegrab_names
+
+    if delete_framegrab_list:
+        logging.info("Deleting %s stale image(s)", len(delete_framegrab_list))
 
     for filename in delete_framegrab_list:
         try:
@@ -209,6 +234,10 @@ def _export_lowering_images(cruise, lowering):  # pylint: disable=redefined-oute
         except Exception as err:
             logging.warning('Could not delete stale image: %s', filename)
             logging.debug(str(err))
+
+    if not framegrab_list:
+        logging.info("No framegrab images to transfer for %s", lowering['lowering_id'])
+        return
 
     temp_list_path = None
     try:
@@ -230,6 +259,11 @@ def _export_lowering_images(cruise, lowering):  # pylint: disable=redefined-oute
             IMAGES_FILE_PATH,
             images_export_dir,
         ], check=True)
+        logging.info(
+            "Image export now has %s file(s): %s",
+            _file_count(images_export_dir),
+            images_export_dir,
+        )
     except subprocess.CalledProcessError as err:
         logging.error("Image transfer failed for lowering %s", lowering['lowering_id'])
         logging.debug(str(err))
@@ -394,6 +428,11 @@ def _stage_report_files(source_dir, destination_dir):
 
     try:
         subprocess.run(rsync_args, check=True, capture_output=True, text=True)
+        logging.info(
+            "Staged %s report file(s): %s",
+            _file_count(destination_dir, REPORT_FILE_PATTERNS),
+            destination_dir,
+        )
     except subprocess.CalledProcessError as err:
         logging.error(
             "Failed to stage report files from %s: %s", source_dir, err.stderr
@@ -429,6 +468,11 @@ def _stage_lowering_files(lowering, lowering_source_dir):
             check=True,
             capture_output=True,
             text=True,
+        )
+        logging.info(
+            "Staged %s uploaded file(s): %s",
+            _file_count(files_dest_dir),
+            files_dest_dir,
         )
     except subprocess.CalledProcessError as err:
         logging.error(
@@ -469,7 +513,12 @@ def _push_2_data_warehouse(  # pylint: disable=too-many-statements
 
         try:
             os.makedirs(warehouse_cruise_reports_dir, exist_ok=True)
-            logging.info("Rclone copying cruise reports for %s", cruise["cruise_id"])
+            logging.info(
+                "Rclone copying %s cruise report file(s) for %s to %s",
+                _file_count(cruise_reports_dir, REPORT_FILE_PATTERNS),
+                cruise["cruise_id"],
+                warehouse_cruise_reports_dir,
+            )
             subprocess.run(
                 [
                     "rclone",
@@ -488,6 +537,10 @@ def _push_2_data_warehouse(  # pylint: disable=too-many-statements
                 check=True,
                 capture_output=False,
                 text=True,
+            )
+            logging.info(
+                "Cruise report destination now has %s report file(s)",
+                _file_count(warehouse_cruise_reports_dir, REPORT_FILE_PATTERNS),
             )
         except subprocess.CalledProcessError as err:
             logging.error(
@@ -543,7 +596,12 @@ def _push_2_data_warehouse(  # pylint: disable=too-many-statements
                 continue
 
         try:
-            logging.info("Rclone syncing Sealog data for %s", lowering['lowering_id'])
+            logging.info(
+                "Rclone syncing %s Sealog file(s) for %s to %s",
+                _file_count(lowering_source_dir),
+                lowering['lowering_id'],
+                warehouse_dest_dir,
+            )
             subprocess.run([
                 'rclone',
                 'sync',
@@ -554,6 +612,11 @@ def _push_2_data_warehouse(  # pylint: disable=too-many-statements
                 lowering_source_dir,
                 warehouse_dest_dir,
             ], check=True, capture_output=False, text=True)
+            logging.info(
+                "Sealog destination for %s now has %s file(s)",
+                lowering['lowering_id'],
+                _file_count(warehouse_dest_dir),
+            )
         except subprocess.CalledProcessError as err:
             logging.error(
                 "Failed to sync Sealog data for lowering %s: %s",
