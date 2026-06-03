@@ -38,6 +38,10 @@ HIDDEN_MILESTONE_ALIASES = {
     'lowering_on_surface',
     'lowering_aborted',
 }
+LOWERING_START_MILESTONE = 'lowering_start'
+LOWERING_STOP_MILESTONE = 'lowering_stop'
+LOWERING_START_LABEL = 'Deployment Start'
+LOWERING_STOP_LABEL = 'On Deck'
 
 
 @dataclass(frozen=True)
@@ -115,7 +119,7 @@ def _render_lowering_summary_html(
         metrics=metrics,
         generated_ts=datetime.now(timezone.utc),
         stage_definitions=STAGE_DEFINITIONS,
-        milestones=_actual_milestones(meta, track_points, event_exports),
+        milestones=_actual_milestones(report_lowering, meta, track_points, event_exports),
         vehicle_name=VEHICLE_NAME,
         max_depth=format_optional_float(metrics.max_depth),
         minimum_distance_to_seabed=_format_minimum_distance_to_seabed(minimum_distance_point),
@@ -172,38 +176,62 @@ def _build_plot_assets(
 
 
 def _actual_milestones(
+    lowering: SealogRecord,
     meta: SealogRecord,
     track_points: list[TrackPoint],
     event_exports: list[SealogRecord] | None = None,
 ) -> list[SealogRecord]:
-    output = []
-    saved_names = set()
+    milestone_map: dict[str, SealogRecord] = {}
+    milestone_order: list[str] = []
+
+    def add_milestone(name: str, value: Any, label: str | None = None, replace: bool = False) -> None:
+        if name in HIDDEN_MILESTONE_ALIASES:
+            return
+
+        timestamp = parse_timestamp(value)
+        if timestamp is None:
+            return
+
+        if name in milestone_map and not replace:
+            return
+
+        if name not in milestone_map:
+            milestone_order.append(name)
+
+        milestone_map[name] = {
+            'name': label or name,
+            'key': name,
+            'ts': timestamp,
+            'raw_value': value,
+        }
+
+    add_milestone(
+        LOWERING_START_MILESTONE,
+        lowering.get('start_ts'),
+        label=LOWERING_START_LABEL,
+    )
 
     milestones = meta.get('milestones', {})
     if isinstance(milestones, dict):
         for name, value in milestones.items():
-            if name in HIDDEN_MILESTONE_ALIASES:
-                continue
-
-            timestamp = parse_timestamp(value)
-            if timestamp is None:
-                continue
-
-            output.append({
-                'name': name,
-                'ts': timestamp,
-                'raw_value': value,
-            })
-            saved_names.add(name)
+            add_milestone(str(name), value, replace=True)
 
     for record in event_milestone_records(event_exports or []):
         name = record.get('name')
-        if name in HIDDEN_MILESTONE_ALIASES or name in saved_names:
+        if not isinstance(name, str):
             continue
 
-        output.append(record)
+        add_milestone(name, record.get('raw_value') or record.get('ts'))
 
-    return _milestone_rows_with_nav(sorted(output, key=_milestone_sort_key), track_points)
+    add_milestone(
+        LOWERING_STOP_MILESTONE,
+        lowering.get('stop_ts'),
+        label=LOWERING_STOP_LABEL,
+    )
+
+    output = [milestone_map[name] for name in milestone_order if name in milestone_map]
+
+    return _milestone_rows_with_nav(output, track_points)
 
 
 def _milestone_rows_with_nav(
