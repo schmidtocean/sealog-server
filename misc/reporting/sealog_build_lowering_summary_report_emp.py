@@ -8,6 +8,7 @@ DESCRIPTION:    Minimal Empress lowering summary PDF reports
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
+import math
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,7 @@ from misc.reporting.sealog_build_cruise_summary_report_emp import (
     event_milestone_records,
     format_float_list,
     format_optional_float,
+    get_stage_boundary,
     lowering_with_event_milestones,
     parse_timestamp,
     render_template,
@@ -103,7 +105,7 @@ def _render_lowering_summary_html(
     meta = report_lowering.get('lowering_additional_meta', {})
     meta = meta if isinstance(meta, dict) else {}
     track_points = _track_points(event_exports)
-    altimeter_readings = [point.altitude for point in track_points if point.altitude is not None]
+    minimum_distance_point = _minimum_distance_point(track_points)
 
     return render_template(
         'emp_lowering_summary.html.j2',
@@ -116,8 +118,10 @@ def _render_lowering_summary_html(
         milestones=_actual_milestones(meta, track_points, event_exports),
         vehicle_name=VEHICLE_NAME,
         max_depth=format_optional_float(metrics.max_depth),
-        minimum_distance_to_seabed=format_optional_float(
-            min(altimeter_readings) if altimeter_readings else None,
+        minimum_distance_to_seabed=_format_minimum_distance_to_seabed(minimum_distance_point),
+        survey_depth_track_distance=_format_survey_depth_track_distance(
+            report_lowering,
+            track_points,
         ),
         bounding_box=format_float_list(metrics.bounding_box),
         plots=plots,
@@ -235,6 +239,85 @@ def _nearest_track_point(timestamp: datetime | None, points: list[TrackPoint]) -
         return None
 
     return min(points, key=lambda point: abs((point.ts - timestamp).total_seconds()))
+
+
+def _minimum_distance_point(points: list[TrackPoint]) -> TrackPoint | None:
+    altitude_points = [point for point in points if point.altitude is not None]
+    if not altitude_points:
+        return None
+
+    return min(altitude_points, key=lambda point: point.altitude or 0)
+
+
+def _format_minimum_distance_to_seabed(point: TrackPoint | None) -> str:
+    if point is None or point.altitude is None:
+        return ''
+
+    return f'{format_optional_float(point.altitude)}m @ {point.ts:%Y-%m-%d %H:%M:%SZ}'
+
+
+def _format_survey_depth_track_distance(
+    lowering: SealogRecord,
+    points: list[TrackPoint],
+) -> str:
+    survey_depth_stage = next(
+        (stage for stage in STAGE_DEFINITIONS if stage.label == 'Survey Depth'),
+        None,
+    )
+    if survey_depth_stage is None:
+        return ''
+
+    start = get_stage_boundary(lowering, survey_depth_stage.start, survey_depth_stage.start_fallback)
+    stop = get_stage_boundary(lowering, survey_depth_stage.stop, survey_depth_stage.stop_fallback)
+    if start is None or stop is None:
+        return ''
+
+    return _format_track_distance(_total_track_distance_m(points, start, stop))
+
+
+def _total_track_distance_m(
+    points: list[TrackPoint],
+    start: datetime | None = None,
+    stop: datetime | None = None,
+) -> float | None:
+    route_points = [
+        point
+        for point in points
+        if point.latitude is not None and point.longitude is not None
+        and (start is None or point.ts >= start)
+        and (stop is None or point.ts <= stop)
+    ]
+    if len(route_points) < 2:
+        return None
+
+    return sum(
+        _distance_m(previous, current)
+        for previous, current in zip(route_points, route_points[1:])
+    )
+
+
+def _distance_m(first: TrackPoint, second: TrackPoint) -> float:
+    radius_m = 6371000
+    first_lat = math.radians(first.latitude or 0)
+    second_lat = math.radians(second.latitude or 0)
+    delta_lat = math.radians((second.latitude or 0) - (first.latitude or 0))
+    delta_lon = math.radians((second.longitude or 0) - (first.longitude or 0))
+
+    haversine = (
+        math.sin(delta_lat / 2) ** 2
+        + math.cos(first_lat) * math.cos(second_lat) * math.sin(delta_lon / 2) ** 2
+    )
+    return 2 * radius_m * math.atan2(math.sqrt(haversine), math.sqrt(1 - haversine))
+
+
+def _format_track_distance(distance_m: float | None) -> str:
+    if distance_m is None:
+        return ''
+
+    if distance_m < 1000:
+        return f'{distance_m:.0f}m'
+
+    return f'{distance_m / 1000:.2f}km'
 
 
 def _event_groups(event_exports: list[SealogRecord] | None) -> list[SealogRecord]:
