@@ -53,7 +53,13 @@
       {% for stage in stage_definitions %}
       <tr>
         <th>{{ stage.label }}</th>
-        <td class="numeric">{{ metrics.stage_durations.get(stage.label)|duration }}</td>
+        <td class="numeric">
+          {% if stage.label == 'Survey Depth' and survey_depth_track_distance %}
+          {{ survey_depth_track_distance }} in {{ metrics.stage_durations.get(stage.label)|duration }}
+          {% else %}
+          {{ metrics.stage_durations.get(stage.label)|duration }}
+          {% endif %}
+        </td>
       </tr>
       {% endfor %}
       <tr><th>Max Depth</th><td class="numeric">{{ max_depth }}</td></tr>

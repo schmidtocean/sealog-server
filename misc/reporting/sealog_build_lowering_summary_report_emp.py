@@ -8,6 +8,7 @@ DESCRIPTION:    Minimal Empress lowering summary PDF reports
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
+import math
 from pathlib import Path
 from typing import Any
 
@@ -19,6 +20,7 @@ from misc.reporting.sealog_build_cruise_summary_report_emp import (
     event_milestone_records,
     format_float_list,
     format_optional_float,
+    get_stage_boundary,
     lowering_with_event_milestones,
     parse_timestamp,
     render_template,
@@ -34,6 +36,10 @@ HIDDEN_MILESTONE_ALIASES = {
     'lowering_on_surface',
     'lowering_aborted',
 }
+LOWERING_START_MILESTONE = 'lowering_start'
+LOWERING_STOP_MILESTONE = 'lowering_stop'
+LOWERING_START_LABEL = 'Deployment Start'
+LOWERING_STOP_LABEL = 'On Deck'
 
 
 @dataclass(frozen=True)
@@ -93,11 +99,11 @@ def _render_lowering_summary_html(
     event_exports: list[SealogRecord],
 ) -> str:
     report_lowering = lowering_with_event_milestones(lowering, event_exports)
-    metrics = build_lowering_metrics(report_lowering)
+    metrics = build_lowering_metrics(report_lowering, event_exports)
     meta = report_lowering.get('lowering_additional_meta', {})
     meta = meta if isinstance(meta, dict) else {}
     track_points = _track_points(event_exports)
-    altimeter_readings = [point.altitude for point in track_points if point.altitude is not None]
+    minimum_distance_point = _minimum_distance_point(track_points)
 
     return render_template(
         'emp_lowering_summary.html.j2',
@@ -107,11 +113,13 @@ def _render_lowering_summary_html(
         metrics=metrics,
         generated_ts=datetime.now(timezone.utc),
         stage_definitions=STAGE_DEFINITIONS,
-        milestones=_actual_milestones(meta, track_points, event_exports),
+        milestones=_actual_milestones(report_lowering, meta, track_points, event_exports),
         vehicle_name=VEHICLE_NAME,
         max_depth=format_optional_float(metrics.max_depth),
-        minimum_distance_to_seabed=format_optional_float(
-            min(altimeter_readings) if altimeter_readings else None,
+        minimum_distance_to_seabed=_format_minimum_distance_to_seabed(minimum_distance_point),
+        survey_depth_track_distance=_format_survey_depth_track_distance(
+            report_lowering,
+            track_points,
         ),
         bounding_box=format_float_list(metrics.bounding_box),
         plots=plots,
@@ -160,35 +168,62 @@ def _build_plot_assets(
 
 
 def _actual_milestones(
+    lowering: SealogRecord,
     meta: SealogRecord,
     track_points: list[TrackPoint],
     event_exports: list[SealogRecord] | None = None,
 ) -> list[SealogRecord]:
-    event_records = [
-        record
-        for record in event_milestone_records(event_exports or [])
-        if record.get('name') not in HIDDEN_MILESTONE_ALIASES
-    ]
-    if event_records:
-        return _milestone_rows_with_nav(event_records, track_points)
+    milestone_map: dict[str, SealogRecord] = {}
+    milestone_order: list[str] = []
+
+    def add_milestone(name: str, value: Any, label: str | None = None, replace: bool = False) -> None:
+        if name in HIDDEN_MILESTONE_ALIASES:
+            return
+
+        timestamp = parse_timestamp(value)
+        if timestamp is None:
+            return
+
+        if name in milestone_map and not replace:
+            return
+
+        if name not in milestone_map:
+            milestone_order.append(name)
+
+        milestone_map[name] = {
+            'name': label or name,
+            'key': name,
+            'ts': timestamp,
+            'raw_value': value,
+        }
+
+    add_milestone(
+        LOWERING_START_MILESTONE,
+        lowering.get('start_ts'),
+        label=LOWERING_START_LABEL,
+    )
 
     milestones = meta.get('milestones', {})
-    if not isinstance(milestones, dict):
-        return []
+    if isinstance(milestones, dict):
+        for name, value in milestones.items():
+            add_milestone(str(name), value, replace=True)
 
-    output = []
-
-    for name, value in milestones.items():
-        if name in HIDDEN_MILESTONE_ALIASES:
+    for record in event_milestone_records(event_exports or []):
+        name = record.get('name')
+        if not isinstance(name, str):
             continue
 
-        output.append({
-            'name': name,
-            'ts': parse_timestamp(value),
-            'raw_value': value,
-        })
+        add_milestone(name, record.get('raw_value') or record.get('ts'))
 
-    return _milestone_rows_with_nav(sorted(output, key=_milestone_sort_key), track_points)
+    add_milestone(
+        LOWERING_STOP_MILESTONE,
+        lowering.get('stop_ts'),
+        label=LOWERING_STOP_LABEL,
+    )
+
+    output = [milestone_map[name] for name in milestone_order if name in milestone_map]
+
+    return _milestone_rows_with_nav(output, track_points)
 
 
 def _milestone_rows_with_nav(
@@ -224,6 +259,85 @@ def _nearest_track_point(timestamp: datetime | None, points: list[TrackPoint]) -
         return None
 
     return min(points, key=lambda point: abs((point.ts - timestamp).total_seconds()))
+
+
+def _minimum_distance_point(points: list[TrackPoint]) -> TrackPoint | None:
+    altitude_points = [point for point in points if point.altitude is not None]
+    if not altitude_points:
+        return None
+
+    return min(altitude_points, key=lambda point: point.altitude or 0)
+
+
+def _format_minimum_distance_to_seabed(point: TrackPoint | None) -> str:
+    if point is None or point.altitude is None:
+        return ''
+
+    return f'{format_optional_float(point.altitude)}m @ {point.ts:%Y-%m-%d %H:%M:%SZ}'
+
+
+def _format_survey_depth_track_distance(
+    lowering: SealogRecord,
+    points: list[TrackPoint],
+) -> str:
+    survey_depth_stage = next(
+        (stage for stage in STAGE_DEFINITIONS if stage.label == 'Survey Depth'),
+        None,
+    )
+    if survey_depth_stage is None:
+        return ''
+
+    start = get_stage_boundary(lowering, survey_depth_stage.start, survey_depth_stage.start_fallback)
+    stop = get_stage_boundary(lowering, survey_depth_stage.stop, survey_depth_stage.stop_fallback)
+    if start is None or stop is None:
+        return ''
+
+    return _format_track_distance(_total_track_distance_m(points, start, stop))
+
+
+def _total_track_distance_m(
+    points: list[TrackPoint],
+    start: datetime | None = None,
+    stop: datetime | None = None,
+) -> float | None:
+    route_points = [
+        point
+        for point in points
+        if point.latitude is not None and point.longitude is not None
+        and (start is None or point.ts >= start)
+        and (stop is None or point.ts <= stop)
+    ]
+    if len(route_points) < 2:
+        return None
+
+    return sum(
+        _distance_m(previous, current)
+        for previous, current in zip(route_points, route_points[1:])
+    )
+
+
+def _distance_m(first: TrackPoint, second: TrackPoint) -> float:
+    radius_m = 6371000
+    first_lat = math.radians(first.latitude or 0)
+    second_lat = math.radians(second.latitude or 0)
+    delta_lat = math.radians((second.latitude or 0) - (first.latitude or 0))
+    delta_lon = math.radians((second.longitude or 0) - (first.longitude or 0))
+
+    haversine = (
+        math.sin(delta_lat / 2) ** 2
+        + math.cos(first_lat) * math.cos(second_lat) * math.sin(delta_lon / 2) ** 2
+    )
+    return 2 * radius_m * math.atan2(math.sqrt(haversine), math.sqrt(1 - haversine))
+
+
+def _format_track_distance(distance_m: float | None) -> str:
+    if distance_m is None:
+        return ''
+
+    if distance_m < 1000:
+        return f'{distance_m:.0f}m'
+
+    return f'{distance_m / 1000:.2f}km'
 
 
 def _event_groups(event_exports: list[SealogRecord] | None) -> list[SealogRecord]:
@@ -469,6 +583,24 @@ def _write_depth_plot(points: list[TrackPoint], output_path: Path) -> None:
         for point in points
         if point.depth is not None and point.altitude is not None
     ]
+    near_bottom_timestamps = [
+        point.ts
+        for point in points
+        if (
+            point.depth is not None
+            and point.altitude is not None
+            and point.altitude < 1
+        )
+    ]
+    near_bottom_depths = [
+        point.depth
+        for point in points
+        if (
+            point.depth is not None
+            and point.altitude is not None
+            and point.altitude < 1
+        )
+    ]
 
     figure, axis = pyplot.subplots(figsize=(6.8, 3.2), dpi=160)
     axis.plot(timestamps, depths, color='#7746a3', linewidth=1.6, label='Depth')
@@ -487,6 +619,15 @@ def _write_depth_plot(points: list[TrackPoint], output_path: Path) -> None:
             color='#151a17',
             linewidth=1.2,
             label='Altimeter',
+        )
+    if near_bottom_timestamps:
+        axis.scatter(
+            near_bottom_timestamps,
+            near_bottom_depths,
+            color='#c24132',
+            s=14,
+            zorder=5,
+            label='Altimeter < 1 m',
         )
     axis.fill_between(timestamps, depths, color='#7746a3', alpha=0.12)
     axis.set_title('Depth Profile')

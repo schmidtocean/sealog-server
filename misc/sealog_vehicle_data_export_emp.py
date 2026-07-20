@@ -75,6 +75,7 @@ LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for det
                 Copyright (C) OceanDataTools.org 2024
 """
 
+import fnmatch
 import json
 import logging
 import os
@@ -101,6 +102,7 @@ from misc.python_sealog.settings import (
     SLACK_WEBHOOK_URL,
 )
 from misc.python_sealog.slack import PooledSlackHandler
+from misc.sealog_backfill_lowering_stats_emp import backfill_lowering_stats
 from misc.reporting.sealog_build_cruise_summary_report_emp import (
     write_cruise_metrics_report,
 )
@@ -184,6 +186,26 @@ def _export_dir_name(cruise_id, lowering_id):
     return lowering_id
 
 
+def _file_count(directory: str, patterns: tuple[str, ...] | None = None) -> int:
+    '''
+    Count regular files under a directory
+    '''
+
+    if not os.path.isdir(directory):
+        return 0
+
+    count = 0
+    for root, _, filenames in os.walk(directory):
+        for filename in filenames:
+            if patterns and not any(fnmatch.fnmatch(filename, pattern) for pattern in patterns):
+                continue
+
+            if os.path.isfile(os.path.join(root, filename)):
+                count += 1
+
+    return count
+
+
 def _verify_source_directories():
     '''
     Verify all required source directories exist.
@@ -217,10 +239,14 @@ def _export_lowering_images(cruise, lowering): # pylint: disable=redefined-outer
     )
     images_export_dir = os.path.join(lowering_export_dir, IMAGES_DIRNAME)
     framegrab_list = get_framegrab_list_by_lowering(lowering['id'])
+    logging.info("Found %s framegrab image(s) for %s", len(framegrab_list), lowering['lowering_id'])
 
     existing_framegrab_list = os.listdir(images_export_dir)
     exported_framegrab_names = {os.path.basename(filepath) for filepath in framegrab_list}
     delete_framegrab_list = set(existing_framegrab_list) - exported_framegrab_names
+
+    if delete_framegrab_list:
+        logging.info("Deleting %s stale image(s)", len(delete_framegrab_list))
 
     for filename in delete_framegrab_list:
         try:
@@ -229,6 +255,10 @@ def _export_lowering_images(cruise, lowering): # pylint: disable=redefined-outer
         except Exception as err:
             logging.warning('Could not delete stale image: %s', filename)
             logging.debug(str(err))
+
+    if not framegrab_list:
+        logging.info("No framegrab images to transfer for %s", lowering['lowering_id'])
+        return
 
     temp_list_path = None
     try:
@@ -250,6 +280,11 @@ def _export_lowering_images(cruise, lowering): # pylint: disable=redefined-outer
             IMAGES_FILE_PATH,
             images_export_dir,
         ], check=True)
+        logging.info(
+            "Image export now has %s file(s): %s",
+            _file_count(images_export_dir),
+            images_export_dir,
+        )
     except subprocess.CalledProcessError as err:
         logging.error("Image transfer failed for lowering %s", lowering['lowering_id'])
         logging.debug(str(err))
@@ -412,6 +447,11 @@ def _stage_report_files(source_dir, destination_dir):
 
     try:
         subprocess.run(rsync_args, check=True, capture_output=True, text=True)
+        logging.info(
+            "Staged %s report file(s): %s",
+            _file_count(destination_dir, REPORT_FILE_PATTERNS),
+            destination_dir,
+        )
     except subprocess.CalledProcessError as err:
         logging.error(
             "Failed to stage report files from %s: %s", source_dir, err.stderr
@@ -448,6 +488,11 @@ def _stage_lowering_files(lowering, lowering_source_dir):
             capture_output=True,
             text=True,
         )
+        logging.info(
+            "Staged %s uploaded file(s): %s",
+            _file_count(files_dest_dir),
+            files_dest_dir,
+        )
     except subprocess.CalledProcessError as err:
         logging.error("Failed to sync user files for lowering %s: %s", lowering['lowering_id'], err.stderr)
         return False
@@ -483,7 +528,12 @@ def _push_2_data_warehouse(cruise, lowerings): # pylint: disable=redefined-outer
 
         try:
             os.makedirs(warehouse_cruise_reports_dir, exist_ok=True)
-            logging.info("Rclone copying cruise reports for %s", cruise["cruise_id"])
+            logging.info(
+                "Rclone copying %s cruise report file(s) for %s to %s",
+                _file_count(cruise_reports_dir, REPORT_FILE_PATTERNS),
+                cruise["cruise_id"],
+                warehouse_cruise_reports_dir,
+            )
             subprocess.run(
                 [
                     "rclone",
@@ -502,6 +552,10 @@ def _push_2_data_warehouse(cruise, lowerings): # pylint: disable=redefined-outer
                 check=True,
                 capture_output=False,
                 text=True,
+            )
+            logging.info(
+                "Cruise report destination now has %s report file(s)",
+                _file_count(warehouse_cruise_reports_dir, REPORT_FILE_PATTERNS),
             )
         except subprocess.CalledProcessError as err:
             logging.error(
@@ -557,7 +611,12 @@ def _push_2_data_warehouse(cruise, lowerings): # pylint: disable=redefined-outer
                 continue
 
         try:
-            logging.info("Rclone syncing Sealog data for %s", lowering['lowering_id'])
+            logging.info(
+                "Rclone syncing %s Sealog file(s) for %s to %s",
+                _file_count(lowering_source_dir),
+                lowering['lowering_id'],
+                warehouse_dest_dir,
+            )
             subprocess.run([
                 'rclone',
                 'sync',
@@ -568,6 +627,11 @@ def _push_2_data_warehouse(cruise, lowerings): # pylint: disable=redefined-outer
                 lowering_source_dir,
                 warehouse_dest_dir,
             ], check=True, capture_output=False, text=True)
+            logging.info(
+                "Sealog destination for %s now has %s file(s)",
+                lowering['lowering_id'],
+                _file_count(warehouse_dest_dir),
+            )
         except subprocess.CalledProcessError as err:
             logging.error("Failed to sync Sealog data for lowering %s: %s", lowering['lowering_id'], err.stderr)
             logging.debug(str(err))
@@ -691,6 +755,55 @@ def _get_event_exports_for_report(
             headers=headers,
         ) or [],
     )
+
+
+def _merge_payload(record: SealogRecord, payload: SealogRecord) -> SealogRecord:
+    '''
+    Return a local copy of a record with a PATCH payload applied
+    '''
+
+    if not payload:
+        return record
+
+    output = dict(record)
+    for key, value in payload.items():
+        if isinstance(value, dict) and isinstance(output.get(key), dict):
+            output[key] = {**output[key], **value}
+        else:
+            output[key] = value
+
+    return output
+
+
+def _backfill_lowering_stats_for_export(
+    lowerings: SealogRecords,
+    api_server_url: str = API_SERVER_URL,
+    headers: dict[str, str] = HEADERS,
+) -> SealogRecords:
+    '''
+    Recompute lowering stats before report and JSON export
+    '''
+
+    output = []
+
+    for lowering in lowerings:
+        try:
+            payload = backfill_lowering_stats(
+                lowering,
+                api_server_url=api_server_url,
+                headers=headers,
+                overwrite=True,
+                dry_run=False,
+            )
+            output.append(_merge_payload(lowering, payload))
+        except Exception:
+            logging.exception(
+                "Unable to backfill lowering stats for %s",
+                lowering.get("lowering_id", lowering.get("id")),
+            )
+            output.append(lowering)
+
+    return output
 
 
 def _select_export_scope(
@@ -878,6 +991,17 @@ if __name__ == '__main__':
         if selected_lowerings else "NONE",
     )
 
+    if parsed_args.transfer_only:
+        _push_2_data_warehouse(selected_cruise, selected_lowerings)
+        logging.debug("Done")
+        sys.exit(0)
+
+    selected_lowerings = _backfill_lowering_stats_for_export(
+        selected_lowerings,
+        api_server_url=api_server_url,
+        headers=headers,
+    )
+
     if parsed_args.reports_only:
         built_reports = _build_reports(
             selected_cruise,
@@ -891,11 +1015,6 @@ if __name__ == '__main__':
             len(built_reports),
             parsed_args.reports_output_dir,
         )
-        logging.debug("Done")
-        sys.exit(0)
-
-    if parsed_args.transfer_only:
-        _push_2_data_warehouse(selected_cruise, selected_lowerings)
         logging.debug("Done")
         sys.exit(0)
 
