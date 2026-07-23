@@ -1,8 +1,9 @@
 # Activate venv if needed
-source venv/bin/activate  # adjust if using .venv or poetry
+#./venv/bin/activate  # adjust if using .venv or poetry
 
 echo "Linting NodeJS code with eslint..."
 npx lint-staged
 
 echo "Running unit tests..."
-npx lab **/*.test.js
+NODE_ENV=test node --env-file=.env node_modules/.bin/lab -v **/*.test.js
+#npx --env-file=.env lab **/*.test.js
