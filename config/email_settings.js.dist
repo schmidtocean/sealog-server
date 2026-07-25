@@ -1,8 +1,8 @@
 // The sender address for all emails
-const senderAddress = '<SENDER_ADDRESS>';
+const senderAddress = 'sealog_admin@oceandatatools.org';
 
 // Additional receipents for and sent emails.
-const notificationEmailAddresses = ['<BCC_ADDRESS>'];
+const notificationEmailAddresses = ['sealog_admin@oceandatatools.org'];
 
 // Needed for email integration
 let emailTransporter = null; //eslint-disable-line prefer-const
@@ -17,51 +17,60 @@ const Nodemailer = require('nodemailer'); // eslint-disable-line no-unused-vars
 // To setup OAuth2 access for nodemailer please refer to:
 // https://rupali.hashnode.dev/send-emails-in-nodejs-using-nodemailer-gmail-oauth2
 // ------------------------------------------------------------------------- //
-// const { google } = require('googleapis'); // eslint-disable-line no-unused-vars
+const { google } = require('googleapis'); // eslint-disable-line no-unused-vars
 
-// const OAuth2 = google.auth.OAuth2; // eslint-disable-line no-unused-vars
+const OAuth2 = google.auth.OAuth2; // eslint-disable-line no-unused-vars
 
-// const client_id = process.env.GMAIL_CLIENT_ID || '<GMAIL_CLIENT_ID>';
-// const client_secret = process.env.GMAIL_CLIENT_SECRET || '<GMAIL_CLIENT_SECRET>';
-// const server_url = process.env.GMAIL_SERVER_URL || '<GMAIL_SERVER_URL>';
-// const refresh_token = process.env.GMAIL_REFRESH_TOKEN || '<GMAIL_REFRESH_TOKEN>';
+const client_id = process.env.GMAIL_CLIENT_ID || '<GMAIL_CLIENT_ID>';
+const client_secret = process.env.GMAIL_CLIENT_SECRET || '<GMAIL_CLIENT_SECRET>';
+const server_url = process.env.GMAIL_SERVER_URL || '<GMAIL_SERVER_URL>';
+const refresh_token = process.env.GMAIL_REFRESH_TOKEN || '<GMAIL_REFRESH_TOKEN>';
 
-// const createTransporter = async (clientId, clientSecret, serverUrl, refreshToken) => {
+const createTransporter = async (clientId, clientSecret, serverUrl, refreshToken) => {
 
-//   const oauth2Client = new OAuth2(clientId, clientSecret, serverUrl);
+  try {
+    const oauth2Client = new OAuth2(
+      clientId,
+      clientSecret,
+      serverUrl
+    );
 
-//   oauth2Client.setCredentials({ refresh_token: refreshToken });
+    oauth2Client.setCredentials({
+      refresh_token: refreshToken
+    });
 
-//   const accessToken = await new Promise((resolve, reject) => {
+    const accessToken = await new Promise((resolve, reject) => {
 
-//     oauth2Client.getAccessToken((err, token) => {
+      oauth2Client.getAccessToken((err, token) => {
 
-//       if (err) {
-//         console.error('*ERR: ', err);
-//         reject(err);
-//       }
-//       else {
-//         resolve(token);
-//       }
-//     });
-//   });
+        if (err) {
+          console.log('*ERR: ', err);
+          reject();
+        }
 
-//   return Nodemailer.createTransport({
-//     service: 'gmail',
-//     auth: {
-//       type: 'OAuth2',
-//       user: senderAddress,
-//       accessToken,
-//       clientId,
-//       clientSecret,
-//       refreshToken
-//     }
-//   });
-// };
+        resolve(token);
+      });
+    });
 
-// createTransporter(client_id, client_secret, server_url, refresh_token) // eslint-disable-line no-dupe-keys
-//   .then((t) => { emailTransporter = t; })
-//   .catch((err) => { console.error('Email transporter init failed:', err); });
+    const transporter = Nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        type: 'OAuth2',
+        user: senderAddress,
+        accessToken,
+        clientId,
+        clientSecret,
+        refreshToken
+      }
+    });
+    return transporter;
+  }
+  catch (err) {
+    return err;
+  }
+};
+
+emailTransporter = createTransporter(client_id, client_secret, server_url, refresh_token); // eslint-disable-line no-dupe-keys
 
 
 // ------------------------------------------------------------------------- //

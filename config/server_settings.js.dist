@@ -15,10 +15,10 @@ const cameraStatusUrls = {
 const reCaptchaSecret = null;
 
 // Disable registering users, requires Sealog admin user to enable the accounts prior to use
-const disableRegisteringUsers = false;
+const disableRegisteringUsers = process.env.SEALOG_DISABLE_SELF_REGISTRATION || false;
 
 // Default roles of self-registering users
-const registeringUserRoles = ['event_watcher', 'event_logger'];
+const registeringUserRoles = process.env.SEALOG_DEFAULT_USER_ROLES || ['event_watcher', 'event_logger'];
 
 // Activate per-cruise/per-lowering access permissions
 const useAccessControl = process.env.SEALOG_SERVER_USE_ACCESS_CONTROL || false;

@@ -43,18 +43,18 @@ from misc.python_sealog.misc import get_framegrab_list_by_lowering
 from misc.python_sealog.lowerings import get_lowerings, get_lowering_by_id, get_lowerings_by_cruise
 from misc.python_sealog.cruises import get_cruises, get_cruise_by_id, get_cruise_by_lowering
 from misc.python_sealog.event_exports import get_event_export
-from misc.python_sealog.settings import API_SERVER_FILE_PATH, SLACK_WEBHOOK_URL, OPENVDM_IP
+from misc.python_sealog.settings import API_SERVER_FILE_PATH
+from misc.slack_sealog.settings import SLACK_WEBHOOK_URL, SLACK_LOG_LEVEL
 from misc.base_data_exporter import SealogDataExporter
 
 # from misc.reporting.sealog_build_lowering_sample_report_soi import LoweringSampleReport
-
-SLACK_LOG_LEVEL = 'INFO'
 
 EXPORT_ROOT_DIR = '/data/sealog-Sub-export'
 VEHICLE_NAME = 'SuBastian'
 EXPORT_IMAGES = True
 IMAGE_DATASOURCES = ['vehicleRealtimeFramegrabberData']
 
+OPENVDM_IP = '10.23.9.20'
 OPENVDM_USER = 'mt'
 OPENVDM_SSH_KEY = '/home/mt/.ssh/id_rsa_openvdm'
 CRUISEDATA_DIR_ON_DATA_WAREHOUSE = '/mnt/CruiseData'
@@ -627,13 +627,14 @@ if __name__ == '__main__':
     if selected_lowerings and len(selected_lowerings) == 1:
         report_title += f" - {selected_lowerings[0]['lowering_id']}"
 
-    slack_handler = PooledSlackHandler(
-        SLACK_WEBHOOK_URL,
-        minimum_level=SLACK_LOG_LEVEL,
-        report_title=report_title
-    )
-    slack_handler.setFormatter(logging.Formatter('%(message)s'))
-    logging.getLogger().addHandler(slack_handler)
+    if SLACK_WEBHOOK_URL is not None:
+        slack_handler = PooledSlackHandler(
+            SLACK_WEBHOOK_URL,
+            minimum_level=SLACK_LOG_LEVEL,
+            report_title=report_title
+        )
+        slack_handler.setFormatter(logging.Formatter('%(message)s'))
+        logging.getLogger().addHandler(slack_handler)
 
     success, msg = exporter.verify_source_directories(selected_cruise, selected_lowerings)
     if not success:

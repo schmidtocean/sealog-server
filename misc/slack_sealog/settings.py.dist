@@ -1,7 +1,7 @@
 """Slack integration settings — copy to settings.py and fill in values."""
 # Slack incoming webhook URL
 # Create one at https://api.slack.com/messaging/webhooks
-SLACK_WEBHOOK_URL = ''
+SLACK_WEBHOOK_URL = None
 
 # Minimum log level to include in the digest: DEBUG, INFO, WARNING, ERROR, CRITICAL
-SLACK_MINIMUM_LEVEL = 'WARNING'
+SLACK_MINIMUM_LEVEL = 'INFO'

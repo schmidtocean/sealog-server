@@ -1,6 +1,6 @@
 
 
-const axios = require('axios');
+const Axios = require('axios');
 const { cameraStatusUrls } = require('../config/server_settings');
 const { customVarsTable } = require('../config/db_constants');
 
@@ -19,11 +19,12 @@ exports.plugin = {
     }
 
     const checkCamera = async (key, url) => {
+
       const varName = `${key}RecState`;
       let value;
 
       try {
-        const response = await axios.get(url, { timeout: 5000 });
+        const response = await Axios.get(url, { timeout: 5000 });
         value = response.data.rec_state ? 'true' : 'false';
       }
       catch {

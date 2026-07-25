@@ -1,5 +1,5 @@
 # Activate venv if needed
-#./venv/bin/activate  # adjust if using .venv or poetry
+source ./venv/bin/activate  # adjust if using .venv or poetry
 
 echo "Linting NodeJS code with eslint..."
 npx lint-staged
