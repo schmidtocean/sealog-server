@@ -30,7 +30,6 @@ from datetime import datetime
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
 
-from misc.python_sealog.slack import PooledSlackHandler
 from misc.reporting.sealog_build_lowering_vehicle_report import LoweringVehicleReport
 from misc.reporting.sealog_build_lowering_summary_report import LoweringSummaryReport
 from misc.reporting.sealog_build_cruise_summary_report_Sub import CruiseSummaryReport
@@ -44,6 +43,7 @@ from misc.python_sealog.lowerings import get_lowerings, get_lowering_by_id, get_
 from misc.python_sealog.cruises import get_cruises, get_cruise_by_id, get_cruise_by_lowering
 from misc.python_sealog.event_exports import get_event_export
 from misc.python_sealog.settings import API_SERVER_FILE_PATH
+from misc.slack_sealog.slack_logger import PooledSlackHandler
 from misc.slack_sealog.settings import SLACK_WEBHOOK_URL, SLACK_LOG_LEVEL
 from misc.base_data_exporter import SealogDataExporter
 
