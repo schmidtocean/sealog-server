@@ -19,7 +19,7 @@ misc/slack_sealog/settings*.py
 misc/sealog_*_data_export.py
 misc/sealog_*_data_export_full.py*
 misc/sealog_asnap.py
-misc/sealog_auto_actions*.py
+misc/sealog_auto_actions.py
 misc/sealog_aux_data_inserter*.py
 misc/sealog_aux_data_inserter_nav.py
 misc/sealog_auxDataInserter*.py
