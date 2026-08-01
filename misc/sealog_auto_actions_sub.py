@@ -28,12 +28,6 @@ LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for det
                 Copyright (C) OceanDataTools.org 2024
 '''
 
-from misc.python_sealog.settings import (
-    API_SERVER_URL, WS_SERVER_URL, HEADERS, EVENTS_API_PATH
-)
-from misc.python_sealog.lowerings import get_lowering_by_event, update_lowering
-from misc.python_sealog.events import get_events_by_lowering
-from misc.python_sealog.custom_vars import get_custom_var_uid_by_name, set_custom_var
 import sys
 import asyncio
 import json
@@ -44,6 +38,12 @@ import websockets
 
 from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
+from misc.python_sealog.settings import (
+    API_SERVER_URL, WS_SERVER_URL, HEADERS, EVENTS_API_PATH
+)
+from misc.python_sealog.lowerings import get_lowering_by_event, update_lowering
+from misc.python_sealog.events import get_events_by_lowering
+from misc.python_sealog.custom_vars import get_custom_var_uid_by_name, set_custom_var
 
 
 ASNAP_STATUS_VAR_NAME = 'asnapStatus'
