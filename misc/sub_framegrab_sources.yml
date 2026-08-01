@@ -1,0 +1,25 @@
+sources:
+  - source_name: SCICAM
+    source_url: http://10.23.46.60/images/
+    source_filename: scicam.jpg
+
+  - source_name: SITCAM
+    source_url: http://10.23.46.61/images/
+    source_filename: sitcam.jpg
+
+  # Additional cameras, uncomment and adjust as needed:
+  # - source_name: HDQUAD
+  #   source_url: http://10.23.46.62/images/
+  #   source_filename: hdquad.jpg
+  #
+  # - source_name: SDQUAD
+  #   source_url: http://10.23.46.63/images/
+  #   source_filename: sdquad.jpg
+  #
+  # - source_name: SCITOO
+  #   source_url: http://10.23.46.64/images/
+  #   source_filename: scitoo.jpg
+  #
+  # - source_name: SITTOO
+  #   source_url: http://10.23.46.65/images/
+  #   source_filename: sittoo.jpg
