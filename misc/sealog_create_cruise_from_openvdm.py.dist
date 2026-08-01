@@ -54,10 +54,10 @@ from misc.python_sealog.cruises import (
 from misc.python_sealog.settings import API_SERVER_URL, HEADERS
 
 # URL to OpenVDM main page
-OPENVDM_SERVER_URL = 'http://openvdm'
+OPENVDM_SERVER_URL = 'http://10.23.9.20'
 
 # Default vessel name to use when creating cruise records
-VESSEL_NAME = 'R/V Discoverer'
+VESSEL_NAME = 'R/V Falkor (too)'
 
 DEFAULT_CRUISE = {
   'cruise_id': None,
