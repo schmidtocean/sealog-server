@@ -1,6 +1,6 @@
 # Sealog Server — SOI Deployment Guide
 
-This is the Schmidt Ocean Institute fork of [sealog-server](https://github.com/OceanDataTools/sealog-server). It extends the upstream server with SOI-specific seed data and instance-type-aware database initialisation.
+This is the Schmidt Ocean Institute fork of [sealog-server](https://github.com/schimdtocean/sealog-server). It extends the upstream server with SOI-specific seed data and instance-type-aware database initialisation.
 
 Three named instance types are supported, controlled by the `SEALOG_INSTANCE_TYPE` environment variable:
 
@@ -27,43 +27,19 @@ See [INSTALL.md](INSTALL.md) for step-by-step instructions to install MongoDB an
 
 ## Configuration
 
-### Config files
-
-Config files live in `config/` and are gitignored — only the `.dist` versions are committed. Copy each `.dist` file before starting the server:
-
-```bash
-cp config/db_constants.js.dist    config/db_constants.js
-cp config/email_settings.js.dist  config/email_settings.js
-cp config/manifest.js.dist        config/manifest.js
-cp config/server_settings.js.dist config/server_settings.js
-cp config/secret.js.dist          config/secret.js
-```
-
-Most settings read from environment variables automatically. The files that typically require manual editing are:
-
-**`config/secret.js`** — JWT signing secret. Generate and paste a key:
-```bash
-node -e "console.log(require('crypto').randomBytes(256).toString('base64'));"
-```
-
-**`config/email_settings.js`** — Set `senderAddress` and `notificationEmailAddresses`, then uncomment one provider block (Gmail OAuth2, Mailgun, or Mailjet) and supply the corresponding environment variables. Leave all blocks commented to disable email.
-
-**`config/db_constants.js`** — Override `sealogDB` and `sealogDB_devel` collection names here, or use `SEALOG_DB_NAME` / `SEALOG_DB_DEVEL_NAME` env vars.
-
-**`config/server_settings.js`** — Override `reCaptchaSecret`, `disableRegisteringUsers`, and `registeringUserRoles` if the env-var defaults are not sufficient.
-
 ### Environment variables
+
+Most settings read from environment variables automatically.
 
 | Variable | Default | Description |
 |---|---|---|
 | `SEALOG_INSTANCE_TYPE` | — | **Required.** `FKt`, `Sub`, or `emp` — controls which seed data loads |
 | `NODE_ENV` | `development` | `production`, `development`, `test`, `debug`, `demo-vehicle`, `demo-vessel` |
 | `MONGO_URL` | `mongodb://localhost:27017/<db>` | Full MongoDB connection URL |
-| `SEALOG_SERVER_PORT` | `8000` | HTTP/HTTPS listen port |
-| `SEALOG_SERVER_FILEPATH_ROOT` | `/opt/sealog-server/sealog-files` | Root path for file storage |
+| `SEALOG_SERVER_FILEPATH_ROOT` | `/opt/sealog-files-fkt` | Root path for Sealog files/images |
 | `SEALOG_SERVER_SECRET` | — | JWT signing secret (required in production) |
-| `SEALOG_DB_NAME` | `sealogDB` | Production MongoDB database name |
-| `SEALOG_DB_DEVEL_NAME` | `sealogDB_devel` | Dev/test database name |
+| `SEALOG_DEFAULT_PASSWD` | `password` | Default password used when setting up users for the first time |
+| `SEALOG_SERVER_PORT` | `8000` | HTTP/HTTPS listen port |
 | `SEALOG_SERVER_USE_ACCESS_CONTROL` | `false` | Enable per-cruise/per-lowering user access lists |
 | `SEALOG_DISABLE_SELF_REGISTRATION` | `false` | Prevent new user self-registration |
 | `SEALOG_SERVER_TLS_PRIVKEY` | — | Path to TLS private key (enables HTTPS) |
@@ -74,8 +50,8 @@ Email provider variables (set whichever matches the provider block uncommented i
 | Variable | Provider |
 |---|---|
 | `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_SERVER_URL`, `GMAIL_REFRESH_TOKEN` | Gmail OAuth2 |
-| `MG_APIKEY`, `MG_DOMAIN` | Mailgun |
-| `MJ_APIKEY_PUBLIC`, `MJ_APIKEY_PRIVATE` | Mailjet |
+
+The appropriate env values are stored in the [shipboard-configuration](https://github.com/schmidtocean/shipboard-configuration) repo within the ./Systems/Sealog/sealog-[FKt|Sub|emp] directories.  Symlink the appropriate env file to the sealog-server root directory as `.env` to apply the values to the server.
 
 ### NODE_ENV behaviour
 
@@ -122,35 +98,27 @@ cp Dockerfile.dist Dockerfile
 cp docker-compose.yml.dist docker-compose.yml
 ```
 
-Copy the per-instance env templates:
+Copy the per-instance env files from shipboard-configurations:
 
 ```bash
-cp .env.FKt.dist .env.FKt
-cp .env.Sub.dist .env.Sub
-cp .env.emp.dist .env.emp
+cp ../shipboard-configuration/Systems/Sealog/server-FKt/.env .env.FKt
+cp ../shipboard-configuration/Systems/Sealog/server-Sub/.env .env.Sub
+cp ../shipboard-configuration/Systems/Sealog/server-emp/.env .env.emp
 ```
 
 Copy the server config templates (defaults work without modification for Docker):
 
 ```bash
-cp config/db_constants.js.dist    config/db_constants.js
-cp config/email_settings.js.dist  config/email_settings.js
-cp config/manifest.js.dist        config/manifest.js
-cp config/server_settings.js.dist config/server_settings.js
-cp config/secret.js.dist          config/secret.js
-```
-
-### 2. Set secrets
-
-Each `.env.*` file needs a `SEALOG_SERVER_SECRET`. Generate one and paste it into each file:
-
-```bash
-node -e "console.log(require('crypto').randomBytes(256).toString('base64'));"
+ln -s config/db_constants.js.dist    config/db_constants.js
+ln -s config/email_settings.js.dist  config/email_settings.js
+ln -s config/manifest.js.dist        config/manifest.js
+ln -s config/server_settings.js.dist config/server_settings.js
+ln -s config/secret.js.dist          config/secret.js
 ```
 
 You can use the same secret in all three files for local development.
 
-### 3. Start the stack
+### 2. Start the stack
 
 ```bash
 docker compose up --build
@@ -162,56 +130,89 @@ Because `NODE_ENV=development`, each instance drops and reseeds its database on 
 
 ## VM production environment
 
-For a full walkthrough of installing MongoDB and Node.js on Ubuntu 22.04 LTS, see [INSTALL.md](INSTALL.md). The SOI-specific steps are below.
+For a full walkthrough of installing MongoDB and Node.js on Ubuntu 24.04 LTS, see [INSTALL.md](INSTALL.md). The SOI-specific steps are below.
 
 ### 1. Clone and install
 
 ```bash
-git clone <repo-url> /opt/sealog-server
-cd /opt/sealog-server
+cd ~
+git clone https://github.com/schmidtocean/sealog-server
+mv sealog-server /opt/sealog-server-<type>
+```
+
+```bash
+cd /opt/sealog-server-<type>
 npm install
+python3 -m venv venv
+source ./venv/bin/activate
+pip install -r requirements.txt
 ```
 
 ### 2. Set up config files
 
 ```bash
-cp config/db_constants.js.dist    config/db_constants.js
-cp config/email_settings.js.dist  config/email_settings.js
-cp config/manifest.js.dist        config/manifest.js
-cp config/server_settings.js.dist config/server_settings.js
-cp config/secret.js.dist          config/secret.js
+ln -s config/db_constants.js.dist    config/db_constants.js
+ln -s config/email_settings.js.dist  config/email_settings.js
+ln -s config/manifest.js.dist        config/manifest.js
+ln -s config/server_settings.js.dist config/server_settings.js
+ln -s config/secret.js.dist          config/secret.js
 ```
 
-Edit each file as described in the [Config files](#config-files) section above. At minimum, edit `config/secret.js` to set the JWT secret and `config/manifest.js` to set the port if not using the default.
+### 3. setup the services files:
 
-### 3. Set environment variables
+For all instance types:
+```bash
+cd /opt/sealog-server-<type>/misc
+ln -s sealog_asnap.py.dist sealog_asnap.py
+ln -s sealog_aux_data_inserter_influx.py.dist sealog_aux_data_inserter_influx.py
+```
 
-The server reads environment variables from a `.env` file in the project root when started with `node --env-file=.env server.js`. Create the file:
+For sealog-fkt:
+```bash
+cd /opt/sealog-server-fkt/misc
+ln -s sealog_auto_actions_fkt.py sealog_auto_actions.py
+ln -s sealog_create_cruise_from_openvdm.py.dist sealog_create_cruise_from_openvdm.py
+ln -s sealog_cruise_sync.py.dist sealog_cruise_sync.py
+ln -s sealog_vessel_data_export_fkt.py sealog_data_export.py
+```
+
+For sealog-sub:
+```bash
+cd /opt/sealog-server-sub/misc
+ln -s sealog_auto_actions_sub.py sealog_auto_actions.py
+ln -s sealog_vehicle_data_export_sub.py sealog_data_export.py
+```
+
+For sealog-emp:
+```bash
+cd /opt/sealog-server-emp/misc
+ln -s sealog_auto_actions_emp.py sealog_auto_actions.py
+ln -s sealog_vehicle_data_export_emp.py sealog_data_export.py
+```
+
+### 4. Set environment variables
+
+Clone the [shipboard-configuration](https://github.com/schmidtocean/shipboard-configuration) repo and symlink the appropriate `.env` file to the server
 
 ```bash
-cp .env.dist .env   # if .env.dist is present, otherwise create from scratch
-nano .env
+cd ~
+git clone https://github.com/schmidtocean/shipboard-configuration
+ln -s ~/shipboard-configuration/Systems/Sealog/server-FKt/.env  /opt/sealog-server-fkt/
+ln -s ~/shipboard-configuration/Systems/Sealog/server-Sub/.env  /opt/sealog-server-sub/
+ln -s ~/shipboard-configuration/Systems/Sealog/server-emp/.env  /opt/sealog-server-emp/
 ```
 
-At minimum set:
-
-```
-SEALOG_INSTANCE_TYPE=FKt
-NODE_ENV=production
-MONGO_URL=mongodb://localhost:27017/sealogDB_FKt
-SEALOG_SERVER_FILEPATH_ROOT=/opt/sealog-server/sealog-files
-SEALOG_SERVER_SECRET=<generated secret>
-```
-
-### 4. Create the file storage directory
+### 5. Create the file storage directory
 
 ```bash
-mkdir -p /opt/sealog-server/sealog-files
+mkdir -p /data/sealog-files-fkt
+mkdir -p /data/sealog-files-sub
+mkdir -p /data/sealog-files-emp
 ```
 
-The server creates `images/`, `cruises/`, and `lowerings/` subdirectories automatically on first start.
+Make sure the directories are owned by the `mt` user
 
-### 5. Set up supervisor
+### 6. Set up supervisor
 
 Install supervisor if not already present:
 
@@ -219,102 +220,94 @@ Install supervisor if not already present:
 sudo apt-get install supervisor
 ```
 
-Create a supervisor config file for the instance. Example for `FKt`:
+Symlink the supervisor config file for each instance:
 
 ```bash
-sudo tee /etc/supervisor/conf.d/sealog-server-FKt.conf << 'EOF'
-[program:sealog-server-FKt]
-directory=/opt/sealog-server
-command=node --env-file=.env server.js
-redirect_stderr=true
-stdout_logfile=/var/log/sealog-server-FKt_STDOUT.log
-user=mt
-autostart=true
-autorestart=true
-EOF
+sudo ln -s ~/shipboard-configuration/Systems/Sealog/server-FKt/etc/sealog-fkt.conf  /etc/supervisor/conf.d
+sudo ln -s ~/shipboard-configuration/Systems/Sealog/server-Sub/etc/sealog-sub.conf  /etc/supervisor/conf.d
+sudo ln -s ~/shipboard-configuration/Systems/Sealog/server-emp/etc/sealog-emp.conf  /etc/supervisor/conf.d
 ```
 
 Load and start:
 
 ```bash
-sudo supervisorctl reread
-sudo supervisorctl update
-sudo supervisorctl start sealog-server-FKt
+sudo supervisorctl
+> reread
+> update
 ```
 
-### Ongoing maintenance
+Some of the processes will fail at this point because they depend on additional setup.
 
-| Task | Command |
-|---|---|
-| Pull updates | `git pull && npm install` |
-| Restart server | `sudo supervisorctl restart sealog-server-FKt` |
-| View logs | `sudo tail -f /var/log/sealog-server-FKt_STDOUT.log` |
-| Check status | `sudo supervisorctl status` |
+### 7. Additional setup
 
----
+#### Sealog JWT
 
-## Development workflow
+Obtain the JWT from the sealog-server API
+```bash
+curl -X 'POST' \
+  'http://localhost:<server_port>/sealog-server/api/v1/auth/login' \
+  -H 'accept: application/json' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "username": "admin",
+  "password": "<password>"
+}'
+```
+
+This will return:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjU5ODFmMTY3MjEyYjM0OGFlZDdmYTlmNSIsInNjb3BlIjpbImFkbWluIl0sInJvbGVzIjpbImFkbWluIiwiY3J1aXNlX21hbmFnZXIiLCJldmVudF9sb2dnZXIiLCJldmVudF9tYW5hZ2VyIiwiZXZlbnRfd2F0Y2hlciIsInRlbXBsYXRlX21hbmFnZXIiXSwiaWF4IjoxNzg1NzYyNjU5fQ.L_pXOIg2TOK60LewZmd2CpkapX0_l94oT0AkhRgLtcE",
+  "id": "5981f167412b348aed7fa9f5"
+}
+```
+
+Create the settings file:
+```bash
+cd /opt/sealog-server-<type>/misc/python_sealog
+cp settings.py.dist settings.py
+```
+
+Copy/paste the token value insto the TOKEN value
+```python
+TOKEN = ''  # noqa:E501
+```
+
+Also make sure the port number matches the the server's port number in the `API_SERVER_URL` and `WS_SERVER_URL` variables
+
+#### Influx JWT
+
+Create the settings file:
+```bash
+cd /opt/sealog-server-<type>/misc/influx_sealog
+cp settings.py.dist settings.py
+```
+
+Update the values accordingly
+```python
+# InfluxDB settings
+INFLUXDB_URL = 'http://localhost:8086'
+INFLUXDB_ORG = 'openrvdas'
+INFLUXDB_BUCKET = 'openrvdas'
+INFLUXDB_AUTH_TOKEN = 'DEFAULT_INFLUXDB_AUTH_TOKEN'  # noqa:E501
+INFLUXDB_VERIFY_SSL = False
+```
+
+#### Slack Integration
+
+Create the settings file:
+```bash
+cd /opt/sealog-server-<type>/misc/slack_sealog
+cp settings.py.dist settings.py
+```
+
+Set the Slack URL value
+```python
+SLACK_WEBHOOK_URL = None
+```
+
+Restart the supervisor processes so that these updates take affect.
 
 ```bash
-# Start in development mode (drops and reseeds DB on every start)
-SEALOG_INSTANCE_TYPE=FKt npm run start-devel
-
-# Start in debug mode (persists DB, full request logging)
-npm run start-debug
-
-# Run tests (drops and reseeds DB)
-npm run start-test
-
-# Run a single test file
-NODE_ENV=test node_modules/.bin/lab test/events.test.js
-
-# Lint
-npm run lint
-npm run lint-fix
+sudo supervisorctl restart all
 ```
-
----
-
-## Making the API available over port 80
-
-See [INSTALL.md](INSTALL.md#making-the-api-available-over-port-80) for Apache reverse proxy configuration.
-
-## Enabling HTTPS
-
-Set `SEALOG_SERVER_TLS_PRIVKEY` and `SEALOG_SERVER_TLS_FULLCHAIN` to the paths of your certificate files. See [INSTALL.md](INSTALL.md#enabling-https) for details.
-
-## Python ancillary services
-
-See [INSTALL.md](INSTALL.md#enabling-additional-functionality) for setup instructions for the Python virtual environment, ASNAP, and Auto-Actions.
-
-### Data export scripts and the `external_calls` route
-
-The server exposes two API routes that trigger a data export script directly from the UI:
-
-| Route | What it does |
-|---|---|
-| `GET /external_calls/export_lowering/{id}` | Runs `misc/sealog_data_export.py -v -L <lowering_id>` |
-| `GET /external_calls/export_cruise/{id}` | Runs `misc/sealog_data_export.py -v -C <cruise_id>` |
-
-Both routes always call `misc/sealog_data_export.py` by that exact name. The SOI fork ships platform-specific scripts under different names:
-
-| Instance | Committed script |
-|---|---|
-| Sub (ROV SuBastian) | `misc/sealog_vehicle_data_export_Sub.py` |
-| FKt (R/V Falkor(too)) | `misc/sealog_vessel_data_export_FKt.py` |
-| emp (AUV Empress) | `misc/sealog_vehicle_data_export_emp.py` |
-
-`misc/sealog_data_export.py` is gitignored. Each installation must have a symlink at that path pointing to the appropriate platform script. `utils/install.sh` creates this symlink automatically:
-
-```bash
-# Sub
-ln -sf sealog_vehicle_data_export_Sub.py misc/sealog_data_export.py
-
-# FKt
-ln -sf sealog_vessel_data_export_FKt.py misc/sealog_data_export.py
-
-# emp
-ln -sf sealog_vehicle_data_export_emp.py misc/sealog_data_export.py
-```
-
-If you set up the server manually (without `utils/install.sh`), create the symlink yourself before starting the server.
