@@ -72,8 +72,8 @@ class LoweringSummaryReport(LoweringReportCreator):  # pylint: disable=too-few-p
         free_form_table = self._build_free_form_table()
         # problem_tables = self._build_problem_tables()
         event_breakdown_table = self._build_event_breakdown_table()
-        event_table_tables, event_table_event_values = self._build_non_system_events_tables()
-        # system_event_table_tables, system_event_table_event_values = self._build_system_events_tables()  # noqa: E501
+        event_table_tables, event_table_event_values = self._build_non_system_events_tables(exclude=['ASNAP'])  # noqa: E501
+        system_event_table_tables, system_event_table_event_values = self._build_system_events_tables(exclude=['ASNAP'])  # noqa: E501
 
         depths_plot_filename = self._build_depths_plot()
         if depths_plot_filename:
@@ -258,15 +258,15 @@ class LoweringSummaryReport(LoweringReportCreator):  # pylint: disable=too-few-p
                     flowables.append(Paragraph("Event - " + event_table_event_values[table], self.heading_2))  # noqa: E501
                     flowables.append(event_table_tables[table])
 
-        # if len(system_event_table_tables) == 0 and len(system_event_table_tables) == 0:
-        #     flowables.append(Paragraph("No template-based events recorded for this dive", self.body_text))  # noqa: E501
-        #     flowables.append(Spacer(PAGE_WIDTH, 1 * cm))
+        if len(system_event_table_tables) == 0 and len(system_event_table_tables) == 0:
+            flowables.append(Paragraph("No system template-based events recorded for this dive", self.body_text))  # noqa: E501
+            flowables.append(Spacer(PAGE_WIDTH, 1 * cm))
 
-        # else:
-        #     for table, _ in enumerate(system_event_table_tables):
-        #         if system_event_table_tables[table]:
-        #             flowables.append(Paragraph("Event - " + system_event_table_event_values[table], self.heading_2))  # noqa: E501
-        #             flowables.append(system_event_table_tables[table])
+        else:
+            for table, _ in enumerate(system_event_table_tables):
+                if system_event_table_tables[table]:
+                    flowables.append(Paragraph("Event - " + system_event_table_event_values[table], self.heading_2))  # noqa: E501
+                    flowables.append(system_event_table_tables[table])
 
         if free_form_table:
             flowables.append(Paragraph("Event - FREE_FORM:", self.heading_2))
