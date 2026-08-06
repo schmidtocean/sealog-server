@@ -16,7 +16,6 @@ LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for det
                 Copyright (C) OceanDataTools.org 2024
 '''
 
-# pylint: disable=consider-using-f-string
 import sys
 import logging
 from io import BytesIO
@@ -72,8 +71,8 @@ class LoweringSummaryReport(LoweringReportCreator):  # pylint: disable=too-few-p
         free_form_table = self._build_free_form_table()
         # problem_tables = self._build_problem_tables()
         event_breakdown_table = self._build_event_breakdown_table()
-        event_table_tables, event_table_event_values = self._build_non_system_events_tables(exclude=['ASNAP'])  # noqa: E501
-        system_event_table_tables, system_event_table_event_values = self._build_system_events_tables(exclude=['ASNAP'])  # noqa: E501
+        event_table_tables, event_table_event_values = self._build_non_system_events_tables()
+        # system_event_table_tables, system_event_table_event_values = self._build_system_events_tables()  # noqa: E501
 
         depths_plot_filename = self._build_depths_plot()
         if depths_plot_filename:
@@ -154,11 +153,11 @@ class LoweringSummaryReport(LoweringReportCreator):  # pylint: disable=too-few-p
         # flowables.append(Paragraph("<b>Cruise Ports:</b> %s" % self.cruise_record['cruise_additional_meta']['cruise_departure_location'] or '' + " --> " + self.cruise_record['cruise_additional_meta']['cruise_arrival_location'] or '', self.body_text))  # noqa: E501
         # flowables.append(Paragraph("<b>Cruise Dates:</b> %s --> %s" % (datetime.fromisoformat(self.cruise_record['start_ts'][:-1]).strftime('%Y-%m-%d'), datetime.fromisoformat(self.cruise_record['stop_ts'][:-1]).strftime('%Y-%m-%d')), self.body_text))  # noqa: E501
         # flowables.append(Paragraph("Dive Summary:", self.cover_header))
-        flowables.append(Paragraph("<b>Dive Number:</b> %s" % self.lowering_record['lowering_id'], self.body_text))  # noqa: E501
-        flowables.append(Paragraph("<b>Dive Location:</b> %s" % self.lowering_record['lowering_location'] or '', self.body_text))  # noqa: E501
+        flowables.append(Paragraph(f"<b>Dive Number:</b> {self.lowering_record['lowering_id']}", self.body_text))  # noqa: E501
+        flowables.append(Paragraph(f"<b>Dive Location:</b> {self.lowering_record['lowering_location']}", self.body_text))  # noqa: E501
         if 'lowering_description' in self.lowering_record['lowering_additional_meta'] and self.lowering_record['lowering_additional_meta']['lowering_description'] != '':  # noqa: E501
             description = self.lowering_record['lowering_additional_meta']['lowering_description'].split('\n\n')  # noqa: E501
-            flowables.append(Paragraph("<b>Dive Summary:</b> %s" % description[0], self.body_text))
+            flowables.append(Paragraph(f"<b>Dive Summary:</b> {description[0]}", self.body_text))
             for paragraph in description[1:]:
                 flowables.append(Paragraph(paragraph.replace('\n', '<br/>'), self.body_text))
         flowables.append(Spacer(PAGE_WIDTH, 5 * mm))
@@ -258,15 +257,15 @@ class LoweringSummaryReport(LoweringReportCreator):  # pylint: disable=too-few-p
                     flowables.append(Paragraph("Event - " + event_table_event_values[table], self.heading_2))  # noqa: E501
                     flowables.append(event_table_tables[table])
 
-        if len(system_event_table_tables) == 0 and len(system_event_table_tables) == 0:
-            flowables.append(Paragraph("No system template-based events recorded for this dive", self.body_text))  # noqa: E501
-            flowables.append(Spacer(PAGE_WIDTH, 1 * cm))
+        # if len(system_event_table_tables) == 0 and len(system_event_table_tables) == 0:
+        #     flowables.append(Paragraph("No template-based events recorded for this dive", self.body_text))  # noqa: E501
+        #     flowables.append(Spacer(PAGE_WIDTH, 1 * cm))
 
-        else:
-            for table, _ in enumerate(system_event_table_tables):
-                if system_event_table_tables[table]:
-                    flowables.append(Paragraph("Event - " + system_event_table_event_values[table], self.heading_2))  # noqa: E501
-                    flowables.append(system_event_table_tables[table])
+        # else:
+        #     for table, _ in enumerate(system_event_table_tables):
+        #         if system_event_table_tables[table]:
+        #             flowables.append(Paragraph("Event - " + system_event_table_event_values[table], self.heading_2))  # noqa: E501
+        #             flowables.append(system_event_table_tables[table])
 
         if free_form_table:
             flowables.append(Paragraph("Event - FREE_FORM:", self.heading_2))

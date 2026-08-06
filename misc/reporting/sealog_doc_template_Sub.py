@@ -15,8 +15,8 @@ REVISION:   2021-07-23
 LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for details)
                 Copyright (C) OceanDataTools.org 2024
 '''
+# pylint: disable=invalid-name
 
-# pylint: disable=invalid-name,consider-using-f-string
 import os
 from datetime import datetime
 from reportlab.platypus import PageTemplate, BaseDocTemplate, Frame, Paragraph
@@ -122,7 +122,7 @@ class OneColumnTemplate(PageTemplate):  # pylint: disable=too-few-public-methods
         canv.drawString(2 * cm, y_pos+8, doc.title)
         canv.drawRightString(self.page_width - 2 * cm, y_pos+8, doc.chapter)
         canv.line(2 * cm, y_pos, self.page_width - 2 * cm, y_pos)
-        canv.drawCentredString(self.page_width / 2, 2 * cm, 'Page %d' % canv.getPageNumber())
+        canv.drawCentredString(self.page_width / 2, 2 * cm, f'Page {canv.getPageNumber():d}')
         canv.restoreState()
 
 
@@ -152,7 +152,7 @@ class TOCTemplate(PageTemplate):  # pylint: disable=too-few-public-methods
         canv.drawCentredString(self.page_width / 2, self.page_height - 2 * cm, 'Table of Contents')
 
         canv.setFont('Helvetica', 10)
-        canv.drawCentredString(self.page_width / 2, 2 * cm, 'Page %d' % canv.getPageNumber())
+        canv.drawCentredString(self.page_width / 2, 2 * cm, f'Page {canv.getPageNumber():d}')
         canv.restoreState()
 
 
@@ -189,7 +189,7 @@ class TwoColumnTemplate(PageTemplate):  # pylint: disable=too-few-public-methods
         canv.drawString(cm, y_pos+8, doc.title)
         canv.drawRightString(self.page_width - cm, y_pos+8, doc.chapter)
         canv.line(cm, y_pos, self.page_width - 2.5 * cm, y_pos * 2.5 * cm)
-        canv.drawCentredString(self.page_width / 2, 2 * cm, 'Page %d' % canv.getPageNumber())
+        canv.drawCentredString(self.page_width / 2, 2 * cm, f'Page {canv.getPageNumber():d}')
         canv.restoreState()
 
 
@@ -250,14 +250,14 @@ class RLDocTemplate(BaseDocTemplate):
                 self.title = txt
             elif style == 'Heading1':
                 self.chapter = txt
-                key = 'ch%s' % self.seq.nextf('chapter')
+                key = f"ch{self.seq.nextf('chapter')}"
                 self.canv.bookmarkPage(key)
                 self.canv.addOutlineEntry(txt, key, 0, 0)
                 self.seq.reset("section")
                 self.notify('TOCEntry', (0, txt, self.page, key))
             elif style == 'Heading2':
                 self.section = flowable.text
-                key = 'ch%ss%s' % (self.seq.thisf("chapter"), self.seq.nextf("section"))
+                key = f'ch{self.seq.thisf("chapter")}s{self.seq.nextf("section")}'
                 self.canv.bookmarkPage(key)
                 self.canv.addOutlineEntry(txt, key, 1, 0)
                 self.notify('TOCEntry', (1, txt, self.page, key))

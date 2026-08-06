@@ -25,7 +25,7 @@ def seconds_to_hours_formatter(seconds, _pos=None):
     """
     Convert seconds to hh:mm
     """
-    return f'{seconds // 3600:d}:00'
+    return f'{seconds//3600:d}:00'
 
 
 def strfdelta(t_delta, fmt='{D:02}d {H:02}h {M:02}m {S:02}s', input_type='timedelta'):

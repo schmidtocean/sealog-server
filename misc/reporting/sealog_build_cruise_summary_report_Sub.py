@@ -15,8 +15,8 @@ REVISION:   2023-05-18
 LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for details)
                 Copyright (C) OceanDataTools.org 2024
 '''
+# pylint: disable=invalid-name
 
-# pylint: disable=invalid-name,consider-using-f-string
 import sys
 import logging
 from io import BytesIO
@@ -75,12 +75,12 @@ class CruiseSummaryReport(CruiseReportCreator):  # pylint: disable=too-few-publi
         flowables = []
 
         flowables.append(NextPageTemplate('Normal'))
-        flowables.append(Paragraph("<b>Cruise ID:</b> %s" % self.cruise_record['cruise_id'], self.body_text))  # noqa: E501
-        flowables.append(Paragraph("<b>Cruise PI:</b> %s" % self.cruise_record['cruise_additional_meta']['cruise_pi'], self.body_text))  # noqa: E501
-        flowables.append(Paragraph("<b>Summary:</b> %s" % self.cruise_record['cruise_additional_meta']['cruise_description'], self.body_text))  # noqa: E501
-        flowables.append(Paragraph("<b>Location:</b> %s" % self.cruise_record['cruise_location'], self.body_text))  # noqa: E501
-        flowables.append(Paragraph("<b>Ports:</b> %s --> %s" % (self.cruise_record['cruise_additional_meta']['cruise_departure_location'], self.cruise_record['cruise_additional_meta']['cruise_arrival_location']), self.body_text))  # noqa: E501
-        flowables.append(Paragraph("<b>Dates:</b> %s --> %s" % (datetime.fromisoformat(self.cruise_record['start_ts'][:-1]).strftime('%d-%m-%Y'), datetime.fromisoformat(self.cruise_record['stop_ts'][:-1]).strftime('%d-%m-%Y')), self.body_text))  # noqa: E501
+        flowables.append(Paragraph(f"<b>Cruise ID:</b> {self.cruise_record['cruise_id']}", self.body_text))  # noqa: E501
+        flowables.append(Paragraph(f"<b>Cruise PI:</b> {self.cruise_record['cruise_additional_meta']['cruise_pi']}", self.body_text))  # noqa: E501
+        flowables.append(Paragraph(f"<b>Summary:</b> {self.cruise_record['cruise_additional_meta']['cruise_description']}", self.body_text))  # noqa: E501
+        flowables.append(Paragraph(f"<b>Location:</b> {self.cruise_record['cruise_location']}", self.body_text))  # noqa: E501
+        flowables.append(Paragraph(f"<b>Ports:</b> {self.cruise_record['cruise_additional_meta']['cruise_departure_location']} --> {self.cruise_record['cruise_additional_meta']['cruise_arrival_location']}", self.body_text))  # noqa: E501
+        flowables.append(Paragraph(f"<b>Dates:</b> {datetime.fromisoformat(self.cruise_record['start_ts'][:-1]).strftime('%d-%m-%Y')} --> {datetime.fromisoformat(self.cruise_record['stop_ts'][:-1]).strftime('%d-%m-%Y')}", self.body_text))  # noqa: E501
         flowables.append(Paragraph("<b>Dive Stats:</b>", self.body_text))
         flowables.append(Spacer(PAGE_WIDTH, 5 * mm))
         flowables.append(stat_table)
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     import argparse
     import os
 
-    parser = argparse.ArgumentParser(description='Build Cruise Summary Report for %s' % VEHICLE_NAME)  # noqa: E501
+    parser = argparse.ArgumentParser(description=f'Build Cruise Summary Report for {VEHICLE_NAME}')  # noqa: E501
     parser.add_argument('-v', '--verbosity', dest='verbosity',
                         default=0, action='count',
                         help='Increase output verbosity')

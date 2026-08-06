@@ -16,7 +16,6 @@ LICENSE INFO:   This code is licensed under MIT license (see LICENSE.txt for det
                 Copyright (C) OceanDataTools.org 2024
 '''
 
-# pylint: disable=invalid-name,consider-using-f-string
 import os
 import sys
 import logging
@@ -62,7 +61,9 @@ pd.set_option('mode.chained_assignment', None)
 
 
 class LoweringVehicleReport(LoweringReportCreator):  # pylint: disable=too-few-public-methods
-    '''Build lowering vehicle report'''
+    '''
+    Build lowering vehicle report
+    '''
 
     def _build_vehicle_comp_datafile(self):
 
@@ -79,12 +80,12 @@ class LoweringVehicleReport(LoweringReportCreator):  # pylint: disable=too-few-p
         _fd, comp_data_file = tempfile.mkstemp(suffix=".csv", dir=self.tmp_dir)
 
         try:
-            with open(comp_data_file, 'w+', encoding='utf-8') as comb_fp:
+            with (open(comp_data_file, 'w+', encoding='utf-8')) as comb_fp:
                 # Timestamp,Header,Comp1_%,Comp2_%,Comp3_%,Comp4_%,Comp5_%,Comp6_%
                 # comb_fp.write("date_time,hdr,comp1,comp2,comp3,comp4,comp5,comp6\n")
 
                 for f in all_filenames:
-                    with open(f, 'r', encoding='utf-8') as fp:
+                    with (open(f, 'r', encoding='utf-8')) as fp:
                         comb_fp.write(fp.read())
 
             return comp_data_file
@@ -339,9 +340,9 @@ class LoweringVehicleReport(LoweringReportCreator):  # pylint: disable=too-few-p
         plt.close(fig_comp)
         imgdata.seek(0)
 
-        svg_img_file = svg2rlg(imgdata)
+        svg2img_file = svg2rlg(imgdata)
 
-        return svg_img_file
+        return svg2img_file
 
     def export_pdf(self):  # pylint: disable=too-many-locals,too-many-statements,too-many-branches
         '''
@@ -445,11 +446,11 @@ class LoweringVehicleReport(LoweringReportCreator):  # pylint: disable=too-few-p
         # flowables.append(Paragraph("<b>Cruise Ports:</b> " + cruise_departure_location + " --> " + cruise_arrival_location, self.body_text)),  # noqa: E501
         # flowables.append(Paragraph("<b>Cruise Dates:</b> " + datetime.fromisoformat(self.cruise_record['start_ts'][:-1]).strftime('%Y-%m-%d') + " --> " + datetime.fromisoformat(self.cruise_record['stop_ts'][:-1]).strftime('%Y-%m-%d'), self.body_text)),  # noqa: E501
         # flowables.append(Paragraph("Dive Summary:", self.coverHeader)),
-        flowables.append(Paragraph("<b>Dive Number:</b> %s" % self.lowering_record['lowering_id'], self.body_text))  # noqa: E501
-        flowables.append(Paragraph("<b>Dive Location:</b> %s" % self.lowering_record['lowering_location'] or '', self.body_text))  # noqa: E501
+        flowables.append(Paragraph(f"<b>Dive Number:</b> {self.lowering_record['lowering_id']}", self.body_text))  # noqa: E501
+        flowables.append(Paragraph(f"<b>Dive Location:</b> {self.lowering_record['lowering_location']}", self.body_text))  # noqa: E501
         if 'lowering_description' in self.lowering_record['lowering_additional_meta'] and self.lowering_record['lowering_additional_meta']['lowering_description'] != '':  # noqa: E501
             description = self.lowering_record['lowering_additional_meta']['lowering_description'].split('\n\n')  # noqa: E501
-            flowables.append(Paragraph("<b>Dive Summary:</b> %s" % description[0], self.body_text))
+            flowables.append(Paragraph(f"<b>Dive Summary:</b> {description[0]}", self.body_text))
             for paragraph in description[1:]:
                 flowables.append(Paragraph(paragraph.replace('\n', '<br/>'), self.body_text))
         flowables.append(Spacer(PAGE_WIDTH, 5 * mm))
@@ -528,8 +529,8 @@ class LoweringVehicleReport(LoweringReportCreator):  # pylint: disable=too-few-p
         else:
             flowables.append(PageBreak())
             flowables.append(Paragraph("Problems:", self.heading_1))
-            for problem_table in problem_tables:
-                flowables.append(problem_table)
+            for _table, item in enumerate(problem_tables):
+                flowables.append(item)
                 flowables.append(Spacer(PAGE_WIDTH, 0.5 * cm))
 
         flowables.append(Paragraph("Watch Changes:", self.heading_1))
