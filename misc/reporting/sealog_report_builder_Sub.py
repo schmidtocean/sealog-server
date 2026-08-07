@@ -465,13 +465,13 @@ class CruiseReportCreator:  # pylint: disable=too-many-instance-attributes,too-f
 
         return svg_2_image_file
 
-    def _build_watch_change_summary_table(self):
+    def _build_watch_change_summary_table(self):  # pylint: disable=too-many-locals
 
         logging.info('Building table of watch change stats')
 
         raw_cols = ['ts', 'event_option.co-pilot', 'event_option.datalogger', 'event_option.pilot']
 
-        df_watchstander_tot = pd.DataFrame(columns=['name', 'co-pilot', 'datalogger', 'pilot'])
+        watchstander_frames = []
 
         for lowering in self.lowering_records:
 
@@ -516,16 +516,22 @@ class CruiseReportCreator:  # pylint: disable=too-many-instance-attributes,too-f
                 # print(sum_df)
 
                 # add this data to the totals df
-                df_watchstander_tot = pd.concat([
-                        df_watchstander_tot,
-                        sum_df
-                    ],
-                    ignore_index=True
-                )
+                watchstander_frames.append(sum_df)
+
+        # combine all per-lowering/per-position totals in a single concat -- concatenating
+        # incrementally in the loop above (including against the empty starter frame) triggers
+        # pandas' empty/all-NA concat FutureWarning on every iteration
+        if watchstander_frames:
+            df_watchstander_tot = pd.concat(watchstander_frames, ignore_index=True)
+        else:
+            df_watchstander_tot = pd.DataFrame(columns=['name', 'co-pilot', 'datalogger', 'pilot'])
+
+        # guarantee all watch position columns exist even if a position never appeared in the data
+        df_watchstander_tot = df_watchstander_tot.reindex(columns=['name', 'co-pilot', 'datalogger', 'pilot'])  # noqa: E501
 
         # Convert duration columns to timedelta if necessary
         duration_columns = ['pilot', 'co-pilot', 'datalogger']
-        df_watchstander_tot[duration_columns] = df_watchstander_tot[duration_columns]
+        df_watchstander_tot[duration_columns] = df_watchstander_tot[duration_columns].apply(pd.to_timedelta)  # noqa: E501
 
         # Group by 'name' and calculate the sum of duration columns
         sum_duration = df_watchstander_tot.groupby('name', as_index=False)[duration_columns].sum()
