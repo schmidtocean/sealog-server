@@ -2114,7 +2114,7 @@ class LoweringReportCreator:  # pylint: disable=too-many-instance-attributes,too
                                 columns=col_names)             # column names
 
         manhours['ts'] = pd.to_datetime(manhours['ts'], utc=True)  # transfrom string to datetime
-        manhours['time_diff'] = 0
+        manhours['time_diff'] = 0.0
 
         for i in range(manhours.shape[0]-1):
             manhours['time_diff'].iat[i] = (manhours['ts'].iat[i+1] - manhours['ts'].iat[i]).total_seconds()  # noqa: E501
@@ -2214,7 +2214,7 @@ class LoweringReportCreator:  # pylint: disable=too-many-instance-attributes,too
                                 columns=col_names)                # column names
 
         manhours['ts'] = pd.to_datetime(manhours['ts'], utc=True)  # transfrom string to datetime
-        manhours['time_diff'] = 0
+        manhours['time_diff'] = 0.0
 
         for i in range(manhours.shape[0]-1):
             manhours['time_diff'].iat[i] = (manhours['ts'].iat[i+1] - manhours['ts'].iat[i]).total_seconds()  # noqa: E501
