@@ -2111,9 +2111,9 @@ class LoweringReportCreator:  # pylint: disable=too-many-instance-attributes,too
         manhours['time_diff'] = 0
 
         for i in range(manhours.shape[0]-1):
-            manhours['time_diff'][i] = (manhours['ts'][i+1] - manhours['ts'][i]).total_seconds()
+            manhours['time_diff'].iat[i] = (manhours['ts'].iat[i+1] - manhours['ts'].iat[i]).total_seconds()  # noqa: E501
 
-        manhours['time_diff'][-1] = (self.lowering_record['milestones']['stop_dt'] - manhours['ts'][-1]).total_seconds()  # noqa: E501
+        manhours['time_diff'].iat[-1] = (self.lowering_record['milestones']['stop_dt'] - manhours['ts'].iat[-1]).total_seconds()  # noqa: E501
 
         for row in range(len(seconds)):
 
@@ -2211,9 +2211,9 @@ class LoweringReportCreator:  # pylint: disable=too-many-instance-attributes,too
         manhours['time_diff'] = 0
 
         for i in range(manhours.shape[0]-1):
-            manhours['time_diff'][i] = (manhours['ts'][i+1] - manhours['ts'][i]).total_seconds()
+            manhours['time_diff'].iat[i] = (manhours['ts'].iat[i+1] - manhours['ts'].iat[i]).total_seconds()  # noqa: E501
 
-        manhours['time_diff'][-1] = (self.lowering_record['milestones']['stop_dt'] - manhours['ts'][-1]).total_seconds()  # noqa: E501
+        manhours['time_diff'].iat[-1] = (self.lowering_record['milestones']['stop_dt'] - manhours['ts'].iat[-1]).total_seconds()  # noqa: E501
 
         for row in range(len(pilot_hours)):
             pilot_hours[row, 1] = manhours.loc[manhours['event_option.pilot'] == pilot_hours[row, 0], 'time_diff'].sum().astype('datetime64[s]')  # noqa: E501
