@@ -56,6 +56,8 @@ EXCLUDE_SET = ('ASNAP',)
 CLIENT_WSID = f'aux_data_inserter_{AUX_DATA_DATASOURCE}'
 
 THRESHOLD = 20  # seconds
+# seconds - bounds how long a single hung/slow VNC source can stall event processing
+CAPTURE_TIMEOUT = 8
 DEST_DIR = '/data/sealog-FKt-files/images/'
 
 # Allowed image formats for screenshot captures.
@@ -214,10 +216,13 @@ async def aux_data_inserter(sources):  # pylint:disable=redefined-outer-name
                         logging.debug("dst: %s", dst)
 
                         try:
-                            await asyncio.to_thread(
-                                capture_screenshot,
-                                f"{source['source_address']}::{VNC_PORT}",
-                                VNC_PASSWORD, screenshot_file
+                            await asyncio.wait_for(
+                                asyncio.to_thread(
+                                    capture_screenshot,
+                                    f"{source['source_address']}::{VNC_PORT}",
+                                    VNC_PASSWORD, screenshot_file
+                                ),
+                                timeout=CAPTURE_TIMEOUT
                             )
 
                             if os.path.exists(screenshot_file):
@@ -230,6 +235,11 @@ async def aux_data_inserter(sources):  # pylint:disable=redefined-outer-name
                                     {'data_name': "filename", 'data_value': dst}
                                 )
 
+                        except asyncio.TimeoutError:
+                            logging.error(
+                                "Timed out waiting for screenshot from %s after %ds",
+                                source['source_name'], CAPTURE_TIMEOUT
+                            )
                         except Exception as error:  # pylint: disable=broad-except
                             logging.error("Unable to save screenshot")
                             logging.error(error)
