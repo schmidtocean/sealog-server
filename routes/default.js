@@ -420,7 +420,7 @@ exports.plugin = {
         tags: ['lowerings','api', 'files']
       }
     });
-
+    
     server.route({
       method: 'POST',
       path: EVENT_ROUTE + '/filepond/process/{id}',
@@ -428,7 +428,7 @@ exports.plugin = {
         const { payload } = request;
         let tmpobj = null;
         tmpobj = Tmp.dirSync({ mode: '0750', prefix: request.params.id + '_' });
-
+    
         try {
           await handleFileUpload(tmpobj.name, payload.filepond[1]);
           return h.response(Path.basename(tmpobj.name)).code(201);
@@ -463,7 +463,7 @@ exports.plugin = {
         tags: ['events', 'api', 'filepond']
       }
     });
-
+    
     server.route({
       method: 'POST',
       path: EVENT_ROUTE + '/{id}',
@@ -494,7 +494,7 @@ exports.plugin = {
         tags: ['events', 'api', 'files']
       }
     });
-
+    
     server.route({
       method: 'GET',
       path: EVENT_ROUTE + '/{param*}',
@@ -516,7 +516,7 @@ exports.plugin = {
         tags: ['events', 'api', 'files']
       }
     });
-
+    
     server.route({
       method: 'DELETE',
       path: EVENT_ROUTE + '/{file*}',

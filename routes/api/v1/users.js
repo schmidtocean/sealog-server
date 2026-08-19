@@ -272,7 +272,7 @@ exports.plugin = {
           <p>If you are on the Telepresence Sealog instance, please use the following link instead:</p>
           <p><a href="${resetLinkPub}">${resetLinkPub}</a></p>
           <p>Please send any Sealog-related questions to: ${senderAddress}</p>
-          <p>Thanks!</p>`
+          <p>Thanks!</p>`,
         };
 
         if (emailTransporter !== null) {

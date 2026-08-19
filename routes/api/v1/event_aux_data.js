@@ -4,9 +4,8 @@ const Path = require('path');
 
 const THRESHOLD = 120; //seconds
 
-const { IMAGE_PATH } = require('../../../config/path_constants');
-
-const FILEPOND_UPLOAD_PATH = '/tmp';
+const {IMAGE_PATH} = require('../../../config/path_constants');
+const FILEPOND_UPLOAD_PATH = '/tmp'
 
 const {
   mvFilesToDir
@@ -46,8 +45,8 @@ const _renameAndClearFields = (doc) => {
   return doc;
 };
 
-const processFilepondUpload = async (event_aux_data) => {
-  const filenameData = event_aux_data.data_array.find((d) => d.data_name === 'filename').data_value;
+async function processFilepondUpload(event_aux_data) {
+  const filenameData = event_aux_data.data_array.find(d => d.data_name === 'filename').data_value;
   const [tempFileId, newFilename] = filenameData.split('|');
 
   const filepondFolder = Path.join(FILEPOND_UPLOAD_PATH, tempFileId);
@@ -57,24 +56,23 @@ const processFilepondUpload = async (event_aux_data) => {
     throw new Error('No files found in upload folder');
   }
 
-  const fileDataArray = event_aux_data.data_array.filter((item) => item.data_name === 'source');
+  const fileDataArray = event_aux_data.data_array.filter(item => item.data_name === "source");
 
   for (const filename of files) {
     const fileExtension = Path.extname(filename);
     const finalFilename = `${Path.basename(newFilename, Path.extname(newFilename))}${fileExtension}`;
 
-    fileDataArray.push({ data_name: 'filename', data_value: finalFilename });
+    fileDataArray.push({ data_name: "filename", data_value: finalFilename });
 
     await Fs.mkdir(IMAGE_PATH, { recursive: true });
     const oldPath = Path.join(filepondFolder, filename);
     const newPath = Path.join(IMAGE_PATH, finalFilename);
-
+    
     try {
       await Fs.copyFile(oldPath, newPath);
       await Fs.unlink(oldPath);
       console.log(`Moved and renamed file from ${oldPath} to ${newPath}`);
-    }
-    catch (err) {
+    } catch (err) {
       console.error(`Error moving file from ${oldPath} to ${newPath}:`, err);
       throw err;
     }
@@ -494,18 +492,18 @@ exports.plugin = {
       async handler(request, h) {
         const db = server.mongo.db;
         const ObjectID = server.mongo.ObjectID;
-
+    
         const event_aux_data = request.payload;
-
+    
         // Check if the file upload is coming from the UI via FilePond
         const isFilepondUpload = event_aux_data.data_source === 'SealogVesselUI';
-
+    
         if (isFilepondUpload) {
           if (!event_aux_data.event_id) {
             console.error('Missing event_id in payload');
             return Boom.badRequest('Missing event_id in payload');
           }
-
+    
           try {
             const fileDataArray = await processFilepondUpload(event_aux_data);
             const auxData = {
@@ -513,19 +511,18 @@ exports.plugin = {
               data_source: event_aux_data.data_source,
               data_array: fileDataArray
             };
-
+    
             const insertResult = await db.collection(eventAuxDataTable).insertOne(auxData);
-
+    
             if (!insertResult.acknowledged || !insertResult.insertedId) {
               return Boom.serverUnavailable('Failed to insert aux_data record');
             }
-
+    
             // Publish WebSocket message for new aux data
             server.publish('/ws/status/newEventAuxData', auxData);
-
+    
             return h.response(insertResult).code(201);
-          }
-          catch (err) {
+          } catch (err) {
             console.error('Error processing files:', err);
             return Boom.serverUnavailable('Unable to process files', err);
           }
@@ -781,14 +778,14 @@ exports.plugin = {
 
         try {
           await db.collection(eventAuxDataTable).deleteOne(query);
-
+          
           // Publish WebSocket message for deleted aux data
           server.publish('/ws/status/deleteEventAuxData', {
             id: auxData._id.toString(),
             event_id: auxData.event_id.toString()
           });
 
-
+    
           return h.response().code(204);
         }
         catch (err) {
