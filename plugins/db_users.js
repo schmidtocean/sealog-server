@@ -37,7 +37,7 @@ exports.plugin = {
     }
 
     let collection = null;
-    let modified_data = [];
+    const modified_data = [];
     console.log('Creating Users Collection');
     try {
       collection = await db.createCollection(usersTable);
@@ -53,7 +53,7 @@ exports.plugin = {
 
       const init_data = JSON.parse(data);
       await init_data.forEach(async (user) => {
-	user._id = ObjectID(user.id);
+        user._id = ObjectID(user.id);
         delete user.id;
 
         user.loginToken = randomAsciiString(20);
