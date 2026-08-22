@@ -46,7 +46,7 @@ exports.plugin = {
           init_data = filePreProcessor('./demo/FKt230303_S0492_eventOnlyExport.json', 'events');
         }
         else if (process.env.SEALOG_INSTANCE_TYPE === 'emp') {
-          init_data = filePreProcessor('./demo/FKt230303_S0492_eventOnlyExport.json', 'events');
+          init_data = filePreProcessor('./demo/FKt260806_E0018_eventOnlyExport.json', 'events');
         }
 
         if (init_data.length > 0) {

@@ -79,10 +79,19 @@ START_STOP_LOOKUP = {
 }
 
 MILESTONE_LOOKUP = {
-    'Descent Initiated': ['lowering_descending'],
+    'Pre-dive': ['lowering_predive'],
+    'Deployment': ['lowering_deployment'],
+    'Mission Key Pulled': ['lowering_key_pulled'],
+    'In Water': ['lowering_in_water'],
+    'Descent Initiated': ['lowering_descent_initiated'],
+    'Descending': ['lowering_descending'],
     'Reached Survey Depth': ['lowering_on_bottom'],
+    'Ascent Initiated': ['lowering_ascent_initiated'],
     'Leaving Survey Depth': ['lowering_off_bottom'],
     'Vehicle on Surface': ['lowering_on_surface'],
+    'Recovery': ['lowering_recovery'],
+    'Out of Water': ['lowering_out_of_water'],
+    'Mission Key Inserted': ['lowering_key_inserted'],
     'Aborted': ['lowering_aborted']
 }
 

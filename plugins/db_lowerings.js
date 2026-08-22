@@ -37,7 +37,15 @@ exports.plugin = {
 
       if (resetDB) {
         console.log('Populating Lowerings Collection');
-        const init_data = filePreProcessor('./demo/FKt230303_S0492_loweringRecord.json', 'lowerings');
+        let init_data = [];
+
+        if (process.env.SEALOG_INSTANCE_TYPE === 'emp') {
+          init_data = filePreProcessor('./demo/FKt260806_loweringRecords.json', 'lowerings');
+        }
+        else {
+          init_data = filePreProcessor('./demo/FKt230303_S0492_loweringRecord.json', 'lowerings');
+        }
+
         await collection.insertMany(init_data);
       }
     }

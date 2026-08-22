@@ -37,7 +37,15 @@ exports.plugin = {
 
       if (resetDB) {
         console.log('Populating Cruises Collection');
-        const init_data = filePreProcessor('./demo/FKt230303_cruiseRecord.json', 'cruises');
+
+        let init_data = [];
+        if (process.env.SEALOG_INSTANCE_TYPE === 'emp') {
+          init_data = filePreProcessor('./init_data/system_templates_emp.json', 'event_templates');
+        }
+        else {
+          init_data = filePreProcessor('./demo/FKt230303_cruiseRecord.json', 'cruises');
+        }
+
         await collection.insertMany(init_data);
       }
     }

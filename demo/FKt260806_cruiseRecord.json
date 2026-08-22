@@ -1,0 +1,50 @@
+[
+  {
+    "cruise_id": "FKt260806",
+    "start_ts": "2026-08-09T00:00:00.000Z",
+    "stop_ts": "2026-09-02T23:59:59.000Z",
+    "cruise_location": "Barbados",
+    "cruise_tags": [
+      "glider",
+      "oceanography",
+      "physical",
+      "salinity",
+      "atlantic",
+      "tropical"
+    ],
+    "cruise_hidden": false,
+    "cruise_additional_meta": {
+      "cruise_participants": [
+        "Joseph Gradone",
+        "Corday Selden",
+        "Aleksandra Mazur",
+        "Ashley Hann",
+        "Becca Horwitz",
+        "Bhavyaa Tyagi",
+        "Dreux Chappell",
+        "Dylan Buchmiller",
+        "Elias Hunter",
+        "Hilde Oliver",
+        "Joshua Dennis",
+        "Kayla Cayemitte",
+        "Mya Sharpe",
+        "Philip Leadbitter",
+        "Prosper Akortsu",
+        "Sal Fricano",
+        "Travis Miles",
+        "Vendela Gustafsson",
+        "William Biggs",
+        "Xinara Bascombe",
+        "Robertina Šebjanič"
+      ],
+      "cruise_name": "Seeking Salt Fingers in the Tropical Atlantic",
+      "cruise_vessel": "R/V Falkor (too)",
+      "cruise_pi": "Dr. Joseph Gradone",
+      "cruise_departure_location": "Bridgetown, Barbados",
+      "cruise_arrival_location": "Bridgetown, Barbados",
+      "cruise_description": "In the northwestern equatorial Atlantic, the water column is highly stratified, with warm, salty water sitting atop cooler, fresher, nutrient-rich waters carried northward from the Antarctic by the Atlantic Meridional Overturning Circulation (AMOC). These conditions make the region a hotspot for salt finger mixing, a fine-scale process in which heat and salt are exchanged across density gradients, leading to waters sinking and rising in a beautiful, swirling motion. Scientists suspect that these salt fingers transport essential nutrients for plankton growth, such as nitrate, to the surface, thereby fueling ecosystem productivity and potentially influencing carbon export to deeper waters. \n\nDrs. Joseph Gradone, Corday Selden of Rutgers University, U.S., and an international team will venture to the Tropical Atlantic to collect essential data on salt fingers and their role in nutrient transport from the deep sea to surface waters. Scientific evidence suggests that salt fingers in this region are intensifying as waters warm and their salinity changes, driven by the ocean absorbing excess heat from the atmosphere. Gradone and Selden hypothesize that this trend is amplifying salt-finger mixing and potentially offsetting predicted ocean productivity loss in the region by carrying more nutrients to the surface and altering ecosystem structure. Using R/V Falkor (too)’s CTD and rosette, two coordinated gliders, and an untethered, autonomous oceanographic vehicle called the Vertical Microstructure Profiler 6000, they will improve our understanding of the physical dynamics of salt fingers and their impact on primary productivity in this region of the global Ocean.",
+      "cruise_files": []
+    },
+    "id": "6a7635b6a28041673a90a3e6"
+  }
+]

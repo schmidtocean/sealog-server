@@ -1,0 +1,170 @@
+[
+  {
+    "lowering_id": "E0018",
+    "start_ts": "2026-06-11T03:03:11.903Z",
+    "stop_ts": "2026-06-12T06:54:21.986Z",
+    "lowering_location": "MAR eastern flank",
+    "lowering_tags": [],
+    "lowering_hidden": false,
+    "lowering_additional_meta": {
+      "milestones": {
+        "lowering_predive": "2026-06-11T03:03:11.903Z",
+        "lowering_deployment": "2026-06-11T03:39:20.041Z",
+        "lowering_key_pulled": "2026-06-11T03:53:57.765Z",
+        "lowering_in_water": "2026-06-11T03:55:32.295Z",
+        "lowering_descent_initiated": "2026-06-11T04:01:39.772Z",
+        "lowering_descending": "2026-06-11T04:01:39.772Z",
+        "lowering_reached_survey_depth": "2026-06-11T05:20:11.721Z",
+        "lowering_on_bottom": "2026-06-11T05:20:11.721Z",
+        "lowering_leaving_survey_depth": "2026-06-12T04:25:03.000Z",
+        "lowering_off_bottom": "2026-06-12T04:25:03.000Z",
+        "lowering_ascent_initiated": "2026-06-12T06:17:57.732Z",
+        "lowering_on_surface": "2026-06-12T06:27:18.775Z",
+        "lowering_recovery": "2026-06-12T06:27:28.744Z",
+        "lowering_out_of_water": "2026-06-12T06:53:21.673Z",
+        "lowering_key_inserted": "2026-06-12T06:54:21.986Z"
+      },
+      "lowering_description": "This AUV dive will survey a new target area on the eastern flank of the Mid-Atlantic Ridge, where we aim to identify possible active or recently active hydrothermal venting. The target has been selected because the eastern flank of the ridge may contain faulted and fractured volcanic and/or exposed basement, and permeability pathways capable of focusing hydrothermal circulation away from the ridge axis. The objective of the survey is to acquire a continuous, high resolution geophysical and environmental dataset across the eastern MAR flank to assess whether water-column or near-bottom anomalies are associated with active hydrothermal discharge, diffuse fluid flow, altered basement, mineralised substrates, sedimented hydrothermal deposits, or fault-controlled fluid pathways. The AUV will collect multibeam bathymetry, acoustic backscatter, sub-bottom profiler data, and environmental sensor measurements along the planned survey corridor. Particular attention will be paid to turbidity, salinity, temperature, methane, dissolved oxygen, and any spatially coherent anomalies that may indicate hydrothermal plumes or diffuse fluid discharge. The survey will provide regional geological context and identify priority targets for subsequent ROV inspection",
+      "stats": {
+        "max_depth": 3972.3,
+        "bounding_box": [
+          8.45047,
+          -39.525916,
+          8.284527,
+          -39.680342
+        ]
+      },
+      "lowering_files": [
+        "FKt260517_E00018_AUV_DivePlan.pdf",
+        "FKt260517_E0018_Empress_Deployment_Summary.pdf"
+      ]
+    },
+    "id": "6a2a2543e9e4db351e8f7f7b"
+  },
+  {
+    "lowering_id": "E0017",
+    "start_ts": "2026-06-07T08:22:15.386Z",
+    "stop_ts": "2026-06-08T11:20:48.934Z",
+    "lowering_location": "Landslide scar",
+    "lowering_tags": [],
+    "lowering_hidden": false,
+    "lowering_additional_meta": {
+      "lowering_description": "This AUV dive will survey the western scarp of a large scar on the southern flank of the Doldrums Transform system. The primary objective is to map the morphology, structure and seabed character of the scarp in order to identify exposed basement, faulted or fractured hard substrate, sediment-basement transitions and potential pathways for fluid circulation. The survey is motivated by the possibility that the large scar has cut into the southern transform flank and exposed deeper basement lithologies that may otherwise be buried beneath sediment. Such exposure may provide a favourable setting for fluid flow, alteration, mineralisation and biological habitat development. The dive will therefore focus on the scarp face, scarp crest, scarp base, and high-backscatter features that may indicate exposed rock, hydrothermal alteration, authigenic deposits or relict fluid discharge. The AUV will acquire high-resolution multibeam bathymetry, acoustic backscatter, sub-bottom profiler data, HiSAS imagery and environmental sensor measurements. These data will be used to characterise the scarp morphology, distinguish exposed basement from sediment-draped terrain, identify structural pathways for fluid migration, detect possible methane, turbidity, temperature, salinity, or oxygen anomalies, and select candidate targets for subsequent ROV investigation. The expected outcome is a detailed geomorphological, acoustic and environmental characterisation of the western scarp that can be used to assess whether the scar represents a window into exposed basement and whether it hosts active, diffuse or relict fluid-flow signatures.",
+      "milestones": {
+        "lowering_deployment": "2026-06-07T11:57:33.696Z",
+        "lowering_key_pulled": "2026-06-07T12:03:03.401Z",
+        "lowering_in_water": "2026-06-07T12:04:52.140Z",
+        "lowering_descent_initiated": "2026-06-07T12:20:51.816Z",
+        "lowering_descending": "2026-06-07T12:20:51.816Z",
+        "lowering_reached_survey_depth": "2026-06-07T13:18:26.044Z",
+        "lowering_on_bottom": "2026-06-07T13:18:26.044Z",
+        "lowering_leaving_survey_depth": "2026-06-08T08:59:15.185Z",
+        "lowering_off_bottom": "2026-06-08T08:59:15.185Z",
+        "lowering_ascent_initiated": "2026-06-08T10:49:13.601Z",
+        "lowering_on_surface": "2026-06-08T10:59:52.031Z",
+        "lowering_recovery": "2026-06-08T11:01:19.353Z",
+        "lowering_out_of_water": "2026-06-08T11:19:44.061Z",
+        "lowering_key_inserted": "2026-06-08T11:20:48.934Z"
+      },
+      "stats": {
+        "max_depth": 3631.7,
+        "bounding_box": [
+          8.124063,
+          -38.134604,
+          8.071051,
+          -38.219723
+        ]
+      },
+      "lowering_files": [
+        "FKt20260517_E0017_rev2.mp",
+        "FKt260517_E00017 - AUV Dive Plan.pdf",
+        "FKt260517_E0017_Empress_Deployment_Summary.pdf",
+        "FKt260517_E0017_LatLong.txt"
+      ]
+    },
+    "id": "6a252a97e9e4db351e8f6e63"
+  },
+  {
+    "lowering_id": "E0016",
+    "start_ts": "2026-06-04T22:48:41.939Z",
+    "stop_ts": "2026-06-06T05:21:09.483Z",
+    "lowering_location": "Neo-volcanic ridge",
+    "lowering_tags": [],
+    "lowering_hidden": false,
+    "lowering_additional_meta": {
+      "lowering_description": "This AUV dive will survey the neo-volcanic zone across ITR1, east of the E0013 survey area, within the Doldrums Transform system. The objective is to map a young volcanic terrain where recent or geologically young volcanic activity may have produced fresh lava flows, volcanic cones, flat-topped mounds, constructional volcanic ridges, collapse features and associated fault-controlled permeability. The survey will focus on identifying the morphology, distribution and structural context of flat-topped mounds and other volcanic landforms, and on assessing whether these features are associated with active or relict hydrothermal circulation. The dive will acquire high-resolution multibeam bathymetry, acoustic backscatter, sub-bottom profiler data, HiSAS imagery and environmental sensor measurements to characterise volcanic morphology, distinguish sedimented from fresh or rough volcanic surfaces, map faults and fractures, and detect possible hydrothermal or diffuse-flow anomalies. Particular attention will be given to mound summits, mound flanks, collapse scarps, fissures, flow fronts, high-backscatter patches, sediment-free or lightly sedimented terrain, and structural intersections that may focus fluid flow. The results will be used to identify candidate targets for subsequent ROV investigation, including sites for visual inspection, vent detection, rock sampling, water-column anomaly follow-up and sediment or push-core sampling where suitable sediment is present.",
+      "milestones": {
+        "lowering_predive": "2026-06-04T22:48:41.939Z",
+        "lowering_deployment": "2026-06-04T23:42:12.130Z",
+        "lowering_key_pulled": "2026-06-04T23:44:26.984Z",
+        "lowering_in_water": "2026-06-04T23:46:30.533Z",
+        "lowering_descent_initiated": "2026-06-05T00:08:07.037Z",
+        "lowering_descending": "2026-06-05T00:08:07.037Z",
+        "lowering_reached_survey_depth": "2026-06-05T01:40:06.488Z",
+        "lowering_on_bottom": "2026-06-05T01:40:06.488Z",
+        "lowering_leaving_survey_depth": "2026-06-06T02:31:02.658Z",
+        "lowering_off_bottom": "2026-06-06T02:31:02.658Z",
+        "lowering_ascent_initiated": "2026-06-06T04:42:05.130Z",
+        "lowering_on_surface": "2026-06-06T04:51:55.164Z",
+        "lowering_recovery": "2026-06-06T04:52:02.501Z",
+        "lowering_out_of_water": "2026-06-06T05:18:50.855Z",
+        "lowering_key_inserted": "2026-06-06T05:21:09.483Z"
+      },
+      "stats": {
+        "max_depth": 4466.9,
+        "bounding_box": [
+          8.15723,
+          -37.986588,
+          8.035484,
+          -38.08094
+        ]
+      },
+      "lowering_files": [
+        "FKt260517_E00016 - AUV Dive Plan.pdf",
+        "FKt260517_E0016_Empress_Deployment_Summary.pdf"
+      ]
+    },
+    "id": "6a21ff84e9e4db351e8f58ca"
+  },
+  {
+    "lowering_id": "E0015",
+    "start_ts": "2026-05-31T16:51:57.304Z",
+    "stop_ts": "2026-06-02T16:16:28.147Z",
+    "lowering_location": "Doldrums intra-transform ridge",
+    "lowering_tags": [],
+    "lowering_hidden": false,
+    "lowering_additional_meta": {
+      "lowering_description": "This AUV dive will survey a priority intra-transform ridge located between the northern and southern flanks of the Doldrums Transform system. The objective is to map a structurally complex ridge domain where intense deformation, faulting, fracturing and basement exposure may have produced high-permeability pathways for fluid circulation. The survey area encloses dredge sites S09-76 and S09-81, where peridotite was recovered, indicating exposure of mantle-derived rocks and raising the possibility of serpentinisation-related fluid circulation, hydrogen generation and associated hydrothermal or diffuse discharge. The dive will focus on identifying the structural, lithological and geomorphic controls on fluid flow across the intra-transform ridge, including fault scarps, lineaments, ridge crests, ridge flanks, basement highs, sediment pockets, sediment–basement transitions, mass-wasting scars, anomalous backscatter patches and water-column or near-bottom environmental anomalies. The survey will acquire high-resolution bathymetry, acoustic backscatter, sub-bottom profiler data, HiSAS imagery and environmental sensor measurements to identify candidate targets for subsequent ROV investigation, including sites for visual inspection, fluid-flow assessment, rock sampling, water-column anomaly follow-up and possible push-coring where sediment is present.",
+      "milestones": {
+        "lowering_predive": "2026-05-31T16:51:57.304Z",
+        "lowering_deployment": "2026-05-31T17:33:25.159Z",
+        "lowering_key_pulled": "2026-05-31T17:42:52.014Z",
+        "lowering_in_water": "2026-05-31T17:44:43.431Z",
+        "lowering_descent_initiated": "2026-05-31T17:53:50.410Z",
+        "lowering_descending": "2026-05-31T17:53:50.410Z",
+        "lowering_reached_survey_depth": "2026-05-31T19:44:27.841Z",
+        "lowering_on_bottom": "2026-05-31T19:44:27.841Z",
+        "lowering_leaving_survey_depth": "2026-06-02T14:06:19.767Z",
+        "lowering_off_bottom": "2026-06-02T14:06:19.767Z",
+        "lowering_recovery": "2026-06-02T15:17:38.332Z",
+        "lowering_ascent_initiated": "2026-06-02T15:52:25.629Z",
+        "lowering_on_surface": "2026-06-02T15:59:56.708Z",
+        "lowering_out_of_water": "2026-06-02T16:15:03.770Z",
+        "lowering_key_inserted": "2026-06-02T16:16:28.147Z"
+      },
+      "stats": {
+        "max_depth": 4304.4,
+        "bounding_box": [
+          8.200085,
+          -38.068981,
+          8.059931,
+          -38.448205
+        ]
+      },
+      "lowering_files": [
+        "FKt260517_E0015_Empress_Deployment_Summary.pdf"
+      ]
+    },
+    "id": "6a1c433ce9e4db351e8f36c0"
+  }
+]

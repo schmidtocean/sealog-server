@@ -40,8 +40,8 @@ exports.plugin = {
 
       if (resetDB) {
         console.log('Populating Event Aux Data Collection');
-        let init_data = [];
 
+        let init_data = [];
         if (process.env.SEALOG_INSTANCE_TYPE === 'FKt') {
           init_data = filePreProcessor('./demo/FKt230303_auxDataExport.json', 'event_aux_data');
         }
@@ -49,7 +49,7 @@ exports.plugin = {
           init_data = filePreProcessor('./demo/FKt230303_S0492_auxDataExport.json', 'event_aux_data');
         }
         else if (process.env.SEALOG_INSTANCE_TYPE === 'emp') {
-          init_data = filePreProcessor('./demo/FKt230303_S0492_auxDataExport.json', 'event_aux_data');
+          init_data = filePreProcessor('./demo/FKt260806_E0018_auxDataExport.json', 'event_aux_data');
         }
 
         if (init_data.length > 0) {

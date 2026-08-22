@@ -242,6 +242,10 @@ else if (env === 'demo' && process.env.NODE_ENV === 'demo-vessel') {
   manifest.register.plugins.push({ 'plugin': './plugins/db_init_demo_vessel' });
 }
 
+else if (env === 'demo' && process.env.NODE_ENV === 'demo-auv') {
+  manifest.register.plugins.push({ 'plugin': './plugins/db_init_demo_auv' });
+}
+
 // Additional Plugins for debug
 // else if (env === 'debug') {}
 
