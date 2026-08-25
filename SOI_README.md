@@ -45,11 +45,11 @@ Most settings read from environment variables automatically.
 | `SEALOG_SERVER_TLS_PRIVKEY` | — | Path to TLS private key (enables HTTPS) |
 | `SEALOG_SERVER_TLS_FULLCHAIN` | — | Path to TLS certificate chain |
 
-Email provider variables (set whichever matches the provider block uncommented in `config/email_settings.js`):
+Gmail OAuth2 is enabled automatically when all three variables below are set. If any are missing, email remains disabled. Nodemailer obtains and refreshes access tokens internally, so an access token and OAuth redirect URL are not required.
 
 | Variable | Provider |
 |---|---|
-| `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_SERVER_URL`, `GMAIL_REFRESH_TOKEN` | Gmail OAuth2 |
+| `GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, `GMAIL_REFRESH_TOKEN` | Gmail OAuth2 |
 
 The appropriate env values are stored in the [shipboard-configuration](https://github.com/schmidtocean/shipboard-configuration) repo within the ./Systems/Sealog/sealog-[FKt|Sub|emp] directories.  Symlink the appropriate env file to the sealog-server root directory as `.env` to apply the values to the server.
 

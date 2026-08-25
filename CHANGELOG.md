@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+### Bug Fixes
+
+* Fixed Gmail OAuth2 email delivery by exporting a synchronous Nodemailer transporter instead of a Promise
+
+### Chores
+
+* Removed manual Google access-token handling and the unused `googleapis` dependency
+
 ## 2.4.6 (2026-07-25)
 
 ### Features
