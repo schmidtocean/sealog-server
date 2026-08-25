@@ -35,12 +35,12 @@ exports.plugin = {
         const result = await db.collection(customVarsTable).findOneAndUpdate(
           { custom_var_name: varName },
           { $set: { custom_var_value: value } },
-          { returnNewDocument: true }
+          { returnDocument: 'after' }
         );
 
-        if (result.value) {
+        if (result) {
           server.publish('/ws/status/updateCustomVars', {
-            id: result.value._id,
+            id: result._id,
             custom_var_name: varName,
             custom_var_value: value
           });

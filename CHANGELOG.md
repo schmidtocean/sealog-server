@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Bug Fixes
 
 * Fixed Gmail OAuth2 email delivery by exporting a synchronous Nodemailer transporter instead of a Promise
+* Fixed camera status WebSocket updates for the MongoDB 6 `findOneAndUpdate` return format
 
 ### Chores
 
