@@ -76,6 +76,9 @@ def combine_files_at_1hz(files, output_file):  # pylint: disable=too-many-locals
     Args:
         files (list of str): List of file paths to CSVs to combine.
         output_file (str): Path to the output CSV.
+
+    Returns:
+        bool: True when the combined CSV was written, otherwise False.
     """
     dfs = []
 
@@ -133,7 +136,7 @@ def combine_files_at_1hz(files, output_file):  # pylint: disable=too-many-locals
 
     if not dfs:
         logging.info("Nothing to combine, quitting.")
-        return
+        return False
 
     all_timestamps_df = pl.concat([df.select("Timestamp") for df in dfs])
     min_timestamp = all_timestamps_df["Timestamp"].min()
@@ -168,6 +171,7 @@ def combine_files_at_1hz(files, output_file):  # pylint: disable=too-many-locals
 
     combined.write_csv(output_file)
     logging.info("✅ Combined CSV saved to %s", output_file)
+    return True
 
 
 if __name__ == "__main__":

@@ -252,9 +252,25 @@ class SubVehicleDataExporter(SealogDataExporter):
             except FileNotFoundError:
                 pass
 
+    @staticmethod
+    def _prune_lowering_openrvdas_exports(cruise, lowering, cropped_dir):
+        """Remove generated OpenRVDAS files left by an earlier export run."""
+        patterns = [
+            os.path.join(
+                cropped_dir,
+                f"{cruise['cruise_id']}_*_{lowering['lowering_id']}.txt"),
+        ]
+        for filepath in (path for pattern in patterns for path in glob.glob(pattern)):
+            try:
+                os.remove(filepath)
+            except OSError as err:
+                logging.error("Could not delete stale OpenRVDAS export %s: %s",
+                              filepath, err)
+
     def _export_lowering_openrvdas_data_files(self, cruise, lowering):
         """Crop and export the OpenRVDAS files for the given cruise/lowering."""
         logging.info("Exporting lowering-level OpenRVDAS data files")
+        exported_files = []
 
         fcu = FileCropUtility(
             datetime.strptime(lowering['start_ts'], '%Y-%m-%dT%H:%M:%S.%fZ'),
@@ -283,6 +299,7 @@ class SubVehicleDataExporter(SealogDataExporter):
                             file.write(line)
                     logging.info(
                         "Data exported for instrument: %s", data_file_def['output_prefix'])
+                    exported_files.append(destination_file)
                 else:
                     logging.warning(
                         "No files containing data in the specified range for : %s",
@@ -290,12 +307,20 @@ class SubVehicleDataExporter(SealogDataExporter):
             except Exception as err:  # pylint: disable=broad-except
                 logging.warning("Could not create cropped data file: %s", destination_file)
                 logging.debug(str(err))
+                try:
+                    os.remove(destination_file)
+                except FileNotFoundError:
+                    pass
+                except OSError as remove_err:
+                    logging.error("Could not delete partial OpenRVDAS export %s: %s",
+                                  destination_file, remove_err)
 
-    def _export_combined_csv_file(self, cruise, lowering, cropped_dir):
+        return exported_files
+
+    def _export_combined_csv_file(self, cruise, lowering, cropped_dir, source_files):
         """Combine the lowering's cropped OpenRVDAS files into a 1 Hz CSV."""
         logging.info("Building combined OpenRVDAS 1 Hz CSV file")
 
-        source_files = glob.glob(os.path.join(cropped_dir, '*.txt'))
         destination_file = os.path.join(
             cropped_dir,
             f"{cruise['cruise_id']}_combined_1Hz_{lowering['lowering_id']}.csv"
@@ -305,12 +330,33 @@ class SubVehicleDataExporter(SealogDataExporter):
             logging.warning(
                 "No cropped OpenRVDAS files found for lowering %s; skipping combined CSV",
                 lowering['lowering_id'])
+            try:
+                os.remove(destination_file)
+            except FileNotFoundError:
+                pass
+            except OSError as err:
+                logging.error("Could not delete stale combined CSV %s: %s",
+                              destination_file, err)
             return
 
         try:
-            combine_files_at_1hz(source_files, destination_file)
+            if not combine_files_at_1hz(source_files, destination_file):
+                try:
+                    os.remove(destination_file)
+                except FileNotFoundError:
+                    pass
+                except OSError as err:
+                    logging.error("Could not delete stale combined CSV %s: %s",
+                                  destination_file, err)
         except Exception as err:  # pylint: disable=broad-except
             logging.error("Combining OpenRVDAS files failed: %s", err)
+            try:
+                os.remove(destination_file)
+            except FileNotFoundError:
+                pass
+            except OSError as remove_err:
+                logging.error("Could not delete partial combined CSV %s: %s",
+                              destination_file, remove_err)
 
     def _build_lowering_marker(self, lowering):
         """Return a CSV line with the on_bottom position for the lowering, or None."""
@@ -584,8 +630,10 @@ class SubVehicleDataExporter(SealogDataExporter):
         }
         self._build_export_directories(dirs)
 
-        self._export_lowering_openrvdas_data_files(cruise, lowering)
-        self._export_combined_csv_file(cruise, lowering, cropped_dir)
+        self._prune_lowering_openrvdas_exports(cruise, lowering, cropped_dir)
+        openrvdas_files = self._export_lowering_openrvdas_data_files(cruise, lowering)
+        self._export_combined_csv_file(
+            cruise, lowering, cropped_dir, openrvdas_files)
 
         for task in self._get_lowering_export_tasks():
             filepath = task['path'](cruise, lowering, dirs)
