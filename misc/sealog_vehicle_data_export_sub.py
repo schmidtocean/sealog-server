@@ -717,6 +717,12 @@ if __name__ == '__main__':
         exporter.export_lowering(selected_cruise, selected_lowering)
 
     if not parsed_args.no_transfer:
-        exporter.push_to_data_warehouse(selected_cruise, selected_lowerings)
+        transfer_success = exporter.push_to_data_warehouse(
+            selected_cruise, selected_lowerings)
+        if transfer_success:
+            logging.warning(":white_check_mark: Completed export and transfer")
+        else:
+            logging.error(
+                "Export completed but one or more transfers failed, check logs.")
 
     logging.debug("Done")
