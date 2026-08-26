@@ -34,6 +34,7 @@ from misc.reporting.sealog_build_lowering_vehicle_report import LoweringVehicleR
 from misc.reporting.sealog_build_lowering_summary_report import LoweringSummaryReport
 from misc.reporting.sealog_build_cruise_summary_report_Sub import CruiseSummaryReport
 from misc.filecrop_utility import FileCropUtility
+from misc.combine_csv_files import combine_files_at_1hz
 from misc.python_sealog.event_templates import get_event_templates
 from misc.python_sealog.event_exports import get_event_exports_by_lowering
 from misc.python_sealog.event_aux_data import get_event_aux_data_by_lowering
@@ -264,6 +265,27 @@ class SubVehicleDataExporter(SealogDataExporter):
             except Exception as err:  # pylint: disable=broad-except
                 logging.warning("Could not create cropped data file: %s", destination_file)
                 logging.debug(str(err))
+
+    def _export_combined_csv_file(self, cruise, lowering, cropped_dir):
+        """Combine the lowering's cropped OpenRVDAS files into a 1 Hz CSV."""
+        logging.info("Building combined OpenRVDAS 1 Hz CSV file")
+
+        source_files = glob.glob(os.path.join(cropped_dir, '*.txt'))
+        destination_file = os.path.join(
+            cropped_dir,
+            f"{cruise['cruise_id']}_combined_1Hz_{lowering['lowering_id']}.csv"
+        )
+
+        if not source_files:
+            logging.warning(
+                "No cropped OpenRVDAS files found for lowering %s; skipping combined CSV",
+                lowering['lowering_id'])
+            return
+
+        try:
+            combine_files_at_1hz(source_files, destination_file)
+        except Exception as err:  # pylint: disable=broad-except
+            logging.error("Combining OpenRVDAS files failed: %s", err)
 
     def _build_lowering_marker(self, lowering):
         """Return a CSV line with the on_bottom position for the lowering, or None."""
@@ -526,6 +548,7 @@ class SubVehicleDataExporter(SealogDataExporter):
         self._build_export_directories(dirs)
 
         self._export_lowering_openrvdas_data_files(cruise, lowering)
+        self._export_combined_csv_file(cruise, lowering, cropped_dir)
 
         for task in self._get_lowering_export_tasks():
             filepath = task['path'](cruise, lowering, dirs)
