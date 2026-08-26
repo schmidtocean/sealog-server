@@ -639,6 +639,16 @@ if __name__ == '__main__':
     parsed_args.verbosity = min(parsed_args.verbosity, max(LOG_LEVELS))
     logging.getLogger().setLevel(LOG_LEVELS[parsed_args.verbosity])
 
+    selection_count = sum((
+        parsed_args.current_cruise,
+        parsed_args.lowering_id is not None,
+        parsed_args.cruise_id is not None,
+    ))
+    if selection_count > 1:
+        logging.error(
+            "Specify only one of -c/--current_cruise, -L/--lowering_id, or -C/--cruise_id")
+        sys.exit(0)
+
     selected_cruise = None
     selected_lowerings = []
 
