@@ -397,14 +397,30 @@ class SubVehicleDataExporter(SealogDataExporter):
             logging.error("Failed to sync cruise reports: %s", e.stderr)
             return False
 
+        warehouse_cruise_dir = os.path.join(
+            CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'],
+            POST_CRUISE_REPORT_DIR, '')
+
         try:
             subprocess.run(
                 ['rsync', '-trimv', '--progress', '-e', f'ssh -i {OPENVDM_SSH_KEY}',
                  os.path.join(cruise_source_dir, self.REPORTS_DIRNAME, ''),
-                 f"{OPENVDM_USER}@{OPENVDM_IP}:{os.path.join(CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'], POST_CRUISE_REPORT_DIR, '')}"],  # noqa: E501
+                 f"{OPENVDM_USER}@{OPENVDM_IP}:{warehouse_cruise_dir}"],
                 check=True, capture_output=True, text=True)
         except subprocess.CalledProcessError as e:
             logging.error("Failed to sync cruise reports to warehouse: %s", e.stderr)
+            return False
+
+        logging.info("Syncing cruise files")
+        try:
+            subprocess.run(
+                ['rsync', '-trimv', '--progress', '--exclude=*.pdf',
+                 '-e', f'ssh -i {OPENVDM_SSH_KEY}',
+                 os.path.join(cruise_source_dir, self.FILES_DIRNAME, ''),
+                 f"{OPENVDM_USER}@{OPENVDM_IP}:{warehouse_cruise_dir}"],
+                check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as e:
+            logging.error("Failed to sync cruise files to warehouse: %s", e.stderr)
             return False
 
         for lowering in lowerings:
