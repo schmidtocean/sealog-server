@@ -525,7 +525,12 @@ class SubVehicleDataExporter(SealogDataExporter):
         for task in self._get_cruise_export_tasks():
             filepath = task['path'](cruise, dirs)
             if filepath is not None:
-                self._write_file(filepath, task['data_fn'](cruise), task['description'])
+                try:
+                    content = task['data_fn'](cruise)
+                except Exception as err:  # pylint: disable=broad-except
+                    logging.error("Failed to export %s: %s", task['description'], err)
+                    continue
+                self._write_file(filepath, content, task['description'])
 
         self._build_cruise_reports(cruise)
         self._export_cruise_files(cruise, cruise_dir)
@@ -556,7 +561,12 @@ class SubVehicleDataExporter(SealogDataExporter):
         for task in self._get_lowering_export_tasks():
             filepath = task['path'](cruise, lowering, dirs)
             if filepath is not None:
-                self._write_file(filepath, task['data_fn'](lowering), task['description'])
+                try:
+                    content = task['data_fn'](lowering)
+                except Exception as err:  # pylint: disable=broad-except
+                    logging.error("Failed to export %s: %s", task['description'], err)
+                    continue
+                self._write_file(filepath, content, task['description'])
 
         if self.export_images:
             self._export_images(lowering, lowering_dir)
