@@ -724,5 +724,7 @@ if __name__ == '__main__':
         else:
             logging.error(
                 "Export completed but one or more transfers failed, check logs.")
+    else:
+        logging.warning("Export completed (data transfer skipped).")
 
     logging.debug("Done")
