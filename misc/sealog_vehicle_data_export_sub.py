@@ -55,10 +55,6 @@ VEHICLE_NAME = 'SuBastian'
 EXPORT_IMAGES = True
 IMAGE_DATASOURCES = ['vehicleRealtimeFramegrabberData']
 
-OPENVDM_IP = '10.23.9.20'
-OPENVDM_USER = 'mt'
-OPENVDM_SSH_KEY = '/home/mt/.ssh/id_rsa_openvdm'
-CRUISEDATA_DIR_ON_DATA_WAREHOUSE = '/mnt/CruiseData'
 CRUISEDATA_LOCAL_MOUNT = '/mnt/CruiseData'
 OPENVDM_VEHICLE_DIR = 'Vehicles/' + VEHICLE_NAME
 SEALOG_DIR = 'Sealog'
@@ -398,29 +394,32 @@ class SubVehicleDataExporter(SealogDataExporter):
             return False
 
         warehouse_cruise_dir = os.path.join(
-            CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'],
+            CRUISEDATA_LOCAL_MOUNT, cruise['cruise_id'],
             POST_CRUISE_REPORT_DIR, '')
 
         try:
             subprocess.run(
-                ['rsync', '-trimv', '--progress', '-e', f'ssh -i {OPENVDM_SSH_KEY}',
+                ['rclone', 'sync', '--transfers=16', '--checkers=16',
+                 '--size-only', '--progress', '--include=*.pdf',
                  os.path.join(cruise_source_dir, self.REPORTS_DIRNAME, ''),
-                 f"{OPENVDM_USER}@{OPENVDM_IP}:{warehouse_cruise_dir}"],
-                check=True, capture_output=True, text=True)
+                 warehouse_cruise_dir],
+                check=True, capture_output=False, text=True)
         except subprocess.CalledProcessError as e:
-            logging.error("Failed to sync cruise reports to warehouse: %s", e.stderr)
+            logging.error("Failed to sync cruise reports to warehouse with exit code %s",
+                          e.returncode)
             return False
 
         logging.info("Syncing cruise files")
         try:
             subprocess.run(
-                ['rsync', '-trimv', '--progress', '--exclude=*.pdf',
-                 '-e', f'ssh -i {OPENVDM_SSH_KEY}',
+                ['rclone', 'sync', '--transfers=16', '--checkers=16',
+                 '--size-only', '--progress', '--exclude=*.pdf',
                  os.path.join(cruise_source_dir, self.FILES_DIRNAME, ''),
-                 f"{OPENVDM_USER}@{OPENVDM_IP}:{warehouse_cruise_dir}"],
-                check=True, capture_output=True, text=True)
+                 warehouse_cruise_dir],
+                check=True, capture_output=False, text=True)
         except subprocess.CalledProcessError as e:
-            logging.error("Failed to sync cruise files to warehouse: %s", e.stderr)
+            logging.error("Failed to sync cruise files to warehouse with exit code %s",
+                          e.returncode)
             return False
 
         for lowering in lowerings:
@@ -456,33 +455,27 @@ class SubVehicleDataExporter(SealogDataExporter):
                 continue
 
             warehouse_lowering_sealog = os.path.join(
-                CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'],
+                CRUISEDATA_LOCAL_MOUNT, cruise['cruise_id'],
                 OPENVDM_VEHICLE_DIR, lowering_name, SEALOG_DIR, '')
 
             if CREATE_DEST_DIR:
                 try:
-                    subprocess.run(
-                        ['ssh', '-i', OPENVDM_SSH_KEY,
-                         f"{OPENVDM_USER}@{OPENVDM_IP}",
-                         f"cd {os.path.join(CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'], OPENVDM_VEHICLE_DIR)}"  # noqa: E501
-                         f"; test -d {os.path.join(lowering_name, SEALOG_DIR)}"
-                         f" || mkdir -p {os.path.join(lowering_name, SEALOG_DIR)}"],
-                        check=True, capture_output=True, text=True)
-                except subprocess.CalledProcessError as e:
+                    os.makedirs(warehouse_lowering_sealog, exist_ok=True)
+                except OSError as e:
                     logging.error("Failed to create sealog directory for lowering %s: %s",
-                                  lowering['lowering_id'], e.stderr)
+                                  lowering['lowering_id'], e)
                     continue
 
             try:
                 subprocess.run(
-                    ['rsync', '-trimv', '--min-size=0', '--progress', '--delete',
-                     '-e', f'ssh -i {OPENVDM_SSH_KEY}',
+                    ['rclone', 'sync', '--transfers=16', '--checkers=16',
+                     '--size-only', '--progress',
                      os.path.join(lowering_source_dir, ''),
-                     f"{OPENVDM_USER}@{OPENVDM_IP}:{warehouse_lowering_sealog}"],
-                    check=True, capture_output=True, text=True)
+                     warehouse_lowering_sealog],
+                    check=True, capture_output=False, text=True)
             except subprocess.CalledProcessError as e:
-                logging.error("Failed to sync sealog data for lowering %s: %s",
-                              lowering['lowering_id'], e.stderr)
+                logging.error("Failed to sync sealog data for lowering %s with exit code %s",
+                              lowering['lowering_id'], e.returncode)
                 continue
 
             cropped_source_dir = os.path.join(
@@ -492,33 +485,27 @@ class SubVehicleDataExporter(SealogDataExporter):
                 continue
 
             warehouse_lowering_openrvdas = os.path.join(
-                CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'],
+                CRUISEDATA_LOCAL_MOUNT, cruise['cruise_id'],
                 OPENVDM_VEHICLE_DIR, lowering_name, OPENRVDAS_DEST_DIR, '')
 
             if CREATE_DEST_DIR:
                 try:
-                    subprocess.run(
-                        ['ssh', '-i', OPENVDM_SSH_KEY,
-                         f"{OPENVDM_USER}@{OPENVDM_IP}",
-                         f"cd {os.path.join(CRUISEDATA_DIR_ON_DATA_WAREHOUSE, cruise['cruise_id'], OPENVDM_VEHICLE_DIR)}"  # noqa: E501
-                         f"; test -d {os.path.join(lowering_name, OPENRVDAS_DEST_DIR)}"
-                         f" || mkdir -p {os.path.join(lowering_name, OPENRVDAS_DEST_DIR)}"],
-                        check=True, capture_output=True, text=True)
-                except subprocess.CalledProcessError as e:
+                    os.makedirs(warehouse_lowering_openrvdas, exist_ok=True)
+                except OSError as e:
                     logging.error("Failed to create OpenRVDAS directory for lowering %s: %s",
-                                  lowering['lowering_id'], e.stderr)
+                                  lowering['lowering_id'], e)
                     continue
 
             try:
                 subprocess.run(
-                    ['rsync', '-trimv', '--min-size=0', '--progress', '--delete',
-                     '-e', f'ssh -i {OPENVDM_SSH_KEY}',
+                    ['rclone', 'sync', '--transfers=16', '--checkers=16',
+                     '--size-only', '--progress',
                      os.path.join(cropped_source_dir, ''),
-                     f"{OPENVDM_USER}@{OPENVDM_IP}:{warehouse_lowering_openrvdas}"],
-                    check=True, capture_output=True, text=True)
+                     warehouse_lowering_openrvdas],
+                    check=True, capture_output=False, text=True)
             except subprocess.CalledProcessError as e:
-                logging.error("Failed to sync OpenRVDAS data for lowering %s: %s",
-                              lowering['lowering_id'], e.stderr)
+                logging.error("Failed to sync OpenRVDAS data for lowering %s with exit code %s",
+                              lowering['lowering_id'], e.returncode)
                 continue
 
         return True
