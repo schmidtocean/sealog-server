@@ -25,6 +25,7 @@ import json
 import logging
 import subprocess
 import glob
+import tempfile
 from datetime import datetime
 
 from os.path import dirname, realpath
@@ -221,7 +222,36 @@ class SubVehicleDataExporter(SealogDataExporter):
         logging.info("Exporting Images")
         framegrab_list = get_framegrab_list_by_lowering(lowering['id'], self.image_datasources)
         images_dir = os.path.join(lowering_dir, self.IMAGES_DIRNAME)
-        self._rsync_images(framegrab_list, images_dir)
+
+        expected_images = {os.path.basename(filepath) for filepath in framegrab_list}
+        for filename in set(os.listdir(images_dir)) - expected_images:
+            try:
+                logging.info("Deleting: %s", filename)
+                os.remove(os.path.join(images_dir, filename))
+            except OSError as err:
+                logging.error("Could not delete stale image %s: %s", filename, err)
+
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', delete=False) as file:
+            for framegrab in framegrab_list:
+                file.write(os.path.basename(framegrab) + '\n')
+            framegrab_list_path = file.name
+
+        logging.info("Starting rclone transfer for images")
+        try:
+            subprocess.run(
+                ['rclone', 'copy', '--transfers=16', '--checkers=16',
+                 '--size-only', '--progress', '--no-traverse',
+                 '--files-from', framegrab_list_path,
+                 os.path.join(self.images_file_path, ''), images_dir],
+                check=True, capture_output=False, text=True)
+        except subprocess.CalledProcessError as err:
+            logging.error("Failed to sync images with exit code %s", err.returncode)
+            raise
+        finally:
+            try:
+                os.remove(framegrab_list_path)
+            except FileNotFoundError:
+                pass
 
     def _export_lowering_openrvdas_data_files(self, cruise, lowering):
         """Crop and export the OpenRVDAS files for the given cruise/lowering."""
