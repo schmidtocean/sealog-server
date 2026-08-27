@@ -81,6 +81,7 @@ class FileCropUtility():  # pylint:disable=R0902
             data_files = [data_files]
 
         culled_files = []
+        self._error_counts.clear()
 
         logging.info("Culling file list")
         if len(data_files) == 0:
@@ -111,7 +112,7 @@ class FileCropUtility():  # pylint:disable=R0902
                     )
 
                 except ValueError as exc:
-                    logging.warning("Could not process first line in %s: %s", data_file, first_line)
+                    self._log_error("Could not process first line", data_file, first_line)
                     logging.debug(str(exc))
                     continue
 
@@ -123,7 +124,7 @@ class FileCropUtility():  # pylint:disable=R0902
                     file.seek(-2, os.SEEK_CUR)
 
                 last_line = file.readline().decode().rstrip('\n')
-                logging.info('lastline: %s', last_line)
+                logging.debug('lastline: %s', last_line)
                 # Hack to deal with extra newline characters in data files.
                 if last_line == '':
                     file.seek(-4, os.SEEK_CUR)
@@ -131,13 +132,13 @@ class FileCropUtility():  # pylint:disable=R0902
                         file.seek(-2, os.SEEK_CUR)
 
                     last_line = file.readline().decode().rstrip('\n')
-                    logging.info('lastline hack: %s', last_line)
+                    logging.debug('lastline hack: %s', last_line)
                 # End of hack
 
                 try:
                     last_ts = datetime.strptime(last_line.split(self.delimiter)[0], self.dt_format)
                 except ValueError as exc:
-                    logging.warning("Could not process last line in %s: %s", data_file, last_line)
+                    self._log_error("Could not process last line", data_file, last_line)
                     logging.debug(str(exc))
                     continue
 
@@ -167,33 +168,43 @@ class FileCropUtility():  # pylint:disable=R0902
         if not isinstance(data_files, list):
             data_files = [data_files]
 
-        for data_file in data_files:
-            logging.debug("File: %s", data_file)
-            with open(data_file, 'r', encoding='utf-8') as file:
-                while True:
+        self._error_counts.clear()
 
-                    # send header
-                    if not header_sent:
-                        header_sent = True
-                        yield self._header_str
+        try:
+            if not header_sent:
+                header_sent = True
+                yield self._header_str
 
-                    line_str = file.readline()
+            for data_file in data_files:
+                self._current_file = data_file
+                logging.debug("File: %s", data_file)
+                with open(data_file, 'r', encoding='utf-8') as file:
+                    if self.header:
+                        _ = file.readline()
 
-                    if not line_str:
-                        break
+                    while True:
+                        line_str = file.readline()
 
-                    try:
-                        line_ts = datetime.strptime(
-                            line_str.split(self.delimiter)[0], self.dt_format
-                        )
+                        if not line_str:
+                            break
 
-                    except ValueError as exc:
-                        logging.warning("Could not process line: %s", line_str)
-                        logging.debug(str(exc))
+                        if line_str.rstrip('\n').rstrip('\r') == '':
+                            continue
 
-                    else:
+                        try:
+                            line_ts = datetime.strptime(
+                                line_str.split(self.delimiter)[0], self.dt_format
+                            )
+                        except ValueError as exc:
+                            self._log_error(
+                                "Could not process line", data_file, line_str.rstrip('\n'))
+                            logging.debug(str(exc))
+                            continue
+
                         if (
                             (line_ts - self.start_dt).total_seconds() >= 0 and
                             (self.stop_dt - line_ts).total_seconds() >= 0
                         ):
                             yield line_str
+        finally:
+            self._report_errors()
