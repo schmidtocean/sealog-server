@@ -66,3 +66,6 @@ docker-compose.yml
 __pycache__
 
 CLAUDE.md
+
+# locally generated initial data
+init_data/system_templates.json
