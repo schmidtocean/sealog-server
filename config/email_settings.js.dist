@@ -1,16 +1,18 @@
 // The sender address for all emails
-const senderAddress = 'sealog_admin@oceandatatools.org';
+const senderAddress = process.env.SEALOG_EMAIL_SENDER_ADDRESS;
 
 // Additional receipents for and sent emails.
-const notificationEmailAddresses = ['sealog_admin@oceandatatools.org'];
+const notificationEmailAddresses = (process.env.SEALOG_EMAIL_NOTIFICATION_ADDRESSES || '')
+  .split(',')
+  .map((address) => address.trim())
+  .filter(Boolean);
 
 // Needed for email integration
 let emailTransporter = null; //eslint-disable-line prefer-const
 const Nodemailer = require('nodemailer'); // eslint-disable-line no-unused-vars
 
 // ========================================================================= //
-// Gmail is enabled automatically when all required credentials are set.
-// To use another provider, uncomment one of the provider blocks below.
+// Uncomment ONE of the following sections for email integration
 // ========================================================================= //
 
 // ------------------------------------------------------------------------- //
@@ -34,7 +36,6 @@ if (gmailClientId && gmailClientSecret && gmailRefreshToken) {
     }
   }); // eslint-disable-line no-dupe-keys
 }
-
 
 // ------------------------------------------------------------------------- //
 // Mailgun integration

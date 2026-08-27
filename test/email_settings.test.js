@@ -4,7 +4,9 @@ const { expect } = require('@hapi/code');
 const { afterEach, beforeEach, describe, it } = exports.lab = Lab.script();
 
 const configPath = require.resolve('../config/email_settings.js.dist');
-const gmailEnvVars = [
+const emailEnvVars = [
+  'SEALOG_EMAIL_SENDER_ADDRESS',
+  'SEALOG_EMAIL_NOTIFICATION_ADDRESSES',
   'GMAIL_CLIENT_ID',
   'GMAIL_CLIENT_SECRET',
   'GMAIL_REFRESH_TOKEN'
@@ -16,7 +18,7 @@ describe('Email settings', () => {
 
   beforeEach(() => {
 
-    gmailEnvVars.forEach((name) => {
+    emailEnvVars.forEach((name) => {
 
       originalEnv[name] = process.env[name];
       delete process.env[name];
@@ -26,7 +28,7 @@ describe('Email settings', () => {
 
   afterEach(() => {
 
-    gmailEnvVars.forEach((name) => {
+    emailEnvVars.forEach((name) => {
 
       if (originalEnv[name] === undefined) {
         delete process.env[name];
@@ -54,8 +56,24 @@ describe('Email settings', () => {
     expect(emailTransporter).to.be.null();
   });
 
+  it('loads sender and notification addresses from the environment', () => {
+
+    process.env.SEALOG_EMAIL_SENDER_ADDRESS = 'sender@example.com';
+    process.env.SEALOG_EMAIL_NOTIFICATION_ADDRESSES =
+      'first@example.com, second@example.com';
+
+    const { senderAddress, notificationEmailAddresses } = require(configPath);
+
+    expect(senderAddress).to.equal('sender@example.com');
+    expect(notificationEmailAddresses).to.equal([
+      'first@example.com',
+      'second@example.com'
+    ]);
+  });
+
   it('exports a synchronous transporter when Gmail credentials are present', () => {
 
+    process.env.SEALOG_EMAIL_SENDER_ADDRESS = 'sender@example.com';
     process.env.GMAIL_CLIENT_ID = 'test-client-id';
     process.env.GMAIL_CLIENT_SECRET = 'test-client-secret';
     process.env.GMAIL_REFRESH_TOKEN = 'test-refresh-token';
@@ -68,6 +86,7 @@ describe('Email settings', () => {
 
     const auth = emailTransporter.transporter.options.auth;
 
+    expect(auth.user).to.equal('sender@example.com');
     expect(auth.clientId).to.equal('test-client-id');
     expect(auth.clientSecret).to.equal('test-client-secret');
     expect(auth.refreshToken).to.equal('test-refresh-token');
