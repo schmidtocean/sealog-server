@@ -369,7 +369,11 @@ def build_lowering_metrics(
         start_ts=get_stage_boundary(lowering, ('Deployment',), 'start_ts'),
         stop_ts=get_stage_boundary(lowering, ('Mission Key Inserted',), 'stop_ts'),
         stage_durations=stage_durations,
-        max_depth=max_depth if max_depth is not None else _optional_float(event_stats.get('max_depth')),
+        max_depth=(
+            max_depth
+            if max_depth is not None
+            else _optional_float(event_stats.get('max_depth'))
+        ),
         bounding_box=bounding_box or _float_list(event_stats.get('bounding_box')),
     )
 

@@ -184,7 +184,12 @@ def _actual_milestones(
     milestone_map: dict[str, SealogRecord] = {}
     milestone_order: list[str] = []
 
-    def add_milestone(name: str, value: Any, label: str | None = None, replace: bool = False) -> None:
+    def add_milestone(
+        name: str,
+        value: Any,
+        label: str | None = None,
+        replace: bool = False,
+    ) -> None:
         if name in HIDDEN_MILESTONE_ALIASES:
             return
 
@@ -295,7 +300,11 @@ def _format_survey_depth_track_distance(
     if survey_depth_stage is None:
         return ''
 
-    start = get_stage_boundary(lowering, survey_depth_stage.start, survey_depth_stage.start_fallback)
+    start = get_stage_boundary(
+        lowering,
+        survey_depth_stage.start,
+        survey_depth_stage.start_fallback,
+    )
     stop = get_stage_boundary(lowering, survey_depth_stage.stop, survey_depth_stage.stop_fallback)
     if start is None or stop is None:
         return ''

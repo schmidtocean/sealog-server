@@ -6,13 +6,15 @@ DESCRIPTION:    Backfill Empress lowering stats from event export aux data.
 
 HOW TO RUN:
                 Preview one lowering:
-                    ./venv/bin/python misc/sealog_backfill_lowering_stats_emp.py -L E0010 --dry_run -v
+                    ./venv/bin/python misc/sealog_backfill_lowering_stats_emp.py \
+                        -L E0010 --dry_run -v
 
                 Backfill one cruise:
                     ./venv/bin/python misc/sealog_backfill_lowering_stats_emp.py -C FKt260503 -v
 
                 Recompute and overwrite existing stats:
-                    ./venv/bin/python misc/sealog_backfill_lowering_stats_emp.py -C FKt260503 --overwrite -v
+                    ./venv/bin/python misc/sealog_backfill_lowering_stats_emp.py \
+                        -C FKt260503 --overwrite -v
 
                 If the API token is not configured in settings.py:
                     export SEALOG_API_TOKEN='<token>'
@@ -33,7 +35,7 @@ sys.path.append(dirname(dirname(realpath(__file__))))
 from misc.python_sealog.cruises import get_cruise_by_id, get_cruises
 from misc.python_sealog.event_exports import get_event_exports_by_lowering
 from misc.python_sealog.lowerings import get_lowering_by_id, get_lowerings, get_lowerings_by_cruise
-from misc.python_sealog.settings import API_SERVER_URL, HEADERS, LOWERINGS_API_PATH
+from misc.python_sealog.settings import HEADERS, LOWERINGS_API_PATH
 from misc.reporting.sealog_build_cruise_summary_report_emp import event_stats_dict
 
 SealogRecord = dict[str, Any]
@@ -66,7 +68,10 @@ def _select_lowerings(
     headers: dict[str, str],
 ) -> SealogRecords:
     if parsed_args.current_cruise:
-        cruises = cast(SealogRecords, get_cruises(api_server_url=api_server_url, headers=headers))
+        cruises = cast(
+            SealogRecords,
+            get_cruises(api_server_url=api_server_url, headers=headers),
+        )
         cruise = cruises[0] if cruises else None
         if cruise is None:
             logging.error("There are no cruises available")
@@ -74,13 +79,19 @@ def _select_lowerings(
 
         return cast(
             SealogRecords,
-            get_lowerings_by_cruise(cruise["id"], api_server_url=api_server_url, headers=headers) or [],
+            get_lowerings_by_cruise(
+                cruise["id"], api_server_url=api_server_url, headers=headers
+            ) or [],
         )
 
     if parsed_args.cruise_id:
         cruise = cast(
             SealogRecord | None,
-            get_cruise_by_id(parsed_args.cruise_id, api_server_url=api_server_url, headers=headers),
+            get_cruise_by_id(
+                parsed_args.cruise_id,
+                api_server_url=api_server_url,
+                headers=headers,
+            ),
         )
         if cruise is None:
             logging.error("Cruise %s not found", parsed_args.cruise_id)
@@ -88,13 +99,19 @@ def _select_lowerings(
 
         return cast(
             SealogRecords,
-            get_lowerings_by_cruise(cruise["id"], api_server_url=api_server_url, headers=headers) or [],
+            get_lowerings_by_cruise(
+                cruise["id"], api_server_url=api_server_url, headers=headers
+            ) or [],
         )
 
     if parsed_args.lowering_id:
         lowering = cast(
             SealogRecord | None,
-            get_lowering_by_id(parsed_args.lowering_id, api_server_url=api_server_url, headers=headers),
+            get_lowering_by_id(
+                parsed_args.lowering_id,
+                api_server_url=api_server_url,
+                headers=headers,
+            ),
         )
         if lowering is None:
             logging.error("Lowering %s not found", parsed_args.lowering_id)
@@ -103,7 +120,10 @@ def _select_lowerings(
         return [lowering]
 
     if parsed_args.all_lowerings:
-        return cast(SealogRecords, get_lowerings(api_server_url=api_server_url, headers=headers) or [])
+        return cast(
+            SealogRecords,
+            get_lowerings(api_server_url=api_server_url, headers=headers) or [],
+        )
 
     logging.error("Select one scope: --lowering_id, --cruise_id, --current_cruise, or --all")
     sys.exit(1)
@@ -191,7 +211,11 @@ def backfill_lowering_stats(
         logging.warning("No depth stats available for %s", lowering['lowering_id'])
         return {}
 
-    logging.info("Updating %s stats: %s", lowering['lowering_id'], payload['lowering_additional_meta']['stats'])
+    logging.info(
+        "Updating %s stats: %s",
+        lowering['lowering_id'],
+        payload['lowering_additional_meta']['stats'],
+    )
     if dry_run:
         return payload
 
@@ -212,22 +236,47 @@ def _scope_count(parsed_args: argparse.Namespace) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Backfill Empress lowering stats from Sealog event exports")
-    parser.add_argument('-v', '--verbosity', default=0, action='count', help='Increase output verbosity')
-    parser.add_argument('--api_server_url', default=EMP_REPORT_API_SERVER_URL, help='Sealog API server URL')
+    parser = argparse.ArgumentParser(
+        description="Backfill Empress lowering stats from Sealog event exports"
+    )
+    parser.add_argument(
+        '-v', '--verbosity', default=0, action='count', help='Increase output verbosity'
+    )
+    parser.add_argument(
+        '--api_server_url', default=EMP_REPORT_API_SERVER_URL, help='Sealog API server URL'
+    )
     parser.add_argument('--api_token', help='Sealog API token; prefer SEALOG_API_TOKEN')
-    parser.add_argument('-L', '--lowering_id', help='select one lowering/deployment, for example E0010')
-    parser.add_argument('-C', '--cruise_id', help='select one cruise, for example FKt260503')
-    parser.add_argument('-c', '--current_cruise', action='store_true', default=False, help='select the most recent cruise')
-    parser.add_argument('--all', dest='all_lowerings', action='store_true', default=False, help='select all lowerings')
-    parser.add_argument('--overwrite', action='store_true', default=False, help='overwrite existing stats values')
-    parser.add_argument('--dry_run', action='store_true', default=False, help='show updates without PATCHing lowerings')
+    parser.add_argument(
+        '-L', '--lowering_id', help='select one lowering/deployment, for example E0010'
+    )
+    parser.add_argument(
+        '-C', '--cruise_id', help='select one cruise, for example FKt260503'
+    )
+    parser.add_argument(
+        '-c', '--current_cruise', action='store_true', default=False,
+        help='select the most recent cruise'
+    )
+    parser.add_argument(
+        '--all', dest='all_lowerings', action='store_true', default=False,
+        help='select all lowerings'
+    )
+    parser.add_argument(
+        '--overwrite', action='store_true', default=False,
+        help='overwrite existing stats values'
+    )
+    parser.add_argument(
+        '--dry_run', action='store_true', default=False,
+        help='show updates without PATCHing lowerings'
+    )
     parsed_args = parser.parse_args()
 
     _configure_logging(parsed_args.verbosity)
 
     if _scope_count(parsed_args) != 1:
-        logging.error("Select exactly one scope: --lowering_id, --cruise_id, --current_cruise, or --all")
+        logging.error(
+            "Select exactly one scope: --lowering_id, --cruise_id, "
+            "--current_cruise, or --all"
+        )
         return 1
 
     headers = _api_headers(parsed_args.api_token)
@@ -247,12 +296,18 @@ def main() -> int:
                 parsed_args.dry_run,
             ):
                 updated_count += 1
-        except Exception as err: # pylint: disable=broad-exception-caught
+        except Exception as err:  # pylint: disable=broad-exception-caught
             failed_count += 1
-            logging.error("Failed to update %s: %s", lowering.get('lowering_id', lowering.get('id')), err)
+            logging.error(
+                "Failed to update %s: %s",
+                lowering.get('lowering_id', lowering.get('id')),
+                err,
+            )
 
     action = "Would update" if parsed_args.dry_run else "Updated"
-    logging.warning("%s %s lowering(s); %s failed", action, updated_count, failed_count)
+    logging.warning(
+        "%s %s lowering(s); %s failed", action, updated_count, failed_count
+    )
 
     return 1 if failed_count else 0
 

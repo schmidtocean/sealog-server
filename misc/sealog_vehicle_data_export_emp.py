@@ -101,7 +101,7 @@ from misc.python_sealog.settings import (
     HEADERS,
     SLACK_WEBHOOK_URL,
 )
-from misc.python_sealog.slack import PooledSlackHandler
+from misc.slack_sealog.slack_logger import PooledSlackHandler
 from misc.sealog_backfill_lowering_stats_emp import backfill_lowering_stats
 from misc.reporting.sealog_build_cruise_summary_report_emp import (
     write_cruise_metrics_report,
