@@ -1,17 +1,17 @@
 -
     data_source: vesselRealtimeNavData
     query_measurements:
-        - posmv
+        - seapath380
     aux_record_lookup:
-        POSMV_HeadingTrue:
+        Seapath_HeadingTrue:
             name: heading
             uom: deg
             round: 3
-        POSMV_Latitude:
+        Seapath_Latitude:
             name: latitude
             uom: ddeg
             round: 6
-        POSMV_Longitude:
+        Seapath_Longitude:
             name: longitude
             uom: ddeg
             round: 6
@@ -51,17 +51,17 @@
 -
     data_source: vehicleRealtimeUSBLData
     query_measurements:
-        - usbl_gga
+        - usbl
     aux_record_lookup:
-        USBL_Latitude_BRAVO:
+        USBL_Latitude_ALPHA:
             name: latitude
             uom: ddeg
             round: 6
-        USBL_Longitude_BRAVO:
+        USBL_Longitude_ALPHA:
             name: longitude
             uom: ddeg
             round: 6
-        USBL_Depth_BRAVO:
+        USBL_Depth_ALPHA:
             name: depth
             uom: m
             round: 2
@@ -113,11 +113,11 @@
             name: saturation_raw
             uom: "%"
             round: 3
-        SB_Oxygen_Concentration_Corr:
+        SB_Oxygen_Concentration_Corr_sbe49:
             name: concentration_corr
             uom: "\u03BC mol"
             round: 3
-        SB_Oxygen_Saturation_Corr:
+        SB_Oxygen_Saturation_Corr_sbe49:
             name: saturation_corr
             uom: "%"
             round: 3
@@ -160,7 +160,17 @@
             name: sv
             uom: m/s
             round: 2
-        SB_CTD_UVSVX_Depth_TEOS:
+        SB_CTD_UVSVX_Depth_Corr:
             name: depth_teos
             uom: m
+            round: 2
+
+-
+    data_source: vehicleRealtimePHData
+    query_measurements:
+        - sb_ph
+    aux_record_lookup:
+        SB_ph_Corr_sbe49:
+            name: pH_corr_sbe49
+            uom: pH
             round: 2
