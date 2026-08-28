@@ -223,7 +223,7 @@ exports.plugin = {
           scope: ['admin', 'write_cruises']
         },
         payload: {
-          maxBytes: 1024 * 1024 * 20, // 20Mb
+          maxBytes: 1024 * 1024 * 256, // 256 MB
           output: 'stream',
           parse: true,
           multipart: true,
@@ -260,7 +260,7 @@ exports.plugin = {
           scope: ['admin', 'write_cruises']
         },
         payload: {
-          maxBytes: 1024 * 1024 * 20, // 20Mb
+          maxBytes: 1024 * 1024 * 256, // 256 MB
           output: 'stream',
           multipart: true,
           allow: 'multipart/form-data' // important
@@ -365,7 +365,7 @@ exports.plugin = {
           scope: ['admin', 'write_lowerings']
         },
         payload: {
-          maxBytes: 1024 * 1024 * 20, // 20Mb
+          maxBytes: 1024 * 1024 * 256, // 256 MB
           output: 'stream',
           parse: true,
           multipart: true,
@@ -402,7 +402,7 @@ exports.plugin = {
           scope: ['admin', 'write_lowerings']
         },
         payload: {
-          maxBytes: 1024 * 1024 * 20, // 20Mb
+          maxBytes: 1024 * 1024 * 256, // 256 MB
           output: 'stream',
           multipart: true,
           allow: 'multipart/form-data' // important
