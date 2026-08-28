@@ -107,6 +107,22 @@ describe('Auth API', () => {
       expect(res.result.token).to.exist();
     });
 
+    it('grants admin template access to power loggers', async () => {
+      await db.collection(usersTable).updateOne(
+        { _id: adminUser._id },
+        { $set: { roles: ['power_logger'] } }
+      );
+
+      const res = await server.inject({
+        method: 'POST',
+        url: '/sealog-server/api/v1/auth/login',
+        payload: { username: 'admin', password: plainPassword }
+      });
+
+      expect(res.statusCode).to.equal(200);
+      expect(Jwt.verify(res.result.token, SECRET).scope).to.include('read_admin_templates');
+    });
+
     it('returns 401 on invalid loginToken', async () => {
       const res = await server.inject({
         method: 'POST',

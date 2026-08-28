@@ -50,7 +50,7 @@ exports.plugin = {
         const offset = (request.query.offset) ? request.query.offset : 0;
         const sort = (request.query.sort) ? { [request.query.sort]: 1 } : {};
 
-        const query = (request.auth.credentials.scope.some((role) => ['admin', 'write_event_templates'].includes(role))) ? {} : { disabled: { $eq: false }, admin_only: { $eq: false } };
+        const query = (request.auth.credentials.scope.some((role) => ['admin', 'write_event_templates', 'read_admin_templates'].includes(role))) ? {} : { disabled: { $eq: false }, admin_only: { $eq: false } };
 
         if (typeof request.query.system_template !== 'undefined') {
           query.system_template = request.query.system_template;
@@ -62,7 +62,7 @@ exports.plugin = {
           if (results.length > 0) {
             results.forEach((result) => {
 
-              return _renameAndClearFields(result, request.auth.credentials.scope.some((role) => ['admin', 'write_event_templates'].includes(role)));
+              return _renameAndClearFields(result, request.auth.credentials.scope.some((role) => ['admin', 'write_event_templates', 'read_admin_templates'].includes(role)));
             });
 
             return h.response(results).code(200);
@@ -121,11 +121,11 @@ exports.plugin = {
             return Boom.notFound('No record found for id: ' + request.params.id);
           }
 
-          if (!request.auth.credentials.scope.includes('admin') && result.admin_only) {
+          if (!request.auth.credentials.scope.some((role) => ['admin', 'write_event_templates', 'read_admin_templates'].includes(role)) && result.admin_only) {
             return Boom.notFound('template only available to admin users');
           }
 
-          return h.response(_renameAndClearFields(result, request.auth.credentials.scope.some((role) => ['admin', 'write_event_templates'].includes(role)))).code(200);
+          return h.response(_renameAndClearFields(result, request.auth.credentials.scope.some((role) => ['admin', 'write_event_templates', 'read_admin_templates'].includes(role)))).code(200);
         }
         catch (err) {
           console.log(err);

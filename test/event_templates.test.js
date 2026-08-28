@@ -148,7 +148,7 @@ describe('Event Templates API', () => {
       expect(res.result[0].event_value).to.equal('NORMAL');
     });
 
-    it('does not return admin_only templates for power_logger', async () => {
+    it('returns admin_only templates for power_logger', async () => {
       const res = await server.inject({
         method: 'GET',
         url: '/sealog-server/api/v1/event_templates',
@@ -157,8 +157,9 @@ describe('Event Templates API', () => {
 
       expect(res.statusCode).to.equal(200);
       const values = res.result.map((t) => t.event_value);
-      expect(values).to.not.include('ADMIN_ONLY');
+      expect(values).to.include('ADMIN_ONLY');
       expect(values).to.include('NORMAL');
+      expect(values).to.include('DISABLED');
     });
 
     it('includes disabled field in response for admin', async () => {
@@ -223,6 +224,17 @@ describe('Event Templates API', () => {
         method: 'GET',
         url: `/sealog-server/api/v1/event_templates/${adminOnlyTemplate._id}`,
         headers: { Authorization: 'Bearer ' + adminJwt }
+      });
+
+      expect(res.statusCode).to.equal(200);
+      expect(res.result.event_value).to.equal('ADMIN_ONLY');
+    });
+
+    it('returns admin_only template for power_logger', async () => {
+      const res = await server.inject({
+        method: 'GET',
+        url: `/sealog-server/api/v1/event_templates/${adminOnlyTemplate._id}`,
+        headers: { Authorization: 'Bearer ' + powerLoggerJwt }
       });
 
       expect(res.statusCode).to.equal(200);
