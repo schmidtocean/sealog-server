@@ -604,6 +604,13 @@ class SubVehicleDataExporter(SealogDataExporter):
                     content = task['data_fn'](cruise)
                 except Exception as err:  # pylint: disable=broad-except
                     logging.error("Failed to export %s: %s", task['description'], err)
+                    try:
+                        os.remove(filepath)
+                    except FileNotFoundError:
+                        pass
+                    except OSError as remove_err:
+                        logging.error("Could not delete stale export %s: %s",
+                                      filepath, remove_err)
                     continue
                 self._write_file(filepath, content, task['description'])
 
@@ -642,6 +649,13 @@ class SubVehicleDataExporter(SealogDataExporter):
                     content = task['data_fn'](lowering)
                 except Exception as err:  # pylint: disable=broad-except
                     logging.error("Failed to export %s: %s", task['description'], err)
+                    try:
+                        os.remove(filepath)
+                    except FileNotFoundError:
+                        pass
+                    except OSError as remove_err:
+                        logging.error("Could not delete stale export %s: %s",
+                                      filepath, remove_err)
                     continue
                 self._write_file(filepath, content, task['description'])
 
