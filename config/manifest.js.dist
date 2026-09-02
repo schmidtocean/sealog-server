@@ -76,7 +76,7 @@ const {
 const port = process.env.SEALOG_SERVER_PORT || SERVER_PORT;
 let env = process.env.NODE_ENV || 'development';
 env = (env === 'test') ? 'development' : env;
-env = ['demo-vehicle','demo-vessel'].includes(env) ? 'demo' : env;
+env = ['demo-vehicle','demo-vessel','demo-auv'].includes(env) ? 'demo' : env;
 
 
 const envKey = (key) => {

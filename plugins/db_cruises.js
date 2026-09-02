@@ -40,7 +40,7 @@ exports.plugin = {
 
         let init_data = [];
         if (process.env.SEALOG_INSTANCE_TYPE === 'emp') {
-          init_data = filePreProcessor('./init_data/system_templates_emp.json', 'event_templates');
+          init_data = filePreProcessor('./demo/FKt260806_cruiseRecord.json', 'cruises');
         }
         else {
           init_data = filePreProcessor('./demo/FKt230303_cruiseRecord.json', 'cruises');
