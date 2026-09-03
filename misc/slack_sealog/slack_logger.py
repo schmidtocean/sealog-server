@@ -74,6 +74,9 @@ class PooledSlackHandler(logging.Handler):
                     'emoji': True
                 }
             }]
+            attachments = [{
+                'color': self._get_level_name_and_color(max(self.message_pools.keys()))[1]
+            }]
 
             # Process each level of messages
             for level in sorted(self.message_pools.keys(), reverse=True):
@@ -90,6 +93,15 @@ class PooledSlackHandler(logging.Handler):
                     message_text += f"• {msg['timestamp']} - {msg['message']}{count_text}\n"
 
                 if message_text:
+                    if level == logging.INFO:
+                        attachments[0].update({
+                            'fallback': f"{self.report_title} - Info",
+                            'pretext': level_name,
+                            'text': message_text.rstrip(),
+                            'mrkdwn_in': ['pretext', 'text']
+                        })
+                        continue
+
                     # Split messages if they're too long
                     message_chunks = [
                         message_text[i:i+2900]
@@ -132,9 +144,7 @@ class PooledSlackHandler(logging.Handler):
 
             payload = {
                 'blocks': blocks,
-                'attachments': [{
-                    'color': self._get_level_name_and_color(max(self.message_pools.keys()))[1]
-                }]
+                'attachments': attachments
             }
 
             # Implement retry logic
