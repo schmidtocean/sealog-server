@@ -31,12 +31,22 @@ EVENT_EXCLUDE_VALUES = {
     'ASNAP', 'FRAME GRAB', 'FRAME_GRAB', 'FRAMEGRAB', 'WATCH CHANGE', 'WATCH_CHANGE',
 }
 EVENT_GROUP_ORDER = ('Vehicle', 'Problem', 'Other')
-HIDDEN_MILESTONE_ALIASES = {
-    'lowering_descending',
-    'lowering_on_bottom',
-    'lowering_off_bottom',
-    'lowering_on_surface',
-    'lowering_aborted',
+MILESTONE_LABELS = {
+    'lowering_deployment': 'Deployment',
+    'lowering_key_pulled': 'Mission Key Pulled',
+    'lowering_in_water': 'In Water',
+    'lowering_descent_initiated': 'Descent Initiated',
+    'lowering_descending': 'Descent Initiated',
+    'lowering_reached_survey_depth': 'Reached Survey Depth',
+    'lowering_on_bottom': 'Reached Survey Depth',
+    'lowering_ascent_initiated': 'Ascent Initiated',
+    'lowering_leaving_survey_depth': 'Leaving Survey Depth',
+    'lowering_off_bottom': 'Leaving Survey Depth',
+    'lowering_vehicle_on_surface': 'Vehicle on Surface',
+    'lowering_on_surface': 'Vehicle on Surface',
+    'lowering_recovery': 'Recovery',
+    'lowering_out_of_water': 'Out of Water',
+    'lowering_aborted': 'Aborted',
 }
 LOWERING_START_MILESTONE = 'lowering_start'
 LOWERING_STOP_MILESTONE = 'lowering_stop'
@@ -190,21 +200,21 @@ def _actual_milestones(
         label: str | None = None,
         replace: bool = False,
     ) -> None:
-        if name in HIDDEN_MILESTONE_ALIASES:
-            return
-
         timestamp = parse_timestamp(value)
         if timestamp is None:
             return
 
-        if name in milestone_map and not replace:
+        display_name = label or MILESTONE_LABELS.get(name, name)
+        milestone_key = display_name.casefold()
+
+        if milestone_key in milestone_map and not replace:
             return
 
-        if name not in milestone_map:
-            milestone_order.append(name)
+        if milestone_key not in milestone_map:
+            milestone_order.append(milestone_key)
 
-        milestone_map[name] = {
-            'name': label or name,
+        milestone_map[milestone_key] = {
+            'name': display_name,
             'key': name,
             'ts': timestamp,
             'raw_value': value,
@@ -221,7 +231,10 @@ def _actual_milestones(
         for name, value in milestones.items():
             add_milestone(str(name), value, replace=True)
 
-    for record in event_milestone_records(event_exports or []):
+    event_records = event_milestone_records(event_exports or [])
+    _warn_duplicate_event_milestones(event_records)
+
+    for record in event_records:
         name = record.get('name')
         if not isinstance(name, str):
             continue
@@ -237,6 +250,28 @@ def _actual_milestones(
     output = [milestone_map[name] for name in milestone_order if name in milestone_map]
 
     return _milestone_rows_with_nav(output, track_points)
+
+
+def _warn_duplicate_event_milestones(event_records: list[SealogRecord]) -> None:
+    '''
+    Warn when the event history contains the same milestone more than once
+    '''
+
+    records_by_type: dict[str, list[SealogRecord]] = {}
+
+    for record in event_records:
+        name = str(record.get('name', ''))
+        display_name = MILESTONE_LABELS.get(name, name)
+        records_by_type.setdefault(display_name.casefold(), []).append(record)
+
+    for records in records_by_type.values():
+        if len(records) > 1:
+            name = str(records[0]['name'])
+            logging.warning(
+                "Multiple milestone events found for %s: %s",
+                MILESTONE_LABELS.get(name, name),
+                ', '.join(str(record['raw_value']) for record in records),
+            )
 
 
 def _milestone_rows_with_nav(
