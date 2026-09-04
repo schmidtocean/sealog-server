@@ -119,6 +119,7 @@ REPORT_ONLY_OUTPUT_DIR = "/data/sealog-emp-export"
 EMP_REPORT_API_SERVER_URL = "http://10.23.9.25:8200/sealog-server"
 SEALOG_API_TOKEN_ENV = "SEALOG_API_TOKEN"
 VEHICLE_NAME = 'Empress'
+IMAGE_DATASOURCES = ['vehicleRealtimeFramegrabberData']
 
 CRUISEDATA_LOCAL_MOUNT = '/mnt/CruiseData'
 OPENVDM_VEHICLE_DIR = 'Vehicles/' + VEHICLE_NAME
@@ -240,7 +241,7 @@ def _export_lowering_images(cruise, lowering):  # pylint: disable=redefined-oute
         _export_dir_name(cruise['cruise_id'], lowering['lowering_id']),
     )
     images_export_dir = os.path.join(lowering_export_dir, IMAGES_DIRNAME)
-    framegrab_list = get_framegrab_list_by_lowering(lowering['id'])
+    framegrab_list = get_framegrab_list_by_lowering(lowering['id'], IMAGE_DATASOURCES)
     logging.info("Found %s framegrab image(s) for %s", len(framegrab_list), lowering['lowering_id'])
 
     existing_framegrab_list = os.listdir(images_export_dir)
