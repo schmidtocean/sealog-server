@@ -28,6 +28,20 @@ Seconds = int | None
 
 MILESTONE_OPTION_NAME = 'milestone'
 STATS_AUX_DATA_SOURCES = ('vehicleRealtimeNavData', 'vehicleRealtimeUSBLData')
+MILESTONE_FIELD_NAMES = {
+    'Deployment': ('lowering_deployment',),
+    'Mission Key Pulled': ('lowering_key_pulled',),
+    'In Water': ('lowering_in_water',),
+    'Descent Initiated': ('lowering_descent_initiated',),
+    'Descending': ('lowering_descending',),
+    'Reached Survey Depth': ('lowering_on_bottom', 'lowering_reached_survey_depth'),
+    'Ascent Initiated': ('lowering_ascent_initiated',),
+    'Leaving Survey Depth': ('lowering_off_bottom', 'lowering_leaving_survey_depth'),
+    'Vehicle on Surface': ('lowering_on_surface', 'lowering_vehicle_on_surface'),
+    'Recovery': ('lowering_recovery',),
+    'Out of Water': ('lowering_out_of_water',),
+    'Aborted': ('lowering_aborted',),
+}
 
 
 @dataclass(frozen=True)
@@ -124,15 +138,26 @@ def lowering_with_event_milestones(
     '''
 
     event_milestones = event_milestones_dict(event_exports or [])
-    if not event_milestones:
-        return lowering
-
     output = dict(lowering)
     meta = output.get('lowering_additional_meta', {})
     meta = dict(meta) if isinstance(meta, dict) else {}
     milestones = meta.get('milestones', {})
     milestones = dict(milestones) if isinstance(milestones, dict) else {}
-    meta['milestones'] = {**event_milestones, **milestones}
+    merged_milestones = {**event_milestones, **milestones}
+
+    for name, field_names in MILESTONE_FIELD_NAMES.items():
+        for field_name in field_names:
+            if parse_timestamp(milestones.get(field_name)) is not None:
+                merged_milestones[name] = milestones[field_name]
+                break
+
+    if parse_timestamp(lowering.get('start_ts')) is not None:
+        merged_milestones['Pre-dive'] = lowering['start_ts']
+
+    if parse_timestamp(lowering.get('stop_ts')) is not None:
+        merged_milestones['Mission Key Inserted'] = lowering['stop_ts']
+
+    meta['milestones'] = merged_milestones
     output['lowering_additional_meta'] = meta
 
     return output

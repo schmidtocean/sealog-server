@@ -36,7 +36,7 @@ MILESTONE_LABELS = {
     'lowering_key_pulled': 'Mission Key Pulled',
     'lowering_in_water': 'In Water',
     'lowering_descent_initiated': 'Descent Initiated',
-    'lowering_descending': 'Descent Initiated',
+    'lowering_descending': 'Descending',
     'lowering_reached_survey_depth': 'Reached Survey Depth',
     'lowering_on_bottom': 'Reached Survey Depth',
     'lowering_ascent_initiated': 'Ascent Initiated',
@@ -50,8 +50,8 @@ MILESTONE_LABELS = {
 }
 LOWERING_START_MILESTONE = 'lowering_start'
 LOWERING_STOP_MILESTONE = 'lowering_stop'
-LOWERING_START_LABEL = 'Deployment Start'
-LOWERING_STOP_LABEL = 'On Deck'
+LOWERING_START_LABEL = 'Pre-dive'
+LOWERING_STOP_LABEL = 'Mission Key Inserted'
 
 
 @dataclass(frozen=True)
@@ -249,7 +249,7 @@ def _actual_milestones(
 
     output = [milestone_map[name] for name in milestone_order if name in milestone_map]
 
-    return _milestone_rows_with_nav(output, track_points)
+    return _milestone_rows_with_nav(sorted(output, key=_milestone_sort_key), track_points)
 
 
 def _warn_duplicate_event_milestones(event_records: list[SealogRecord]) -> None:
