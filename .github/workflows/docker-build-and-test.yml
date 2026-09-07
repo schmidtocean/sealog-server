@@ -3,11 +3,11 @@ name: Docker Build and Run Test
 on:
   push:
     branches:
-      - 2.x  # Or any branch you want to trigger the workflow
+      - master  # Or any branch you want to trigger the workflow
       - dev
   pull_request:
     branches:
-      - 2.x  # Or any branch you want to trigger the workflow
+      - master  # Or any branch you want to trigger the workflow
       - dev
 
 jobs:
