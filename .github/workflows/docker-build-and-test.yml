@@ -57,6 +57,29 @@ jobs:
       run: |
         cp Dockerfile.dist Dockerfile
 
+    - name: Create environment files
+      run: |
+        cp .env.dist .env.FKt
+        cp .env.dist .env.Sub
+        cp .env.emp.dist .env.emp
+
+        sed -i \
+          -e 's|^MONGO_URL=.*|MONGO_URL=mongodb://mongo:27017/sealogDB_FKt|' \
+          -e 's|^SEALOG_SERVER_FILEPATH_ROOT=.*|SEALOG_SERVER_FILEPATH_ROOT=/data/sealog-files|' \
+          -e "s|^SEALOG_SERVER_SECRET=.*|SEALOG_SERVER_SECRET=${SECRET_KEY}|" \
+          .env.FKt
+
+        sed -i \
+          -e 's|^SEALOG_INSTANCE_TYPE=.*|SEALOG_INSTANCE_TYPE=Sub|' \
+          -e 's|^MONGO_URL=.*|MONGO_URL=mongodb://mongo:27017/sealogDB_Sub|' \
+          -e 's|^SEALOG_SERVER_FILEPATH_ROOT=.*|SEALOG_SERVER_FILEPATH_ROOT=/data/sealog-files|' \
+          -e "s|^SEALOG_SERVER_SECRET=.*|SEALOG_SERVER_SECRET=${SECRET_KEY}|" \
+          .env.Sub
+
+        sed -i \
+          -e "s|^SEALOG_SERVER_SECRET=.*|SEALOG_SERVER_SECRET=${SECRET_KEY}|" \
+          .env.emp
+
     - name: Build and Run Docker Compose
       run: |
         docker-compose -f docker-compose.yml up -d --build
