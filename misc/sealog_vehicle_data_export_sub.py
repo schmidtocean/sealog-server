@@ -473,7 +473,7 @@ class SubVehicleDataExporter(SealogDataExporter):
 
         try:
             subprocess.run(
-                ['rclone', 'sync', '--transfers=16', '--checkers=16',
+                ['rclone', 'copy', '--transfers=16', '--checkers=16',
                  '--size-only', '--progress', '--include=*.pdf',
                  os.path.join(cruise_source_dir, self.REPORTS_DIRNAME, ''),
                  warehouse_cruise_dir],
@@ -486,7 +486,7 @@ class SubVehicleDataExporter(SealogDataExporter):
         logging.info("Syncing cruise files")
         try:
             subprocess.run(
-                ['rclone', 'sync', '--transfers=16', '--checkers=16',
+                ['rclone', 'copy', '--transfers=16', '--checkers=16',
                  '--size-only', '--progress', '--exclude=*.pdf',
                  os.path.join(cruise_source_dir, self.FILES_DIRNAME, ''),
                  warehouse_cruise_dir],
