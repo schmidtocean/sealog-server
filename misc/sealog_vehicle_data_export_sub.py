@@ -422,8 +422,7 @@ class SubVehicleDataExporter(SealogDataExporter):
             with open(os.path.join(report_dest_dir, report_filename), 'wb') as file:
                 file.write(CruiseSummaryReport(cruise['id']).export_pdf())
         except Exception as err:  # pylint: disable=broad-except
-            logging.error("Unable to build report")
-            logging.debug(str(err))
+            logging.error("Unable to build cruise report %s: %s", report_filename, err)
 
     def _build_lowering_reports(self, cruise, lowering):
         """Build the lowering summary and vehicle PDF reports."""

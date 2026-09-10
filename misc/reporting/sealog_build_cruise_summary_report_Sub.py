@@ -77,7 +77,8 @@ class CruiseSummaryReport(CruiseReportCreator):  # pylint: disable=too-few-publi
         flowables.append(NextPageTemplate('Normal'))
         flowables.append(Paragraph(f"<b>Cruise ID:</b> {self.cruise_record['cruise_id']}", self.body_text))  # noqa: E501
         flowables.append(Paragraph(f"<b>Cruise PI:</b> {self.cruise_record['cruise_additional_meta']['cruise_pi']}", self.body_text))  # noqa: E501
-        flowables.append(Paragraph(f"<b>Summary:</b> {self.cruise_record['cruise_additional_meta']['cruise_description']}", self.body_text))  # noqa: E501
+        cruise_description = self.cruise_record['cruise_additional_meta'].get('cruise_description') or 'N/A'  # noqa: E501
+        flowables.append(Paragraph(f"<b>Summary:</b> {cruise_description}", self.body_text))
         flowables.append(Paragraph(f"<b>Location:</b> {self.cruise_record['cruise_location']}", self.body_text))  # noqa: E501
         flowables.append(Paragraph(f"<b>Ports:</b> {self.cruise_record['cruise_additional_meta']['cruise_departure_location']} --> {self.cruise_record['cruise_additional_meta']['cruise_arrival_location']}", self.body_text))  # noqa: E501
         flowables.append(Paragraph(f"<b>Dates:</b> {datetime.fromisoformat(self.cruise_record['start_ts'][:-1]).strftime('%d-%m-%Y')} --> {datetime.fromisoformat(self.cruise_record['stop_ts'][:-1]).strftime('%d-%m-%Y')}", self.body_text))  # noqa: E501
