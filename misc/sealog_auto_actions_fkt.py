@@ -62,7 +62,8 @@ PING = {
 
 ASNAP_LOOKUP = {
     'Start of Cruise': 'On',
-    'Arrived at Dock/Port': 'Off'
+    'Arrived at Dock/Port': 'Off',
+    'End of Cruise': 'Off'
 }
 
 
