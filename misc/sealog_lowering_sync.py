@@ -24,6 +24,7 @@ SETTINGS_FILES = {
 MAPPINGS = {
     'sub': {
         'event_value': 'ROV',
+        'number_option': 'dive_number',
         'event_options': [],
         'milestones': {
             'off deck': 'Deployed',
@@ -31,10 +32,9 @@ MAPPINGS = {
         },
     },
     'emp': {
-        'event_value': 'EQUIPMENT',
-        'event_options': [
-            {'event_option_name': 'system', 'event_option_value': 'AUV'},
-        ],
+        'event_value': 'AUV',
+        'number_option': 'deployment_number',
+        'event_options': [],
         'milestones': {
             'in water': 'Deployed',
             'out of water': 'Recovered',
@@ -74,7 +74,7 @@ def destination_event(instance, event, lowering):
     event_options = [dict(option) for option in mapping['event_options']]
     event_options.extend([
         {'event_option_name': 'status', 'event_option_value': status},
-        {'event_option_name': 'dive_number', 'event_option_value': lowering_id},
+        {'event_option_name': mapping['number_option'], 'event_option_value': lowering_id},
     ])
     return {
         'event_value': mapping['event_value'],
