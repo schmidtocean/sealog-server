@@ -75,21 +75,21 @@ ASNAP_LOOKUP = {
 
 START_STOP_LOOKUP = {
     'Pre-dive': 'start_ts',
-    'Mission Key Inserted': 'stop_ts'
+    'Mission key inserted': 'stop_ts'
 }
 
 MILESTONE_LOOKUP = {
     'Deployment': ['lowering_deployment'],
-    'Mission Key Pulled': ['lowering_key_pulled'],
-    'In Water': ['lowering_in_water'],
-    'Descent Initiated': ['lowering_descent_initiated'],
+    'Mission key pulled': ['lowering_key_pulled'],
+    'In water': ['lowering_in_water'],
+    'Descent initiated': ['lowering_descent_initiated'],
     'Descending': ['lowering_descending'],
-    'Reached Survey Depth': ['lowering_on_bottom'],
-    'Ascent Initiated': ['lowering_ascent_initiated'],
-    'Leaving Survey Depth': ['lowering_off_bottom'],
-    'Vehicle on Surface': ['lowering_on_surface'],
+    'Reached survey depth': ['lowering_on_bottom'],
+    'Ascent initiated': ['lowering_ascent_initiated'],
+    'Leaving survey depth': ['lowering_off_bottom'],
+    'Vehicle on surface': ['lowering_on_surface'],
     'Recovery': ['lowering_recovery'],
-    'Out of Water': ['lowering_out_of_water'],
+    'Out of water': ['lowering_out_of_water'],
     'Aborted': ['lowering_aborted']
 }
 
@@ -107,11 +107,12 @@ def _handle_vehicle_event(event):
 
     # if event has milestone event_option, pass milestone to _set_milestones
     for option in event.get('event_options', []):
-        if option.get('event_option_name') == "milestone":
+        if str(option.get('event_option_name', '')).strip().casefold() == "milestone":
             milestone = option.get('event_option_value')
             break
 
-    if milestone is not None:
+    if isinstance(milestone, str):
+        milestone = milestone.strip().capitalize()
         _set_asnap(milestone)
 
         if milestone == WATCH_CHANGE_START_MILESTONE:
@@ -184,16 +185,15 @@ def _set_milestones(event, evt_milestone):  # pylint: disable=too-many-branches,
                 milestone.get('reset', False) if isinstance(milestone, dict) else False
             )
 
-            if (
-                'milestones' not in lowering['lowering_additional_meta'] or
-                milestone_name not in lowering['lowering_additional_meta']['milestones'] or
-                lowering['lowering_additional_meta']['milestones'][milestone_name] is None or
-                lowering['lowering_additional_meta']['milestones'][milestone_name] == '' or
-                milestone_reset
-            ):
-
+            milestones = payload['lowering_additional_meta']['milestones']
+            existing_names = [name for name in milestones
+                              if name.strip().casefold() == milestone_name.strip().casefold()]
+            if milestone_reset or not any(milestones[name] not in (None, '')
+                                          for name in existing_names):
+                for name in existing_names:
+                    del milestones[name]
                 logging.info("Setting milestone: %s to %s", milestone_name, event['ts'])
-                payload['lowering_additional_meta']['milestones'][milestone_name] = event['ts']
+                milestones[milestone_name] = event['ts']
 
     if not bool(payload):
         logging.warning("Nothing to update in the lowering record")

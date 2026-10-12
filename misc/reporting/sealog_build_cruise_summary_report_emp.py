@@ -96,34 +96,34 @@ STAGE_DEFINITIONS = (
     StageDefinition(
         'Deck to Deck',
         ('Deployment',),
-        ('Mission Key Inserted',),
+        ('Mission key inserted',),
         start_fallback='start_ts',
         stop_fallback='stop_ts',
     ),
     StageDefinition(
         'Deployment',
         ('Deployment',),
-        ('Descent Initiated', 'Initial Descent', 'lowering_descending'),
+        ('Descent initiated', 'Initial descent', 'lowering_descending'),
     ),
     StageDefinition(
         'Descent',
-        ('Descent Initiated', 'Initial Descent', 'lowering_descending'),
-        ('Reached Survey Depth', 'At Depth', 'lowering_on_bottom'),
+        ('Descent initiated', 'Initial descent', 'lowering_descending'),
+        ('Reached survey depth', 'At depth', 'lowering_on_bottom'),
     ),
     StageDefinition(
         'Survey Depth',
-        ('Reached Survey Depth', 'At Depth', 'lowering_on_bottom'),
-        ('Leaving Survey Depth', 'lowering_off_bottom'),
+        ('Reached survey depth', 'At depth', 'lowering_on_bottom'),
+        ('Leaving survey depth', 'lowering_off_bottom'),
     ),
     StageDefinition(
         'Ascent',
-        ('Leaving Survey Depth', 'lowering_off_bottom'),
-        ('Vehicle on Surface', 'lowering_on_surface'),
+        ('Leaving survey depth', 'lowering_off_bottom'),
+        ('Vehicle on surface', 'lowering_on_surface'),
     ),
     StageDefinition(
         'Recovery',
-        ('Vehicle on Surface', 'lowering_on_surface', 'Recovery'),
-        ('Mission Key Inserted',),
+        ('Vehicle on surface', 'lowering_on_surface', 'Recovery'),
+        ('Mission key inserted',),
         stop_fallback='stop_ts',
     ),
 )
@@ -142,20 +142,22 @@ def lowering_with_event_milestones(
     meta = output.get('lowering_additional_meta', {})
     meta = dict(meta) if isinstance(meta, dict) else {}
     milestones = meta.get('milestones', {})
-    milestones = dict(milestones) if isinstance(milestones, dict) else {}
+    milestones = {
+        str(name).strip().casefold(): value for name, value in milestones.items()
+    } if isinstance(milestones, dict) else {}
     merged_milestones = {**event_milestones, **milestones}
 
     for name, field_names in MILESTONE_FIELD_NAMES.items():
         for field_name in field_names:
             if parse_timestamp(milestones.get(field_name)) is not None:
-                merged_milestones[name] = milestones[field_name]
+                merged_milestones[name.casefold()] = milestones[field_name]
                 break
 
     if parse_timestamp(lowering.get('start_ts')) is not None:
-        merged_milestones['Pre-dive'] = lowering['start_ts']
+        merged_milestones['pre-dive'] = lowering['start_ts']
 
     if parse_timestamp(lowering.get('stop_ts')) is not None:
-        merged_milestones['Mission Key Inserted'] = lowering['stop_ts']
+        merged_milestones['mission key inserted'] = lowering['stop_ts']
 
     meta['milestones'] = merged_milestones
     output['lowering_additional_meta'] = meta
@@ -253,7 +255,7 @@ def event_milestones_dict(event_exports: list[SealogRecord]) -> dict[str, Any]:
     milestones = {}
 
     for record in event_milestone_records(event_exports):
-        milestones.setdefault(str(record['name']), record['raw_value'])
+        milestones.setdefault(str(record['name']).strip().casefold(), record['raw_value'])
 
     return milestones
 
@@ -267,10 +269,11 @@ def event_milestone_value(event: SealogRecord) -> str | None:
         if not isinstance(option, dict):
             continue
 
-        if option.get('event_option_name') != MILESTONE_OPTION_NAME:
+        if str(option.get('event_option_name', '')).strip().casefold() != MILESTONE_OPTION_NAME:
             continue
 
-        value = str(option.get('event_option_value', '')).strip()
+        value = option.get('event_option_value')
+        value = value.strip().capitalize() if isinstance(value, str) else ''
         return value or None
 
     return None
@@ -355,10 +358,13 @@ def get_stage_boundary(
     Return the first matching milestone timestamp, with optional lowering field fallback
     '''
 
-    milestones = _get_meta_dict(lowering, 'milestones')
+    milestones = {
+        str(name).strip().casefold(): value
+        for name, value in _get_meta_dict(lowering, 'milestones').items()
+    }
 
     for name in names:
-        timestamp = parse_timestamp(milestones.get(name))
+        timestamp = parse_timestamp(milestones.get(name.strip().casefold()))
         if timestamp is not None:
             return timestamp
 

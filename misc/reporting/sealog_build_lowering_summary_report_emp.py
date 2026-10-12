@@ -204,7 +204,8 @@ def _actual_milestones(
         if timestamp is None:
             return
 
-        display_name = label or MILESTONE_LABELS.get(name, name)
+        name = name.strip()
+        display_name = (label or MILESTONE_LABELS.get(name.casefold(), name)).capitalize()
         milestone_key = display_name.casefold()
 
         if milestone_key in milestone_map and not replace:
@@ -228,7 +229,12 @@ def _actual_milestones(
 
     milestones = meta.get('milestones', {})
     if isinstance(milestones, dict):
+        milestones = {str(name).strip().casefold(): value for name, value in milestones.items()}
         for name, value in milestones.items():
+            label = MILESTONE_LABELS.get(name)
+            if label and parse_timestamp(milestones.get(label.casefold())) is not None:
+                # The merged name already carries the preferred legacy alias timestamp.
+                continue
             add_milestone(str(name), value, replace=True)
 
     event_records = event_milestone_records(event_exports or [])
@@ -261,7 +267,7 @@ def _warn_duplicate_event_milestones(event_records: list[SealogRecord]) -> None:
 
     for record in event_records:
         name = str(record.get('name', ''))
-        display_name = MILESTONE_LABELS.get(name, name)
+        display_name = MILESTONE_LABELS.get(name.strip().casefold(), name).strip().capitalize()
         records_by_type.setdefault(display_name.casefold(), []).append(record)
 
     for records in records_by_type.values():
@@ -269,7 +275,7 @@ def _warn_duplicate_event_milestones(event_records: list[SealogRecord]) -> None:
             name = str(records[0]['name'])
             logging.warning(
                 "Multiple milestone events found for %s: %s",
-                MILESTONE_LABELS.get(name, name),
+                MILESTONE_LABELS.get(name.strip().casefold(), name).strip().capitalize(),
                 ', '.join(str(record['raw_value']) for record in records),
             )
 

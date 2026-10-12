@@ -314,7 +314,7 @@
       {
         "event_option_name": "milestone",
         "event_option_type": "static text",
-        "event_option_default_value": "Mission Key Pulled",
+        "event_option_default_value": "Mission key pulled",
         "event_option_allow_freeform": false,
         "event_option_required": false,
         "event_option_values": []
@@ -330,7 +330,7 @@
       {
         "event_option_name": "milestone",
         "event_option_type": "static text",
-        "event_option_default_value": "In Water",
+        "event_option_default_value": "In water",
         "event_option_required": false,
         "event_option_allow_freeform": false,
         "event_option_values": []
@@ -358,7 +358,7 @@
       {
         "event_option_name": "milestone",
         "event_option_type": "static text",
-        "event_option_default_value": "Descent Initiated",
+        "event_option_default_value": "Descent initiated",
         "event_option_allow_freeform": false,
         "event_option_required": false,
         "event_option_values": []
@@ -380,7 +380,7 @@
       {
         "event_option_name": "milestone",
         "event_option_type": "static text",
-        "event_option_default_value": "Reached Survey Depth",
+        "event_option_default_value": "Reached survey depth",
         "event_option_allow_freeform": false,
         "event_option_required": false,
         "event_option_values": []
@@ -402,7 +402,7 @@
       {
         "event_option_name": "milestone",
         "event_option_type": "static text",
-        "event_option_default_value": "Leaving Survey Depth",
+        "event_option_default_value": "Leaving survey depth",
         "event_option_allow_freeform": false,
         "event_option_required": false,
         "event_option_values": []
@@ -424,7 +424,7 @@
       {
         "event_option_name": "milestone",
         "event_option_type": "static text",
-        "event_option_default_value": "Ascent Initiated",
+        "event_option_default_value": "Ascent initiated",
         "event_option_allow_freeform": false,
         "event_option_required": false,
         "event_option_values": []
@@ -446,7 +446,7 @@
       {
         "event_option_name": "milestone",
         "event_option_type": "static text",
-        "event_option_default_value": "Vehicle on Surface",
+        "event_option_default_value": "Vehicle on surface",
         "event_option_allow_freeform": false,
         "event_option_required": false,
         "event_option_values": []
@@ -675,7 +675,7 @@
       {
         "event_option_name": "milestone",
         "event_option_type": "static text",
-        "event_option_default_value": "Mission Key Inserted",
+        "event_option_default_value": "Mission key inserted",
         "event_option_allow_freeform": false,
         "event_option_required": false,
         "event_option_values": []

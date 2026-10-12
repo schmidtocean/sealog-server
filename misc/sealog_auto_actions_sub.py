@@ -97,11 +97,12 @@ def _handle_vehicle_event(event):
 
     # if event has milestone event_option, pass milestone to _set_asnap and _set_milestones
     for option in event['event_options']:
-        if option['event_option_name'] == "milestone":
+        if option['event_option_name'].strip().casefold() == "milestone":
             milestone = option['event_option_value']
             break
 
-    if milestone is not None:
+    if isinstance(milestone, str):
+        milestone = milestone.strip().capitalize()
         _set_asnap(milestone)
 
         if milestone == 'Off deck':
