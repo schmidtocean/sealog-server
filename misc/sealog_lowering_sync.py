@@ -14,6 +14,8 @@ import websockets
 EVENTS_API_PATH = '/api/v1/events'
 LOWERING_BY_EVENT_PATH = '/api/v1/lowerings/byevent'
 SUBSCRIPTION_PATH = '/ws/status/newEvents'
+UPDATE_SUBSCRIPTION_PATH = '/ws/status/updateEvents'
+SUBSCRIPTION_PATHS = (SUBSCRIPTION_PATH, UPDATE_SUBSCRIPTION_PATH)
 
 SETTINGS_FILES = {
     'fkt': '/opt/sealog-server-fkt/misc/python_sealog/settings.py',
@@ -129,7 +131,7 @@ async def listen(source, destination):
         'id': client_id,
         'auth': {'headers': source['headers']},
         'version': '2',
-        'subs': [SUBSCRIPTION_PATH],
+        'subs': list(SUBSCRIPTION_PATHS),
     }
     async with websockets.connect(source['websocketServerURL']) as websocket:
         logging.info('Connected to %s event feed', instance)
@@ -138,7 +140,7 @@ async def listen(source, destination):
             message = json.loads(message)
             if message.get('type') == 'ping':
                 await websocket.send(json.dumps({'type': 'ping', 'id': client_id}))
-            elif message.get('type') == 'pub' and message.get('path') == SUBSCRIPTION_PATH:
+            elif message.get('type') == 'pub' and message.get('path') in SUBSCRIPTION_PATHS:
                 try:
                     await asyncio.to_thread(
                         forward_event, instance, message['message'], source, destination,

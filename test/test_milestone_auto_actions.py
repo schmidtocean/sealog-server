@@ -34,6 +34,12 @@ def event(value, option_name='MILESTONE'):
 
 
 class MilestoneConsumerTests(unittest.TestCase):
+    def test_lowering_sync_subscribes_to_new_and_updated_events(self):
+        self.assertEqual(SYNC.SUBSCRIPTION_PATHS, (
+            '/ws/status/newEvents',
+            '/ws/status/updateEvents',
+        ))
+
     def handle(self, module, value, existing=None, option_name='MILESTONE'):
         lowering = {
             'id': 'lowering-1',
