@@ -40,7 +40,7 @@ class MilestoneConsumerTests(unittest.TestCase):
             '/ws/status/updateEvents',
         ))
 
-    def handle(self, module, value, existing=None, option_name='MILESTONE'):
+    def handle(self, module, value, existing=None, option_name='MILESTONE', watch_events=None):
         lowering = {
             'id': 'lowering-1',
             'lowering_additional_meta': {'milestones': deepcopy(existing or {})},
@@ -54,7 +54,7 @@ class MilestoneConsumerTests(unittest.TestCase):
                 module, 'get_lowering_by_event', return_value=lowering,
             ))
             mocks.enter_context(patch.object(
-                module, 'get_events_by_lowering', return_value=[{'id': 'watch-1'}],
+                module, 'get_events_by_lowering', return_value=watch_events or [{'id': 'watch-1'}],
             ))
             mocks.enter_context(patch.object(
                 module, 'get_custom_var_uid_by_name', return_value='asnap-1',
@@ -99,11 +99,26 @@ class MilestoneConsumerTests(unittest.TestCase):
             'Reached survey depth': TIMESTAMP, 'lowering_on_bottom': TIMESTAMP,
         })
 
-    def test_emp_dive_aborted_button_sets_lowering_aborted(self):
-        updates, _, _ = self.handle(EMP, 'Dive Aborted')
-        self.assertEqual(updates[0]['lowering_additional_meta']['milestones'], {
-            'Dive aborted': TIMESTAMP, 'lowering_aborted': TIMESTAMP,
-        })
+    def test_every_checked_in_emp_milestone_template_updates_the_lowering(self):
+        templates = json.loads((ROOT / 'init_data/system_templates_emp.json').read_text())
+        values = [option['event_option_default_value'] for template in templates
+                  for option in template['event_options']
+                  if option['event_option_name'].casefold() == 'milestone']
+        self.assertIn('Dive aborted', values)
+        for value in values:
+            with self.subTest(value=value):
+                updates, _, _ = self.handle(EMP, value)
+                milestones = updates[0]['lowering_additional_meta']['milestones']
+                expected = [value.capitalize()] + EMP.MILESTONE_LOOKUP.get(value.capitalize(), [])
+                self.assertEqual(milestones, dict.fromkeys(expected, TIMESTAMP))
+        updates, _, _ = self.handle(EMP, 'Dive aborted')
+        self.assertIn('lowering_aborted', updates[0]['lowering_additional_meta']['milestones'])
+
+    def test_in_water_moves_the_first_watch_change(self):
+        _, watches, _ = self.handle(
+            EMP, 'In water', watch_events=[{'id': 'watch-1'}, {'id': 'watch-2'}],
+        )
+        self.assertEqual(watches, [{'ts': TIMESTAMP}])
 
     def test_existing_emp_keys_are_reused_and_recorded_timestamps_preserved(self):
         for label in ('Reached Survey Depth', 'REACHED SURVEY DEPTH'):

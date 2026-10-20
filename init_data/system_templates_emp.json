@@ -687,7 +687,16 @@
     "event_name": "Dive Aborted",
     "event_value": "VEHICLE",
     "event_free_text_required": true,
-    "event_options": [],
+    "event_options": [
+      {
+        "event_option_name": "milestone",
+        "event_option_type": "static text",
+        "event_option_default_value": "Dive aborted",
+        "event_option_required": false,
+        "event_option_allow_freeform": false,
+        "event_option_values": []
+      }
+    ],
     "system_template": true,
     "template_categories": [
       "VEHICLE"

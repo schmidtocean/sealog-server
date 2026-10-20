@@ -228,7 +228,7 @@ def _update_first_watch_change(event):
 
     if watch_change_events:
         requests.patch(
-            API_SERVER_URL + EVENTS_API_PATH + '/' + watch_change_events[-1]['id'],
+            API_SERVER_URL + EVENTS_API_PATH + '/' + watch_change_events[0]['id'],
             headers=HEADERS,
             data=json.dumps({'ts': event['ts']}),
         )
