@@ -40,7 +40,7 @@ MILESTONE_FIELD_NAMES = {
     'Vehicle on Surface': ('lowering_on_surface', 'lowering_vehicle_on_surface'),
     'Recovery': ('lowering_recovery',),
     'Out of Water': ('lowering_out_of_water',),
-    'Aborted': ('lowering_aborted',),
+    'Dive aborted': ('lowering_aborted',),
 }
 
 
@@ -144,6 +144,7 @@ def lowering_with_event_milestones(
     milestones = meta.get('milestones', {})
     milestones = {
         str(name).strip().casefold(): value for name, value in milestones.items()
+        if value not in (None, '')
     } if isinstance(milestones, dict) else {}
     merged_milestones = {**event_milestones, **milestones}
 
@@ -397,8 +398,8 @@ def build_lowering_metrics(
     return LoweringMetrics(
         lowering_id=str(lowering.get('lowering_id', '')),
         location=str(lowering.get('lowering_location', '')),
-        start_ts=get_stage_boundary(lowering, ('Deployment',), 'start_ts'),
-        stop_ts=get_stage_boundary(lowering, ('Mission Key Inserted',), 'stop_ts'),
+        start_ts=get_stage_boundary(lowering, STAGE_DEFINITIONS[0].start, 'start_ts'),
+        stop_ts=get_stage_boundary(lowering, STAGE_DEFINITIONS[0].stop, 'stop_ts'),
         stage_durations=stage_durations,
         max_depth=(
             max_depth

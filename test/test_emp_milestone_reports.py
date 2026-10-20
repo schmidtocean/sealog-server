@@ -109,6 +109,33 @@ class EmpMilestoneReportsTest(unittest.TestCase):
             lowering_report._format_survey_depth_track_distance(lowering, points), '111.19km',
         )
 
+    def test_empty_stored_milestones_do_not_hide_event_timestamps(self):
+        '''Null stored values fall through to events; start/stop match Deck to Deck.'''
+        lowering = {
+            'start_ts': timestamp(0), 'stop_ts': timestamp(8),
+            'lowering_additional_meta': {'milestones': {'In water': None, 'Out of water': ''}},
+        }
+        events = [event('In water', 2), event('Out of water', 6)]
+        metrics = cruise_report.build_lowering_metrics(
+            cruise_report.lowering_with_event_milestones(lowering, events),
+        )
+        self.assertEqual(metrics.stage_durations['Deck to Deck'], 4 * 3600)
+        self.assertEqual(metrics.start_ts, cruise_report.parse_timestamp(timestamp(2)))
+        self.assertEqual(metrics.stop_ts, cruise_report.parse_timestamp(timestamp(6)))
+
+    def test_abort_milestone_is_listed_once(self):
+        '''auto_actions stores both names for an abort; the report shows one.'''
+        lowering = {'lowering_additional_meta': {'milestones': {
+            'Dive aborted': timestamp(3), 'lowering_aborted': timestamp(3),
+        }}}
+        merged = cruise_report.lowering_with_event_milestones(lowering, [event('Dive aborted', 3)])
+        # pylint: disable=protected-access
+        rows = lowering_report._actual_milestones(
+            merged, merged['lowering_additional_meta'], [], [event('Dive aborted', 3)],
+        )
+        self.assertEqual([row['name'] for row in rows if 'abort' in row['name'].lower()],
+                         ['Dive aborted'])
+
 
 if __name__ == '__main__':
     unittest.main()

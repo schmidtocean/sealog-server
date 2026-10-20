@@ -46,7 +46,7 @@ MILESTONE_LABELS = {
     'lowering_on_surface': 'Vehicle on Surface',
     'lowering_recovery': 'Recovery',
     'lowering_out_of_water': 'Out of Water',
-    'lowering_aborted': 'Aborted',
+    'lowering_aborted': 'Dive aborted',
 }
 LOWERING_START_MILESTONE = 'lowering_start'
 LOWERING_STOP_MILESTONE = 'lowering_stop'
