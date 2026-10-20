@@ -99,6 +99,12 @@ class MilestoneConsumerTests(unittest.TestCase):
             'Reached survey depth': TIMESTAMP, 'lowering_on_bottom': TIMESTAMP,
         })
 
+    def test_emp_dive_aborted_button_sets_lowering_aborted(self):
+        updates, _, _ = self.handle(EMP, 'Dive Aborted')
+        self.assertEqual(updates[0]['lowering_additional_meta']['milestones'], {
+            'Dive aborted': TIMESTAMP, 'lowering_aborted': TIMESTAMP,
+        })
+
     def test_existing_emp_keys_are_reused_and_recorded_timestamps_preserved(self):
         for label in ('Reached Survey Depth', 'REACHED SURVEY DEPTH'):
             for previous in (EARLIER, None, ''):

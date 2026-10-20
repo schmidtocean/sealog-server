@@ -90,7 +90,8 @@ MILESTONE_LOOKUP = {
     'Vehicle on surface': ['lowering_on_surface'],
     'Recovery': ['lowering_recovery'],
     'Out of water': ['lowering_out_of_water'],
-    'Aborted': ['lowering_aborted']
+    'Aborted': ['lowering_aborted'],
+    'Dive aborted': ['lowering_aborted']
 }
 
 WATCH_CHANGE_START_MILESTONE = 'In water'
