@@ -36,10 +36,10 @@ class EmpMilestoneReportsTest(unittest.TestCase):
     def test_stage_durations_accept_old_sentence_and_lowercase_values(self):
         '''Historical and newly formatted events produce the same durations.'''
         names = [
-            'Pre-dive', 'Deployment', 'Descent Initiated', 'Reached Survey Depth',
-            'Leaving Survey Depth', 'Vehicle on Surface', 'Mission Key Inserted',
+            'Pre-dive', 'Deployment', 'In Water', 'Descent Initiated', 'Reached Survey Depth',
+            'Leaving Survey Depth', 'Vehicle on Surface', 'Out of Water', 'Mission Key Inserted',
         ]
-        lowering = {'start_ts': timestamp(0), 'stop_ts': timestamp(6)}
+        lowering = {'start_ts': timestamp(0), 'stop_ts': timestamp(8)}
         for transform in (str, str.capitalize, str.lower, str.swapcase):
             with self.subTest(transform=transform.__name__):
                 events = [event(transform(name), hour) for hour, name in enumerate(names)]
@@ -47,8 +47,8 @@ class EmpMilestoneReportsTest(unittest.TestCase):
                 self.assertEqual(
                     cruise_report.build_lowering_metrics(report_lowering).stage_durations,
                     {
-                        'Deck to Deck': 18000, 'Deployment': 3600, 'Descent': 3600,
-                        'Survey Depth': 3600, 'Ascent': 3600, 'Recovery': 3600,
+                        'Deck to Deck': 18000, 'Deployment': 7200, 'Descent': 3600,
+                        'Survey Depth': 3600, 'Ascent': 3600, 'Recovery': 7200,
                     },
                 )
 

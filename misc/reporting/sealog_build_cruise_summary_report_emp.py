@@ -95,8 +95,8 @@ class CruiseMapAssets:
 STAGE_DEFINITIONS = (
     StageDefinition(
         'Deck to Deck',
-        ('Deployment',),
-        ('Mission key inserted',),
+        ('In water',),
+        ('Out of water',),
         start_fallback='start_ts',
         stop_fallback='stop_ts',
     ),
