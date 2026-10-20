@@ -32,6 +32,7 @@ import asyncio
 import json
 import logging
 import time
+from datetime import datetime, timedelta
 import requests
 import websockets
 
@@ -39,7 +40,7 @@ from os.path import dirname, realpath
 sys.path.append(dirname(dirname(realpath(__file__))))
 
 from misc.python_sealog.custom_vars import get_custom_var_uid_by_name, set_custom_var
-from misc.python_sealog.events import get_events_by_lowering
+from misc.python_sealog.events import get_events
 from misc.python_sealog.lowerings import get_lowering_by_event
 from misc.python_sealog.settings import (
     API_SERVER_URL, WS_SERVER_URL, HEADERS, EVENTS_API_PATH, LOWERINGS_API_PATH,
@@ -94,7 +95,10 @@ MILESTONE_LOOKUP = {
     'Dive aborted': ['lowering_aborted']
 }
 
-WATCH_CHANGE_START_MILESTONE = 'In water'
+WATCH_CHANGE_START_MILESTONE = 'Pre-dive'
+
+# The first watch is often logged just before Pre-dive, outside the deployment.
+WATCH_CHANGE_LOOKBACK = timedelta(minutes=15)
 
 
 def _handle_vehicle_event(event):
@@ -214,21 +218,19 @@ def _set_milestones(event, evt_milestone):  # pylint: disable=too-many-branches,
 
 def _update_first_watch_change(event):
     '''
-    Update the timestamp of the first WATCH CHANGE event to match the 'In water' milestone.
+    Move a WATCH CHANGE logged shortly before Pre-dive to the Pre-dive time, so the
+    first watch falls inside the deployment.
     '''
 
-    # get lowering record corresponding to the event_uid
-    lowering = get_lowering_by_event(event['id'])
+    event_ts = datetime.fromisoformat(event['ts'].replace('Z', '+00:00'))
+    lookback = (event_ts - WATCH_CHANGE_LOOKBACK).isoformat().replace('+00:00', 'Z')
+    watch_change_events = get_events(event_filter=['WATCH CHANGE'],
+                                     start_ts=lookback, stop_ts=event['ts'])
 
-    if not lowering:
-        logging.warning("No lowering found for event.")
-        return
-
-    watch_change_events = get_events_by_lowering(lowering['id'], event_filter=['WATCH CHANGE'])
-
-    if watch_change_events:
+    # Events come back oldest first; the latest one is the watch starting this deployment.
+    if watch_change_events and watch_change_events[-1]['ts'] != event['ts']:
         requests.patch(
-            API_SERVER_URL + EVENTS_API_PATH + '/' + watch_change_events[0]['id'],
+            API_SERVER_URL + EVENTS_API_PATH + '/' + watch_change_events[-1]['id'],
             headers=HEADERS,
             data=json.dumps({'ts': event['ts']}),
         )

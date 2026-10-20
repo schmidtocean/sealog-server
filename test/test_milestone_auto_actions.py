@@ -53,8 +53,12 @@ class MilestoneConsumerTests(unittest.TestCase):
             mocks.enter_context(patch.object(
                 module, 'get_lowering_by_event', return_value=lowering,
             ))
+            watches_mock = watch_events or [{'id': 'watch-1', 'ts': EARLIER}]
             mocks.enter_context(patch.object(
-                module, 'get_events_by_lowering', return_value=watch_events or [{'id': 'watch-1'}],
+                module, 'get_events_by_lowering', return_value=watches_mock, create=True,
+            ))
+            self.get_events = mocks.enter_context(patch.object(
+                module, 'get_events', return_value=watches_mock, create=True,
             ))
             mocks.enter_context(patch.object(
                 module, 'get_custom_var_uid_by_name', return_value='asnap-1',
@@ -81,7 +85,7 @@ class MilestoneConsumerTests(unittest.TestCase):
                 with self.subTest(value=value, option_name=option_name):
                     updates, watches, calls = self.handle(EMP, value, option_name=option_name)
                     calls.assert_called_once_with('asnap-1', status)
-                    self.assertEqual(watches, [{'ts': TIMESTAMP}] if status == 'On' else [])
+                    self.assertEqual(watches, [])
                     self.assertEqual(updates[0]['lowering_additional_meta']['milestones'], {
                         label: TIMESTAMP, alias: TIMESTAMP,
                     })
@@ -114,11 +118,24 @@ class MilestoneConsumerTests(unittest.TestCase):
         updates, _, _ = self.handle(EMP, 'Dive aborted')
         self.assertIn('lowering_aborted', updates[0]['lowering_additional_meta']['milestones'])
 
-    def test_in_water_moves_the_first_watch_change(self):
+    def test_pre_dive_pulls_in_the_watch_logged_just_before_it(self):
+        # E0021: the first watch was logged 11 s before Pre-dive, outside the deployment.
+        pre_dive = '2026-10-18T17:02:18.945Z'
+        watch_events = [{'id': 'watch-0', 'ts': '2026-10-18T16:50:00.000Z'},
+                        {'id': 'watch-1', 'ts': '2026-10-18T17:02:07.000Z'}]
+        with patch.object(sys.modules[__name__], 'TIMESTAMP', pre_dive):
+            _, watches, _ = self.handle(EMP, 'Pre-dive', watch_events=watch_events)
+        self.assertEqual(watches, [{'ts': pre_dive}])
+        self.assertEqual(self.get_events.call_args.kwargs, {
+            'event_filter': ['WATCH CHANGE'],
+            'start_ts': '2026-10-18T16:47:18.945000Z', 'stop_ts': pre_dive,
+        })
+
+    def test_pre_dive_leaves_a_watch_already_at_pre_dive(self):
         _, watches, _ = self.handle(
-            EMP, 'In water', watch_events=[{'id': 'watch-1'}, {'id': 'watch-2'}],
+            EMP, 'Pre-dive', watch_events=[{'id': 'watch-1', 'ts': TIMESTAMP}],
         )
-        self.assertEqual(watches, [{'ts': TIMESTAMP}])
+        self.assertEqual(watches, [])
 
     def test_existing_emp_keys_are_reused_and_recorded_timestamps_preserved(self):
         for label in ('Reached Survey Depth', 'REACHED SURVEY DEPTH'):
